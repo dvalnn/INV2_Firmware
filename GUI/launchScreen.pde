@@ -1,0 +1,7 @@
+void initializeLaunchScreen(){
+  
+}
+
+void launchScreen(){
+  
+}
