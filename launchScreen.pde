@@ -1,7 +1,0 @@
-void initializeLaunchScreen(){
-  
-}
-
-void launchScreen(){
-  
-}
