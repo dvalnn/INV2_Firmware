@@ -7,4 +7,6 @@ int baudRate = 115200;
 
 void initializeSerial(){
     Receiver = new Serial(this, serialPort, baudRate);
+
+    log("INITIALIZED SERIAL COMMUNICATION");
 }

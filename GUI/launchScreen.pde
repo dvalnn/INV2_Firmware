@@ -1,7 +1,11 @@
-void initializeLaunchScreen(){
-  
+void initializeLaunchScreen() {
+    
+    log("INITIALIZED LAUNCH SCREEN");
 }
 
-void launchScreen(){
-  
+void launchScreen() {
+    if (state != prevState) {
+        log("LAUNCH SCREEN");
+        prevState = state;
+    }
 }
