@@ -29,7 +29,7 @@ void fillingScreen() {
         boolean anterior = valvesStates[i];
         valvesStates[i] = valves[i].toggle();
         if (anterior != valvesStates[i]) {
-            log("CHANGED VALVE STATE - " + i + 1 + "->" + valvesStates[i]);
+            log("CHANGED VALVE STATE - " + (i + 1) + "->" + valvesStates[i]);
         }
     }
     

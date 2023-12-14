@@ -1,4 +1,4 @@
-int state; // state 0 is startScreen, state 1 is fillingScreen, state 2 is launchScreen
+int state; // 0-> startScreen | 1-> fillingScreen | 2-> launchScreen | 3-> chooseSerialPort
 int prevState;
 
 void setup() {
@@ -23,6 +23,8 @@ void draw() {
         case 2:
             launchScreen();
             break;
+        case 3:
+            choosePort();
     }
 
     if (debugging){
@@ -54,8 +56,6 @@ void initialize() {
     initializeStartScreen();
     initializeFillingScreen();
     initializeLaunchScreen();
-
-    //initializeSerial();
 
     log("INITIALIZATION SUCCESSFUL");
 }
