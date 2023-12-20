@@ -4,12 +4,14 @@ class button {
   //some refactoring might make it so that you can make round buttons or buttons with some other shapes (me from the future here, image buttons!)
   PVector pos;    //saves the coordinates of the top left corner of the button
   PVector size;   //x saves width, y saves height
+  PVector new_pos, new_size; // used to make the animations gradual
   color fill;     //button filling color
   color stroke;   //button stroke filling color
   float rounding; //the radius of the rectangle's corners
   String label;   //saves whatever the fuck the name of the button should be
 
-  float textSize;
+  float textSize; // pretty self-explanatory
+  float new_textSize; // used to make the animations gradual 
 
   boolean smol = false;
   float hoveringCoefficient = 1.2;
@@ -34,6 +36,10 @@ class button {
     this.label = label;
 
     textSize = constrain((size.x/label.length())*1.6, 0, size.y / 2); //maybe make it a bit smaller? It is a bit too close to the edges of the button;done! 
+
+    new_pos = new PVector(pos.x, pos.y);
+    new_size = new PVector(size.x, size.y);
+    new_textSize = textSize;
   }
 
   void show() {
@@ -47,46 +53,53 @@ class button {
     text(label, pos.x+size.x/2, pos.y+size.y/2 + textSize/3);
   }
 
+  void animateChangeSize(){
+    float changeRate = 0.3;
+    pos.x += changeRate * (new_pos.x - pos.x);
+    pos.y += changeRate * (new_pos.y - pos.y);
+
+    size.x += changeRate * (new_size.x - size.x);
+    size.y += changeRate * (new_size.y - size.y);
+
+    textSize += changeRate * (new_textSize - textSize);
+  }
+
   void hoveringAnimation() { // super rad change in size when hovered
-    if (!smol) {
-      pos.x += (size.x - size.x*hoveringCoefficient)/2;
-      pos.y += (size.y - size.y*hoveringCoefficient)/2;
-      size.x *= hoveringCoefficient;
-      size.y *= hoveringCoefficient;
-      textSize *= hoveringCoefficient;
+    if (!smol){
+      new_pos.x += (new_size.x - new_size.x * hoveringCoefficient)/2;
+      new_pos.y += (new_size.y - new_size.y * hoveringCoefficient)/2;
+      new_size.mult(hoveringCoefficient);
+      new_textSize *= hoveringCoefficient;
       smol = true;
     }
   }
 
   void pressedAnimation() { // super rad change in size when pressed
     if (!bigger) {
-      pos.x += (size.x - size.x*pressingCoefficient)/2;
-      pos.y += (size.y - size.y*pressingCoefficient)/2;
-      size.x *= pressingCoefficient;
-      size.y *= pressingCoefficient;
-      textSize *= pressingCoefficient;
+      new_pos.x += (new_size.x - new_size.x*pressingCoefficient)/2;
+      new_pos.y += (new_size.y - new_size.y*pressingCoefficient)/2;
+      new_size.mult(pressingCoefficient);
+      new_textSize *= pressingCoefficient;
       bigger = true;
     }
   }
 
   void killHoveringAnimation() { // idk if this is the best way to make this but whatever, it works, it kills the animation when the mouse stops hovering
     if (smol) {
-      size.x /= hoveringCoefficient;
-      size.y /= hoveringCoefficient;
-      pos.x -= (size.x - size.x*hoveringCoefficient)/2;
-      pos.y -= (size.y - size.y*hoveringCoefficient)/2;
-      textSize /= hoveringCoefficient;
+      new_size.mult(1/hoveringCoefficient);
+      new_pos.x -= (new_size.x - new_size.x * hoveringCoefficient)/2;
+      new_pos.y -= (new_size.y - new_size.y * hoveringCoefficient)/2;
+      new_textSize /= hoveringCoefficient;
       smol = false;
     }
   }
 
   void killPressedAnimation() { // the same things I said about the killHoveringAnimation apply for this one, except for the clicking 
     if (bigger) {
-      size.x /= pressingCoefficient;
-      size.y /= pressingCoefficient;
-      pos.x -= (size.x - size.x*pressingCoefficient)/2;
-      pos.y -= (size.y - size.y*pressingCoefficient)/2;
-      textSize /= pressingCoefficient;
+      new_size.mult(1/pressingCoefficient);
+      new_pos.x -= (new_size.x - new_size.x*pressingCoefficient)/2;
+      new_pos.y -= (new_size.y - new_size.y*pressingCoefficient)/2;
+      new_textSize /= pressingCoefficient;
       bigger = false;
     }
   }
@@ -117,6 +130,7 @@ class button {
 
   boolean pushButton() { // call this function if you want the button to act like a pushButton, on when clicked and the off when unclicked
     show();
+    animateChangeSize();
     if (hovering()) {
       hoveringAnimation();
       if (pressed()) {
