@@ -76,8 +76,6 @@ def toggle_status():
 def arm():
     cmd = bytearray([0x55, command_map['ARM'], 1, 1, 2, 3])
     ser.write(cmd)
-    
-    #rep = ser.read(6)
     read_cmd()
     if(len(buff) != 6 or int(buff[1]) != command_map['ARM_ACK'] or int(buff[3]) != 1):
         print("ARM1 error", buff)
