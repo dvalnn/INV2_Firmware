@@ -5,7 +5,7 @@ import serial
 #mac
 #ser = serial.Serial('/dev/cu.usbserial-0001', 115200, timeout=0.015) #set read timeout of 1s
 #windows
-ser = serial.Serial('COM3', 115200, timeout=0.1) #set read timeout of 1s
+ser = serial.Serial('COM3', 115200, timeout=0.01) #set read timeout of 1s
 
 log_delay = 0.05
 
@@ -47,11 +47,6 @@ crc_1_state = 5
 crc_2_state = 6
 end_state = 7
 
-waiting_input = 1
-waiting_rep = 2
-
-comm_stage = waiting_input
-
 comm_state = sync_state
 data_total = 0
 data_recv = 0
@@ -79,8 +74,6 @@ def toggle_status():
     elif log_status == 1: log_status = 0
 
 def arm():
-    global comm_stage
-
     cmd = bytearray([0x55, command_map['ARM'], 1, 1, 2, 3])
     ser.write(cmd)
     
@@ -88,7 +81,6 @@ def arm():
     read_cmd()
     if(len(buff) != 6 or int(buff[1]) != command_map['ARM_ACK'] or int(buff[3]) != 1):
         print("ARM1 error", buff)
-        comm_stage = waiting_input
         return
     else:
         print("ARM 1 ok")
@@ -98,7 +90,6 @@ def arm():
     read_cmd()
     if(len(buff) != 6 or int(buff[1]) != command_map['ARM_ACK'] or int(buff[3]) != 2):
         print("ARM2 error", buff)
-        comm_stage = waiting_input
         return
     else:
         print("ARM 2 ok")
@@ -109,13 +100,9 @@ def arm():
     read_cmd()
     if(len(buff) != 6 or int(buff[1]) != command_map['ARM_ACK'] or int(buff[3]) != 3):
         print("ARM3 error", buff)
-        comm_stage = waiting_input
         return
     else:
         print("ARM 3 ok")
-    
-
-    comm_stage = waiting_input
 
 
 def print_status():
@@ -124,6 +111,7 @@ def print_status():
         return
 
     state = int.from_bytes(buff[3:4], byteorder='big', signed=True)
+    if state < 0 or state >= len(command_map): return
 
     ax = int.from_bytes(buff[4:6], byteorder='big', signed=True)
     ay = int.from_bytes(buff[6:8], byteorder='big', signed=True)
@@ -146,7 +134,6 @@ def print_status():
     print("gx:", gx, "gy:", gy, "gz:", gz)
 
 def read_cmd():
-    global comm_stage
     global comm_state, sync_state, cmd_state, size_state, data_state, crc_1_state, crc_2_state, end_state
     global buff
     global data_recv, data_total
@@ -163,6 +150,7 @@ def read_cmd():
 
             if comm_state == sync_state:
                 if ch == 0x55:
+                    #begin = time.perf_counter()
                     comm_state = cmd_state
                     buff.append(ch)
                 else:
@@ -197,20 +185,21 @@ def read_cmd():
         
         end = time.perf_counter()
         msec = (end - begin) 
-        if(comm_stage != sync_state): print("ms: ", msec)
-        if comm_state != sync_state and msec > 1:
+        if(comm_state != sync_state): print("ms: ", msec)
+        if comm_state != sync_state and msec > 0.1:
             comm_state = sync_state
             print("command timeout", msec)
             print("buffer recieved:", buff) 
             return
 
-        if msec > 1:
-            print("no cmd")
+        if msec > 0.1:
+            print("no cmd state: ", comm_state)
             return
 
         if comm_state == end_state:
             comm_state = sync_state
             print("ACK recieved:", len(buff))
+            print("command time", msec)
             if(buff[1] == command_map['STATUS_ACK']):
                 print_status()
             print("Cmd_ACK: [",''.join('{:02x} '.format(x) for x in buff)[:-1], "]")

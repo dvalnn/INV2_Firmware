@@ -68,8 +68,7 @@ State_t state_machine[rocket_state_size] =
     },
     //ABORT
     {
-        .work = { {.chanel = read_IMU, .delay = 10},
-                  {.chanel = toggle_led_high, .delay = 1000} },
+        .work = { {.chanel = read_IMU, .delay = 10} },
 
         .events = {},
 
