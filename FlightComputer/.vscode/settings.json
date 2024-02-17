@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.rmd": "markdown",
+        "cstdio": "c",
+        "uart.h": "c",
+        "esp32-hal-spi.h": "c"
+    }
+}
