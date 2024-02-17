@@ -193,6 +193,7 @@ def read_cmd():
             return
 
         if msec > 0.1:
+            print("command timeout", msec)
             print("no cmd state: ", comm_state)
             return
 
