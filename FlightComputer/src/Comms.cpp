@@ -7,6 +7,8 @@
 #include "Target.h"
 #include "Comms.h"
 
+#include <LoRa.h>
+
 void write_command(command_t* cmd)
 {
     int size = 0;
@@ -20,10 +22,14 @@ void write_command(command_t* cmd)
     buff[size++] = ((cmd->crc >> 8) & 0xff);
     buff[size++] = ((cmd->crc) & 0xff);
 
-#ifndef DIGITAL_TARGET
-    Serial2.write(buff, size);
-#else
+#if defined(DIGITAL_TARGET)
     Serial.write(buff, size);
+#elif defined(LoRa_TARGET)
+    LoRa.beginPacket();
+    LoRa.write(buff, size);
+    LoRa.endPacket();
+#elif defined(RS485_TARGET)
+    Serial2.write(buff, size);
 #endif
 }
 
@@ -37,19 +43,25 @@ command_t* read_command(int* error)
     size_t size;
     uint8_t read_byte;
 
-#ifdef DIGITAL_TARGET
+#if defined(DIGITAL_TARGET)
     /*
         Used for testing. See Target.h
     */
     while(Serial.available())
     {
         read_byte = Serial.read();
-#else
+#elif defined(LoRa_TARGET)
+    int packetSize = LoRa.parsePacket();
+    while(packetSize-- > 0 && LoRa.available())
+    {
+        read_byte = LoRa.read();
+
+#elif defined(RS485_TARGET)
     while(Serial2.available())
     {
         read_byte = Serial2.read();
 #endif
-        //printf("data %x\n", read_byte);
+        printf("data %x\n", read_byte);
         switch(state)
         {
             case SYNC:

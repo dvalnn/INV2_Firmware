@@ -12,5 +12,7 @@ serial2(uart serial) for read
     For this to run just uncomment the #define DIGITAL_TARGET
  */
 
-#define DIGITAL_TARGET
+//#define DIGITAL_TARGET
+#define LoRa_TARGET
+//#define RS485_TARGET
 
