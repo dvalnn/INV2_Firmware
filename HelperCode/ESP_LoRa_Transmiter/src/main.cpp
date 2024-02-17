@@ -26,8 +26,16 @@ void loop() {
 
   if(size > 0)
   {
+    //Serial.println("Got bytes");
     LoRa.beginPacket();
     LoRa.write(buff, size);
     LoRa.endPacket();
   }
+
+  // read packet
+  int packetSize = LoRa.parsePacket();
+  while (packetSize != 0 && LoRa.available()) {
+    Serial.write((char)LoRa.read());
+  }
+
 }
