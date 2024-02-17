@@ -109,7 +109,9 @@ def print_status():
         return
 
     state = int.from_bytes(buff[3:4], byteorder='big', signed=True)
-    if state < 0 or state >= len(command_map): return
+    if state < 0 or state >= len(state_map_to_string): 
+        print("bad state decoding")
+        return
 
     ax = int.from_bytes(buff[4:6], byteorder='big', signed=True)
     ay = int.from_bytes(buff[6:8], byteorder='big', signed=True)
