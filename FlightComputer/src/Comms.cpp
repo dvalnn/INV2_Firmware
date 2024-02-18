@@ -12,7 +12,7 @@
 void write_command(command_t* cmd)
 {
     int size = 0;
-    uint8_t buff[100] = {0};
+    uint8_t buff[MAX_COMMAND_BUFFER + 5] = {0};
     
     buff[size++] = 0x55;
     buff[size++] = cmd->cmd;
@@ -27,7 +27,7 @@ void write_command(command_t* cmd)
 #elif defined(LoRa_TARGET)
     LoRa.beginPacket();
     LoRa.write(buff, size);
-    LoRa.endPacket();
+    LoRa.endPacket(true);
 #elif defined(RS485_TARGET)
     Serial2.write(buff, size);
 #endif

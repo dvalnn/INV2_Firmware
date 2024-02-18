@@ -7,7 +7,11 @@ import serial
 #windows
 ser = serial.Serial('COM3', 115200, timeout=0.01) #set read timeout of 1s
 
-log_delay = 0.05
+log_delay = 0.01
+message_timeout = 0.3
+
+missed_packets = 0
+log_speed = 0
 
 command_map = {
     "STATUS" : 0,
@@ -56,7 +60,7 @@ buff = bytearray()
 
 sg.theme('DarkAmber')    # Keep things interesting for your users
 
-layout = [[sg.Button('LED_ON', key = '_LED_ON_', size = (10,5)), sg.Button('LED_OFF', key = '_LED_OFF_', size = (10,5)), sg.Text("Ax  Ay  Az  Gx  Gy  Gz", key = '_IMU_OUT_', size = (40, 5), auto_size_text=True, font=('Arial Bold', 18))],      
+layout = [[sg.Button('LED_ON', key = '_LED_ON_', size = (10,5)), sg.Button('LED_OFF', key = '_LED_OFF_', size = (10,5)), sg.Text("Ax  Ay  Az  Gx  Gy  Gz", key = '_IMU_OUT_', size = (40, 5), auto_size_text=True, font=('Arial Bold', 16))],      
           [sg.Button('Ready', key = '_READY_', size = (10,5)),
            sg.Button('Arm', key = '_ARM_', size = (10,5)), 
            sg.Button('Abort', key = '_ABORT_', size = (10,5)), 
@@ -104,6 +108,8 @@ def arm():
 
 
 def print_status():
+    global missed_packets
+    global log_speed
     if(len(buff) < 16):
         print("bad status")
         return
@@ -127,7 +133,10 @@ def print_status():
 
     print("state", state)
     s1 = "State: " + state_map_to_string[state] + "\n"
-    s = s1 + "Ax: " + str(round(ax, 2)) + " Ay: " + str(round(ay, 2)) + " Az: " + str(round(az, 2)) + "\nGx: " + str(round(gx, 2)) + " Gy: " + str(round(gy, 2)) + " Gz: " + str(round(gz, 2))
+    sa = "Ax: " + str(round(ax, 2)) + " Ay: " + str(round(ay, 2)) + " Az: " + str(round(az, 2)) + "\n"
+    sg = "Gx: " + str(round(gx, 2)) + " Gy: " + str(round(gy, 2)) + " Gz: " + str(round(gz, 2)) + "\n"
+    s2 = "Log Speed: " + str(round(log_speed, 0)) + "hz\nMissed packets: " + str(missed_packets) + "\n" 
+    s = s1 + sa + sg + s2
     window['_IMU_OUT_'].update(s)
 
     print("ax:", ax, "ay:", ay, "az:", az)
@@ -138,6 +147,7 @@ def read_cmd():
     global buff
     global data_recv, data_total
     global begin, end
+    global missed_packets
 
     buff = bytearray()
     data_recv = 0
@@ -185,16 +195,18 @@ def read_cmd():
         
         end = time.perf_counter()
         msec = (end - begin) 
-        if(comm_state != sync_state): print("ms: ", msec)
-        if comm_state != sync_state and msec > 0.1:
+        #if(comm_state != sync_state): print("ms: ", msec)
+        if comm_state != sync_state and msec > message_timeout:
             comm_state = sync_state
+            missed_packets += 1
             print("command timeout", msec)
             print("buffer recieved:", buff) 
             return
 
-        if msec > 0.1:
+        if msec > message_timeout:
             print("command timeout", msec)
             print("no cmd state: ", comm_state)
+            missed_packets += 1
             return
 
         if comm_state == end_state:
@@ -278,10 +290,11 @@ while True:
     log_end = time.perf_counter()
     if(cmd_launched == 0 and log_status == 1 and log_end - log_begin > log_delay):
         #send status cmd
+        log_speed = 1 / (log_end - log_begin)
+        log_begin = time.perf_counter()
         cmd = bytearray([0x55, command_map['STATUS'], 0, 0x20, 0x21])
         ser.write(cmd)
         read_cmd()
-        log_begin = time.perf_counter()
         #pass
     
     #while ser.in_waiting > 0:

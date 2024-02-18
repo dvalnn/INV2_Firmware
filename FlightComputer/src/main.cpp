@@ -121,6 +121,7 @@ int run_command(command_t* cmd, rocket_state_t state)
              */
             command_rep.cmd = CMD_STATUS_ACK;
             command_rep.size = 2*6 + 1;
+            //command_rep.size = 100; //test
             command_rep.data[0] = state;
             command_rep.data[1] = (imu_ax >> 8) & 0xff;
             command_rep.data[2] = (imu_ax) & 0xff ;
@@ -240,6 +241,7 @@ void gyroSetup(void)
 void LoRa_Setup(void)
 {
   LoRa.setPins(5,4,36);
+  LoRa.setSignalBandwidth(300E3);
   Serial.println("Lora starting");
   if (!LoRa.begin(868E6)) {
     Serial.println("Starting LoRa failed!");

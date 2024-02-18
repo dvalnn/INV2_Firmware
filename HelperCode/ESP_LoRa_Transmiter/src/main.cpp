@@ -10,6 +10,7 @@ void setup() {
   Serial.println("LoRa Sender");
 
   LoRa.setPins(5,4,36);
+  LoRa.setSignalBandwidth(300E3);
   if (!LoRa.begin(868E6)) {
     Serial.println("Starting LoRa failed!");
     while (1);
@@ -29,7 +30,7 @@ void loop() {
     //Serial.println("Got bytes");
     LoRa.beginPacket();
     LoRa.write(buff, size);
-    LoRa.endPacket();
+    LoRa.endPacket(true);
   }
 
   // read packet
