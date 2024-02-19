@@ -3,6 +3,7 @@ import processing.serial.*;
 Serial Receiver;
 
 String serialPort;
+String prevPort;
 String serialPorts[];
 int nSerialPorts;
 button portButtons[];
@@ -17,10 +18,20 @@ void choosePort(){
     }
 
     serialPort = chooseSerialPort();
-    if (serialPort != ""){
+    if (serialPort != "" && Receiver == null){
         log("SERIAL PORT SELECTED - " + serialPort);
         Receiver = new Serial(this, serialPort, baudRate);
+        prevPort = serialPort;
         log("INITIALIZED SERIAL COMMUNICATION");
+        state = 0;
+    }
+    else if (serialPort != ""){
+        log("NEW SERIAL PORT SELECTED - " + serialPort);
+        Receiver.stop();
+        log("SERIAL PORT CLOSED - " + prevPort);
+        Receiver = new Serial(this, serialPort, baudRate);
+        prevPort = serialPort;
+        log("INITIALIZED SERIAL COMMUNICATION AGAIN - " + serialPort);
         state = 0;
     }
 }
@@ -29,6 +40,7 @@ String chooseSerialPort(){
 
     if (nSerialPorts == 0){
         text("NO SERIAL PORTS CONNECTED YOU MORON", width/2, height/2);
+        return "";
     }
 
     for (int i = 0; i < nSerialPorts; ++i){
