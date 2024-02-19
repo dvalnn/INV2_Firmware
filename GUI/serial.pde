@@ -26,6 +26,11 @@ void choosePort(){
 }
 
 String chooseSerialPort(){
+
+    if (nSerialPorts == 0){
+        text("NO SERIAL PORTS CONNECTED YOU MORON", width/2, height/2);
+    }
+
     for (int i = 0; i < nSerialPorts; ++i){
         if (portButtons[i].pushButton()){
             return serialPorts[i];
