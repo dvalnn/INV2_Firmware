@@ -190,6 +190,45 @@ int run_command(command_t* cmd, rocket_state_t state)
         }
         break;
 
+        case CMD_ADD_WORK:
+        case CMD_REMOVE_WORK:
+        {
+            static uint8_t working_index[work_enum_size] = {-1}; 
+            static void(*work[work_enum_size])(void) = {logger, pressure_safety};
+            
+            if(cmd->size < 3) return CMD_RUN_OUT_OF_BOUND;
+            uint8_t work_id = cmd->data[0];
+            uint16_t work_delay = (cmd->data[1] << 8) & cmd->data[2];
+
+            if(cmd->cmd == CMD_ADD_WORK &&
+                working_index[work_id] == -1)
+            {
+                int i;
+                for(i = 0; i < MAX_WORK_SIZE; i++)
+                    // find work empty slot
+                    if(state_machine[state].work[i].chanel == NULL) break;
+
+                if(i == MAX_WORK_SIZE) return CMD_RUN_OUT_OF_BOUND; 
+
+                state_machine[state].work[i].chanel = work[work_id]; 
+                state_machine[state].work[i].delay = work_delay;
+                state_machine[state].work[i].begin = 0;
+                working_index[work_id] = i;
+
+            }
+            else if(cmd-> cmd == CMD_REMOVE_WORK &&
+                    working_index[work_id] != -1)
+            {
+                uint8_t index = working_index[work_id];
+
+                state_machine[state].work[index].chanel = NULL;
+                state_machine[state].work[index].delay = 0;
+                state_machine[state].work[index].begin = 0;
+                working_index[work_id] = -1;
+            }
+        }
+        break;
+
         case CMD_READY:
         {
             command_rep.cmd = CMD_READY_ACK;

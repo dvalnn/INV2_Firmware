@@ -17,4 +17,6 @@ void toggle_led_200ms(void);
 void imu_pid_calibration(void);
 void read_IMU(void); 
 
+void logger(void);
+void pressure_safety(void);
 #endif

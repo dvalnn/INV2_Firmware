@@ -46,7 +46,9 @@ typedef enum
     CMD_LED_OFF,
 
     CMD_IMU_CALIBRATE,
-
+    CMD_ADD_WORK,
+    CMD_REMOVE_WORK,
+  
     cmd_size,
 
     CMD_STATUS_ACK,
@@ -56,8 +58,16 @@ typedef enum
     CMD_LED_ON_ACK,
     CMD_LED_OFF_ACK,
     CMD_IMU_CALIBRATE_ACK,
+    CMD_ADD_WORK_ACK,
+    CMD_REMOVE_WORK_ACK,
 } cmd_type_t;
 
+typedef enum
+{
+    logging_work,
+    pressure_safety_work,
+    work_enum_size,
+} cmd_work_enum;
 
 //----------------------------------------
 
