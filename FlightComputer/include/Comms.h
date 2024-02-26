@@ -4,7 +4,8 @@
 #include <inttypes.h>
 
 #define MAX_COMMAND_BUFFER 100
-#define RS485_TIMEOUT_TIME_MS 5000
+#define RS485_TIMEOUT_TIME_MS 50 //try to get limit bounds 
+//#define RS485_TIMEOUT_TIME_MS 5000
 
 /*
     Read command errors

@@ -331,7 +331,6 @@ void loop() {
 
     /*
         Execute the state function 
-        and perform the default state transition 
      */
     bool work_performed = WORK_HANDLER();
 
