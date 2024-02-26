@@ -2,7 +2,7 @@
  * @file Comms.h
  * @author AM 
  * @brief
- *      Shared file bettewn all the systems,  
+ *      Shared file bettewn all the systems, 
  *      This way we only have one definition for each command working everywhere  
  * @version 0.1
  * @date 2024-02-26
