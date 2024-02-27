@@ -26,6 +26,8 @@ class button {
   boolean current = false;
   boolean old = false;
   //toggle variables
+  
+  dataPacket packet; // button packet
 
   button(float x, float y, float _width, float _height, color background, color stroke, float rounding, String label) { 
     this.pos = new PVector(x, y);
@@ -156,5 +158,9 @@ class button {
       old = false;
     }
     return state;
+  }
+  
+  void setPacket(byte command, byte[] payload) {
+    packet = new dataPacket(command, payload);
   }
 }
