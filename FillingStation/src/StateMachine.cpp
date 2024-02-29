@@ -14,7 +14,7 @@
 rocket_state_t comm_transition[rocket_state_size][cmd_size] = {  
 //                STATUS ABORT EXEC   STOP   FUELING    [Flight cmds]  RESUME, ADD, REMOVE    
 /* Idle    */   {   -1 , ABORT, -1,   -1,    FUELING,  -1,-1,-1,-1,-1,    -1,  -1,   -1   },      
-/* FUELING */   {   -1 , ABORT, -1,   -1,    FUELING,  -1,-1,-1,-1,-1,    -1,  -1,   -1   },      
+/* FUELING */   {   -1 , IDLE,  -1,   -1,    FUELING,  -1,-1,-1,-1,-1,    -1,  -1,   -1   },      
 /* Prog1   */   {   -1 , ABORT, -1, FUELING, FUELING,  -1,-1,-1,-1,-1,    -1,  -1,   -1   },      
 /* Prog2   */   {   -1 , ABORT, -1, FUELING, FUELING,  -1,-1,-1,-1,-1,    -1,  -1,   -1   },      
 /* Prog3   */   {   -1 , ABORT, -1, FUELING, FUELING,  -1,-1,-1,-1,-1,    -1,  -1,   -1   },      
@@ -32,7 +32,7 @@ State_t state_machine[rocket_state_size] =
     //IDLE
     {
         .work = { {.chanel = read_pressures, .delay = 10},
-                  {.chanel = read_temperatures, .delay = 10}},
+                  {.chanel = read_temperatures, .delay = 10} },
 
         .events = {},
 

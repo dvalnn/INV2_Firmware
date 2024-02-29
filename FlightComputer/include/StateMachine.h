@@ -15,6 +15,12 @@ typedef int8_t rocket_state_t;
 enum 
 {
     IDLE,
+    
+    FUELING,
+    PROG1,
+    PROG2,
+    SAFETY,
+
     READY,
     ARMED,
     LAUNCH,
