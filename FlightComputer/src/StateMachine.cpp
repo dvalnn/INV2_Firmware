@@ -12,13 +12,13 @@
 
 //need to add a stop and see how the executin function changes
 rocket_state_t comm_transition[rocket_state_size][cmd_size] = {  
-//               Status    Ready    Arm     Abort   LED_ON    LED_OFF  IMU_CALIBRATE  
-/* Idle      */   {-1,     READY,    -1,    ABORT,    -1,        -1,   IMU_PID_TUNE },      
-/* Ready     */   {-1,      -1,     ARMED,   IDLE,    -1,        -1,   IMU_PID_TUNE },
-/* Armed     */   {-1,      -1,      -1,     IDLE,    -1,        -1,   IMU_PID_TUNE },
-/* Launch    */   {-1,      -1,      -1,    ABORT,    -1,        -1,        -1 /*1*/},
-/* Abort     */   {-1, /*2*/IDLE,    -1,      -1,     -1,        -1,        -1      },
-/* IMU PID   */   {-1,      -1,      -1,     IDLE,    -1,        -1,        -1      }
+//                STATUS ABORT EXEC STOP FUELING  READY  ARM   LED_ON LED_OFF IMU_CALIB  RESUME, ADD, REMOVE    
+/* Idle     */  {    -1, ABORT, -1,  -1,    -1,   READY, -1,     -1,     -1,  IMU_TUNE,    -1,    -1,   -1  },      
+/* Ready    */  {    -1, IDLE,  -1,  -1,    -1,    -1,   ARMED,  -1,     -1,  IMU_TUNE,    -1,    -1,   -1  },
+/* Armed    */  {    -1, IDLE,  -1,  -1,    -1,    -1,   -1,     -1,     -1,  IMU_TUNE,    -1,    -1,   -1  },
+/* Launch   */  {    -1, ABORT, -1,  -1,    -1,    -1,   -1,     -1,     -1,  IMU_TUNE,    -1,    -1,   -1  },
+/* Abort    */  {    -1,  -1,   -1,  -1,    -1,   IDLE,  -1,     -1,     -1,  IMU_TUNE,    -1,    -1,   -1  },
+/* IMU PID  */  {    -1, IDLE,  -1,  -1,    -1,    -1,   -1,     -1,     -1,  IMU_TUNE,    -1,    -1,   -1  }
 };
 
 /*1*/ // don't allow sensor calibration once rocket is armed, arming the rocket hould be the last step before laucnh (right?)
@@ -75,13 +75,13 @@ State_t state_machine[rocket_state_size] =
         .comms = comm_transition[ABORT],
 
     },
-    //IMU_PID_TUNE
+    //IMU_TUNE
     {
         .work = { {.chanel = imu_pid_calibration, .delay = 1000, .begin = 0}, },
 
         .events = { {TrueCond, NULL, IDLE} }, //this will always evaluate true, imu calib is run one time and is automaticly sent to idle
 
-        .comms = comm_transition[IMU_PID_TUNE],
+        .comms = comm_transition[IMU_TUNE],
     }
 };
 

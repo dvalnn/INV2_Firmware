@@ -19,7 +19,7 @@ enum
     ARMED,
     LAUNCH,
     ABORT,
-    IMU_PID_TUNE,
+    IMU_TUNE,
 
     rocket_state_size, //this needs to be the last state for size to work
 };
