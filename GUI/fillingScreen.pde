@@ -31,15 +31,12 @@ void fillingScreen() {
         if (anterior != valvesStates[i]) {
             log("CHANGED VALVE STATE - " + (i + 1) + "->" + valvesStates[i]);
             // serial write
-            byte[] valveNum = {valvesHex[i], valvesStates[i] ? (byte) 0x01 : (byte) 0x00};
-            valves[i].setPacket((byte) 0x98, valveNum);
-            String payloadString = new String(valves[i].packet.getPacket());
-            text(payloadString, 100, 100);
-            Receiver.write(payloadString);
-            println(Receiver.read());
+            byte[] valvePayload = {valvesHex[i], valvesStates[i] ? (byte) 0x01 : (byte) 0x00};
+            valves[i].setPacket((byte) 0x25, valvePayload);
+            valves[i].packet.logPacket();
+            Receiver.write(valves[i].packet.getPacket());
         }
     }
-    
     colorCodingValves();
 }
 
