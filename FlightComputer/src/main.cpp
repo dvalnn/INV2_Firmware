@@ -280,10 +280,10 @@ void gyroSetup(void)
 void LoRa_Setup(void)
 {
   LoRa.setPins(5,4,36);
-  LoRa.setSignalBandwidth(500E3);
-  LoRa.setCodingRate4(5);
-  LoRa.setSpreadingFactor(7);
-  LoRa.setGain(1);
+  //LoRa.setSignalBandwidth(500E3);
+  //LoRa.setCodingRate4(5);
+  //LoRa.setSpreadingFactor(7);
+  //LoRa.setGain(1);
 
   Serial.println("Lora starting");
   if (!LoRa.begin(868E6)) {
