@@ -4,6 +4,7 @@ import serial
 
 #mac
 ser = serial.Serial('/dev/cu.usbserial-0001', 115200, timeout=0.015) #set read timeout of 1s
+#ser = serial.Serial('/dev/cu.usbmodem1301', 115200, timeout=0.015) #set read timeout of 1s
 #windows
 #ser = serial.Serial('COM3', 115200, timeout=0.01) #set read timeout of 1s
 
