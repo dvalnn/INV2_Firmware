@@ -24,15 +24,19 @@ void fillingScreen() {
     }
     
     image(img, 0, 0);
-    
+    byte[] valvesHex = {(byte)0x01, (byte)0x02, (byte)0x03};
     for (int i = 0; i < valves.length; ++i) {
         boolean anterior = valvesStates[i];
         valvesStates[i] = valves[i].toggle();
         if (anterior != valvesStates[i]) {
             log("CHANGED VALVE STATE - " + (i + 1) + "->" + valvesStates[i]);
+            // serial write
+            byte[] valvePayload = {valvesHex[i], valvesStates[i] ? (byte) 0x01 : (byte) 0x00};
+            valves[i].setPacket((byte) 0x25, valvePayload);
+            valves[i].packet.logPacket();
+            Receiver.write(valves[i].packet.getPacket());
         }
     }
-    
     colorCodingValves();
 }
 

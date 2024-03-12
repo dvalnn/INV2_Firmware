@@ -2,7 +2,7 @@
  * @file Comms.h
  * @author AM 
  * @brief
- *      Shared file bettewn all the systems, 
+ *      Shared file bettewn all the systems,  
  *      This way we only have one definition for each command working everywhere  
  * @version 0.1
  * @date 2024-02-26
@@ -78,16 +78,16 @@ typedef enum
 
 //ACKs
     CMD_STATUS_ACK,
-    CMD_FUELING,
+    CMD_FUELING_ACK,
     CMD_READY_ACK,
     CMD_ARM_ACK,
     CMD_ABORT_ACK,
     CMD_LED_ON_ACK,
     CMD_LED_OFF_ACK,
     CMD_IMU_CALIBRATE_ACK,
-    CMD_EXEC_PROG,
-    CMD_STOP_PROG,
-    CMD_RESUME_PROG,
+    CMD_EXEC_PROG_ACK,
+    CMD_STOP_PROG_ACK,
+    CMD_RESUME_PROG_ACK,
     CMD_ADD_WORK_ACK,
     CMD_REMOVE_WORK_ACK,
 } cmd_type_t;
