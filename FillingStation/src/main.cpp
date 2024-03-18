@@ -120,8 +120,8 @@ int run_command(command_t* cmd, rocket_state_t state)
              * Send response
              */
             command_rep.cmd = CMD_STATUS_ACK;
-            //command_rep.size = 2*6 + 1;
-            command_rep.size = 100; //test
+            command_rep.size = 2*6 + 1;
+            //command_rep.size = 100; //test
             command_rep.data[0] = state;
             command_rep.data[1] = (imu_ax >> 8) & 0xff;
             command_rep.data[2] = (imu_ax) & 0xff ;
@@ -193,7 +193,7 @@ int run_command(command_t* cmd, rocket_state_t state)
         case CMD_ADD_WORK:
         case CMD_REMOVE_WORK:
         {
-            static int8_t working_index[work_enum_size] = {-1}; //Still not sure if this works 
+            static uint8_t working_index[work_enum_size] = {-1}; 
             static void(*work[work_enum_size])(void) = {logger, pressure_safety};
             
             if(cmd->size < 3) return CMD_RUN_OUT_OF_BOUND;
@@ -280,11 +280,7 @@ void gyroSetup(void)
 void LoRa_Setup(void)
 {
   LoRa.setPins(5,4,36);
-  //LoRa.setSignalBandwidth(500E3);
-  //LoRa.setCodingRate4(5);
-  //LoRa.setSpreadingFactor(7);
-  //LoRa.setGain(1);
-
+  LoRa.setSignalBandwidth(300E3);
   Serial.println("Lora starting");
   if (!LoRa.begin(868E6)) {
     Serial.println("Starting LoRa failed!");

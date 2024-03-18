@@ -15,17 +15,12 @@ typedef int8_t rocket_state_t;
 enum 
 {
     IDLE,
-    
     FUELING,
     PROG1,
     PROG2,
-    SAFETY,
-
-    READY,
-    ARMED,
-    LAUNCH,
+    PROG3,
+    STOP,
     ABORT,
-    IMU_TUNE,
 
     rocket_state_size, //this needs to be the last state for size to work
 };

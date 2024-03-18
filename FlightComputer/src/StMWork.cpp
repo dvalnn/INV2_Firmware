@@ -116,3 +116,13 @@ void read_IMU(void)
                              &imu_gx, &imu_gy, &imu_gz);
     return; 
 }
+
+void logger(void)
+{
+
+}
+
+void pressure_safety(void)
+{
+
+}

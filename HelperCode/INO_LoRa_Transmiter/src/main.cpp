@@ -1,18 +1,47 @@
-#include <Arduino.h>
+#include <SPI.h>
+#include <LoRa.h>
 
-// put function declarations here:
-int myFunction(int, int);
+int counter = 0;
 
 void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+  Serial.begin(115200);
+  while (!Serial);
+
+  Serial.println("LoRa Sender");
+
+  LoRa.setPins(10, 9, 2);
+  //LoRa.setSignalBandwidth(500E3);
+  //LoRa.setCodingRate4(5);
+  //LoRa.setSpreadingFactor(7);
+  //LoRa.setGain(1);
+
+  if (!LoRa.begin(868E6)) {
+    Serial.println("Starting LoRa failed!");
+    while (1);
+  }
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-}
+  uint8_t buff[100] = {0};
+  int size = 0;
+  while(Serial.available())
+  {
+    //Serial.println("got serial");
+    buff[size++] = Serial.read();
+  }
 
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+  if(size > 0)
+  {
+    //Serial.println("Send LoRa");
+    LoRa.beginPacket();
+    LoRa.write(buff, size);
+    LoRa.endPacket(true);
+  }
+
+  // read packet
+  int packetSize = LoRa.parsePacket();
+  while (packetSize != 0 && LoRa.available()) {
+    Serial.write((char)LoRa.read());
+  }
+
 }
