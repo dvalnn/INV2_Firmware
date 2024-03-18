@@ -2,8 +2,10 @@ button valves[];
 PImage img;
 boolean valvesStates[];
 
+int NVALVES = 3;
+
 void initializeFillingScreen() {
-    valves = new button[3];
+    valves = new button[NVALVES];
     
     valves[0] = new button(width / 2 + 100, height - 200, 100, 75, color(0), color(255), 10, "Valve 1");
     valves[1] = new button(width / 2 + 250, height - 200, 100, 75, color(0), color(255), 10, "Valve 2");
@@ -12,7 +14,7 @@ void initializeFillingScreen() {
     img = loadImage("FuellingSystem.png");
     img.resize(1000, 0);
     
-    valvesStates = new boolean[3];
+    valvesStates = new boolean[NVALVES];
     
     log("INITIALIZED FILLING SCREEN");
 }
@@ -37,12 +39,12 @@ void fillingScreen() {
 }
 
 void colorCodingValves() {
-    PVector valvesCoordinates[] = new PVector[3];
+    PVector valvesCoordinates[] = new PVector[NVALVES];
     valvesCoordinates[0] = new PVector(375, 242);
     valvesCoordinates[1] = new PVector(397, 711);
     valvesCoordinates[2] = new PVector(858, 94);
     
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < NVALVES; ++i) {
         fill(255, 0, 0);
         if (valvesStates[i]) {
             fill(0, 255, 0);
