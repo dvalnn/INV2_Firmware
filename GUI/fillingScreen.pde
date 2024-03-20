@@ -2,7 +2,7 @@ button valves[];
 PImage img;
 boolean valvesStates[];
 
-int NVALVES = 3;
+int NVALVES = 4;
 
 void initializeFillingScreen() {
     valves = new button[NVALVES];
@@ -10,8 +10,9 @@ void initializeFillingScreen() {
     valves[0] = new button(width / 2 + 100, height - 200, 100, 75, color(0), color(255), 10, "Valve 1");
     valves[1] = new button(width / 2 + 250, height - 200, 100, 75, color(0), color(255), 10, "Valve 2");
     valves[2] = new button(width / 2 + 400, height - 200, 100, 75, color(0), color(255), 10, "Valve 3");
+    valves[3] = new button(width / 2 + 550, height - 200, 100, 75, color(0), color(255), 10, "VPU");
     
-    img = loadImage("FuellingSystem.png");
+    img = loadImage("FillProcess.png");
     img.resize(1000, 0);
     
     valvesStates = new boolean[NVALVES];
@@ -26,7 +27,7 @@ void fillingScreen() {
     }
     
     image(img, 0, 0);
-    byte[] valvesHex = {(byte)0x01, (byte)0x02, (byte)0x03};
+    byte[] valvesHex = {(byte)0x01, (byte)0x02, (byte)0x03, (byte)0x04};
     for (int i = 0; i < valves.length; ++i) {
         boolean anterior = valvesStates[i];
         valvesStates[i] = valves[i].toggle();
@@ -44,9 +45,10 @@ void fillingScreen() {
 
 void colorCodingValves() {
     PVector valvesCoordinates[] = new PVector[NVALVES];
-    valvesCoordinates[0] = new PVector(375, 242);
-    valvesCoordinates[1] = new PVector(397, 711);
-    valvesCoordinates[2] = new PVector(858, 94);
+    valvesCoordinates[0] = new PVector(252, 139);
+    valvesCoordinates[1] = new PVector(252, 317);
+    valvesCoordinates[2] = new PVector(514, 80);
+    valvesCoordinates[3] = new PVector(691, 80);
     
     for (int i = 0; i < NVALVES; ++i) {
         fill(255, 0, 0);
