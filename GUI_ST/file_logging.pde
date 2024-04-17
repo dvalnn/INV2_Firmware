@@ -24,4 +24,5 @@ void flushWriters(){
 void log(String toLog){
     logFile.print(toLog);
     logFile.println("\t--> " + millis() + "ms");
+    logFile.flush();
 }
