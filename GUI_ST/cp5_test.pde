@@ -5,10 +5,14 @@ import java.util.*;
 ControlP5 cp5;
 PFont font;
 Serial myPort; // For serial communication
-int baudRate = 115200;
 dataPacket tx_packet;
 
+byte tp11, tp12, tp21, tp22, tp31, tp32, tl11, tl12, tl21, tl22; // program inputs (2 bytes per arg)
+byte[] prog_cmds = {(byte)0x00, (byte)0x01, (byte)0x02, (byte)0x03, (byte)0x04};
+
 void setup() {
+  //inits
+  initializeWriters();
   frameRate(120);
   fullScreen();
   background(0);
@@ -83,21 +87,27 @@ public void controlEvent(ControlEvent event) {
     myPort = new Serial(this, selectedPort, 9600); // Adjust baud rate as needed
   }
   
-  // Handle other events, like selections from your "program" ScrollableList
+  if(event.isFrom("Send")) {
+    byte[] payload = {prog_cmds[3], tp11, tp12, tp21, tp22, tp31, tp32, tl11, tl12, tl21, tl22}; // program to exec and the args
+    send((byte) 0x53, payload); // placeholder command value -> replace with EXEC_PROG command value
+  }
 }
 
-// Implement actions for the "Send" button and other interactions as needed
-void send() {
-  // Example function to be called when the "Send" button is pressed
+void send(byte command, byte[] payload) {
   println("Send button clicked.");
-  // Add code here for what should happen when "Send" is clicked.
-  byte[] placeholder_payload = {(byte) 0x05, (byte) 0x06, (byte) 0x04};
-  tx_packet = new dataPacket((byte) 0x01, placeholder_payload); 
-  myPort.write(tx_packet.getPacket());
+  tx_packet = new dataPacket(command, payload); 
+  tx_packet.logPacket();
+  if (myPort != null) {
+    myPort.write(tx_packet.getPacket());
+  }
+  else {
+    println("No serial port selected!");
+  }
 }
 
 // This method ensures the serial port is closed properly when the program is exited
 void stop() {
+  flushWriters();
   if (myPort != null) {
     myPort.stop();
   }
