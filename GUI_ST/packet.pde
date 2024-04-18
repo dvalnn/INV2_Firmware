@@ -1,7 +1,7 @@
 // Packet Structure: START BYTE(0x55) | COMMAND | PAYLOAD LENGTH | PAYLOAD | CRC
 
 class dataPacket {
-  final byte START_BYTE = 0x55;
+  final byte START_BYTE = (byte)0x55;
   byte command;
   byte payloadLength;
   byte[] payload;
@@ -13,14 +13,7 @@ class dataPacket {
     this.payload = payload;
     this.payloadLength = (byte)payload.length;
     this.id = (byte)0x01; // placeholder id
-    this.crc = calculateCRC();
-  }
-  
-  private byte calculateCRC() {
-    // Placeholder for CRC calculation logic
-    // This method should calculate the CRC based on the command, payload length, and payload
-    // For demonstration, it returns a dummy value
-    return (byte) 0x00;
+    this.crc = (byte) 0x00;
   }
 
   void logPacket() {
@@ -33,6 +26,7 @@ class dataPacket {
     for (int i = 0; i < payloadLength; i++) {
       finalPacket = append(finalPacket, payload[i]);
     }
+    finalPacket = append(finalPacket, crc);
     finalPacket = append(finalPacket, crc);
     return finalPacket;
   }
