@@ -7,7 +7,7 @@ PFont font;
 Serial myPort; // For serial communication
 dataPacket tx_packet;
 HashMap<String, boolean[]> prog_args = new HashMap<String, boolean[]>();
-
+int baudRate = 115200;
 Textfield[] textfields = new Textfield[5];
 int[] prog_inputs = new int[5];
 int selected_index = -1;
@@ -105,7 +105,7 @@ void setup() {
   List<String> portNames = Arrays.asList(Serial.list());
   cp5.addScrollableList("serialPort")
     .setPosition(50, 600) // Adjust position based on your UI layout
-    .setSize(250, 100)
+    .setSize(250, 500)
     .setBarHeight(50)
     .setItemHeight(50)
     .addItems(portNames)
@@ -129,7 +129,7 @@ public void controlEvent(ControlEvent event) {
     if (myPort != null) {
       myPort.stop();
     }
-    myPort = new Serial(this, selectedPort, 9600); // Adjust baud rate as needed
+    myPort = new Serial(this, selectedPort, baudRate); // Adjust baud rate as needed
   } else if (event.isFrom("Send")) {
     for (int i = 0; i < 5; i++) {
       String input = textfields[i].getText();
