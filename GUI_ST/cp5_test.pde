@@ -4,14 +4,19 @@ import java.util.*;
 
 ControlP5 cp5;
 PFont font;
+
 Serial myPort; // For serial communication
 dataPacket tx_packet;
-HashMap<String, boolean[]> prog_args = new HashMap<String, boolean[]>();
 int baudRate = 115200;
+byte[] rx_packet = new byte[150];
+// String parseStates = {"SYNC", 1, 2, 3, 4, 5, 6};
+
+HashMap<String, boolean[]> prog_args = new HashMap<String, boolean[]>();
 Textfield[] textfields = new Textfield[5];
 int[] prog_inputs = new int[5];
 int selected_index = -1;
-byte[] prog_cmds = {(byte)0x00, (byte)0x01, (byte)0x02, (byte)0x03, (byte)0x04};
+byte[] prog_cmds = {(byte)0x01, (byte)0x02, (byte)0x03, (byte)0x01, (byte)0x02};
+
 List<String> programs = Arrays.asList("fp1", "fp2", "fp3", "rp1", "rp2");
 List<String> vars = Arrays.asList("tp1", "tp2", "tp3", "tl1", "tl2");
 CColor gray = new CColor();
@@ -101,6 +106,11 @@ void setup() {
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
+  cp5.addButton("Status")
+    .setPosition(1500, 340)
+    .setSize(150, 50)
+    .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
+    .setFont(font);
   // List available serial ports and add them to a new ScrollableList
   List<String> portNames = Arrays.asList(Serial.list());
   cp5.addScrollableList("serialPort")
@@ -117,6 +127,14 @@ void setup() {
 
 void draw() {
   background(0);
+  //if(myPort.available()>0){
+  //  parseIncomingByte((byte)myPort.read());
+  //}
+}
+
+void parseIncomingByte(byte rx_byte) {
+  if(rx_byte == (byte) 0x55) {
+  }
 }
 
 public void controlEvent(ControlEvent event) {
@@ -171,18 +189,19 @@ public void controlEvent(ControlEvent event) {
       }
     }
     println(program);
-  }
-  else if (event.isFrom("Stop")) {
+  } else if (event.isFrom("Stop")) {
     byte[] placeholder = {};
     send((byte)0x03, placeholder);
-  }
-  else if (event.isFrom("Start Filling")) {
+  } else if (event.isFrom("Start Filling")) {
     byte[] placeholder = {};
     send((byte)0x04, placeholder);
-  }
-  else if (event.isFrom("Resume")) {
+  } else if (event.isFrom("Resume")) {
     byte[] placeholder = {};
     send((byte)0x0a, placeholder);
+  }
+  else if (event.isFrom("Status")) {
+    byte[] placeholder = {};
+    send((byte)0x00, placeholder);
   }
 }
 
@@ -193,7 +212,6 @@ void send(byte command, byte[] payload) {
   if (myPort != null) {
     println(tx_packet.getPacket());
     myPort.write(tx_packet.getPacket());
-    
   } else {
     println("No serial port selected!");
   }
