@@ -9,10 +9,14 @@ Serial myPort; // For serial communication
 dataPacket tx_packet;
 int baudRate = 115200;
 byte[] rx_packet = new byte[150];
-// String parseStates = {"SYNC", 1, 2, 3, 4, 5, 6};
+// packet structure : "SYNC", "CMD", "PLEN", "PAYLOAD", "ID", "CRC1", "CRC2"
+byte CMD, PLEN, ID, CRC1, CRC2;
+byte[] rx_payload;
+int currentParseState = 0;
 
 HashMap<String, boolean[]> prog_args = new HashMap<String, boolean[]>();
 Textfield[] textfields = new Textfield[5];
+Textlabel log_display;
 int[] prog_inputs = new int[5];
 int selected_index = -1;
 byte[] prog_cmds = {(byte)0x01, (byte)0x02, (byte)0x03, (byte)0x01, (byte)0x02};
@@ -123,17 +127,71 @@ void setup() {
     .setColorBackground(color(50, 50, 50))
     .setColorForeground(color(0, 144, 0))
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
+  
+  log_display = cp5.addTextlabel("Log")
+      .setText("Logging Packet goes here")
+      .setPosition(width/2-200, height/2-200)
+      .setFont(font);
 }
 
 void draw() {
   background(0);
-  //if(myPort.available()>0){
-  //  parseIncomingByte((byte)myPort.read());
-  //}
+  if (frameCount % 10 == 0) {
+    thread("receiveStatus");
+  }
+}
+
+void receiveStatus() {
+  // ERRO: NullPointerException (?)
+  while (myPort.available() > 0) {
+    byte rx_byte = (byte) myPort.read();
+    parseIncomingByte(rx_byte);
+  }
+
+  log_display.setText(str(selected_index));
 }
 
 void parseIncomingByte(byte rx_byte) {
-  if(rx_byte == (byte) 0x55) {
+  switch(currentParseState) {
+  case 0:
+    if (rx_byte == (byte) 0x55) {
+      currentParseState = 1;
+    } else {
+      println("Start byte not received");
+    }
+    break;
+  case 1:
+    CMD = rx_byte;
+    if (CMD == (byte) 0x00) {
+      println("Status cmd received");
+      currentParseState = 2;
+    }
+    break;
+  case 2:
+    PLEN = rx_byte;
+    if (PLEN > (byte) 0x00) {
+      currentParseState = 3;
+    } else {
+      currentParseState = 4;
+    }
+  case 3:
+    for (int i = 0; i < (int) PLEN; i++) {
+      rx_payload[i] = rx_byte;
+    }
+    currentParseState = 4;
+    break;
+  case 4:
+    ID = rx_byte;
+    currentParseState = 5;
+    break;
+  case 5:
+    CRC1 = rx_byte;
+    currentParseState = 6;
+    break;
+  case 6:
+    CRC2 = rx_byte;
+    currentParseState = 0;
+    break;
   }
 }
 
@@ -198,8 +256,7 @@ public void controlEvent(ControlEvent event) {
   } else if (event.isFrom("Resume")) {
     byte[] placeholder = {};
     send((byte)0x0a, placeholder);
-  }
-  else if (event.isFrom("Status")) {
+  } else if (event.isFrom("Status")) {
     byte[] placeholder = {};
     send((byte)0x00, placeholder);
   }
