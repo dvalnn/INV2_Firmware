@@ -1,6 +1,7 @@
 import controlP5.*;
 import processing.serial.*;
 import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue; 
 
 ControlP5 cp5;
 PFont font;
@@ -8,11 +9,18 @@ PFont font;
 Serial myPort; // For serial communication
 dataPacket tx_packet;
 int baudRate = 115200;
-byte[] rx_packet = new byte[150];
+String selectedPort;
+dataPacket rx_packet;
+boolean port_selected = false;
+int last_read_time = 0;
+int TIMEOUT = 800;
+LinkedBlockingQueue<byte[]> tx_queue = new LinkedBlockingQueue<byte[]>(); 
+            
 // packet structure : "SYNC", "CMD", "PLEN", "PAYLOAD", "ID", "CRC1", "CRC2"
-byte CMD, PLEN, ID, CRC1, CRC2;
-byte[] rx_payload;
+byte CMD=0, PLEN=0 /*, ID, CRC1, CRC2 */;
+byte[] rx_payload = new byte[100];
 int currentParseState = 0;
+int rx_payload_index = 0;
 
 HashMap<String, boolean[]> prog_args = new HashMap<String, boolean[]>();
 Textfield[] textfields = new Textfield[5];
@@ -136,22 +144,39 @@ void setup() {
 
 void draw() {
   background(0);
-  if (frameCount % 10 == 0) {
-    thread("receiveStatus");
-  }
 }
 
-void receiveStatus() {
-  // ERRO: NullPointerException (?)
-  while (myPort.available() > 0) {
-    byte rx_byte = (byte) myPort.read();
-    parseIncomingByte(rx_byte);
-  }
+void serialThread() {
+    myPort = new Serial(this, selectedPort, baudRate);
+    port_selected = true;
+    // myPort.clear();
+    println(myPort.available());
+    while (port_selected) {
+      while(myPort.available() > 0) {
+        println(myPort.available());
 
-  log_display.setText(str(selected_index));
+        byte rx_byte = (byte) myPort.read();
+        // log_display.setText(str(char(rx_byte)));
+        parseIncomingByte(rx_byte);
+      }
+      
+      // Send packets in queue
+      byte[] head = tx_queue.peek();
+      while(head != null) {
+        myPort.write(head);
+        tx_queue.remove();
+        head = tx_queue.peek();
+      }
+    }
+    // log_display.setText(str(selected_index));
 }
 
 void parseIncomingByte(byte rx_byte) {
+  
+  if(last_read_time == 0 || millis() - last_read_time > TIMEOUT) {
+    currentParseState = 0;
+  }
+  last_read_time = millis();
   switch(currentParseState) {
   case 0:
     if (rx_byte == (byte) 0x55) {
@@ -163,49 +188,73 @@ void parseIncomingByte(byte rx_byte) {
   case 1:
     CMD = rx_byte;
     if (CMD == (byte) 0x00) {
-      println("Status cmd received");
+      println("Status cmd received " + (int) CMD);
       currentParseState = 2;
     }
     break;
   case 2:
     PLEN = rx_byte;
-    if (PLEN > (byte) 0x00) {
+    println("Payload length " + (int) PLEN);
+    if ((int) PLEN > 0) {
       currentParseState = 3;
+      rx_payload_index = 0;
     } else {
       currentParseState = 4;
     }
   case 3:
-    for (int i = 0; i < (int) PLEN; i++) {
-      rx_payload[i] = rx_byte;
+    println("Reading Payload");
+    if(rx_payload_index < (int) PLEN) {
+      rx_payload[rx_payload_index] = rx_byte;
+      rx_payload_index++;
     }
-    currentParseState = 4;
+    else {
+      currentParseState = 4;
+      rx_payload_index = 0;
+    }
     break;
   case 4:
-    ID = rx_byte;
+    println("Reading ID");
+    // ID = rx_byte;
     currentParseState = 5;
     break;
   case 5:
-    CRC1 = rx_byte;
+    println("Reading CRC1");
+    // CRC1 = rx_byte;
     currentParseState = 6;
     break;
   case 6:
-    CRC2 = rx_byte;
-    currentParseState = 0;
-    break;
+    println("Reading CRC2");
+    // CRC2 = rx_byte;
+    processPacket();
   }
+}
+
+void processPacket() {
+  dataPacket new_packet = new dataPacket(CMD, rx_payload);
+  new_packet.logPacket();
+  rx_packet = new_packet;
+  String state = str(Byte.toUnsignedInt(rx_packet.payload[1]));
+  String imu_ax = str((Byte.toUnsignedInt(rx_packet.payload[2]) << 8) | Byte.toUnsignedInt(rx_packet.payload[3]));
+  String imu_ay = str((Byte.toUnsignedInt(rx_packet.payload[4]) << 8) | Byte.toUnsignedInt(rx_packet.payload[5]));
+  String imu_az = str((Byte.toUnsignedInt(rx_packet.payload[6]) << 8) | Byte.toUnsignedInt(rx_packet.payload[7]));
+  String imu_gx = str((Byte.toUnsignedInt(rx_packet.payload[8]) << 8) | Byte.toUnsignedInt(rx_packet.payload[9]));
+  String imu_gy = str((Byte.toUnsignedInt(rx_packet.payload[10]) << 8) | Byte.toUnsignedInt(rx_packet.payload[11]));
+  String imu_gz = str((Byte.toUnsignedInt(rx_packet.payload[12]) << 8) | Byte.toUnsignedInt(rx_packet.payload[13]));
+  
+  log_display.setText(state + " " + imu_ax + "," + imu_ay+ "," + imu_az + " " + imu_gx + "," + imu_gy+ "," + imu_gz);
 }
 
 public void controlEvent(ControlEvent event) {
   if (event.isFrom("serialPort")) {
+    port_selected = false;
     int index = (int)event.getValue();
-    String selectedPort = Serial.list()[index];
+    selectedPort = Serial.list()[index];
     println("Selected serial port: " + selectedPort);
-
     // Open the selected serial port here. Close any previously opened port first.
     if (myPort != null) {
       myPort.stop();
     }
-    myPort = new Serial(this, selectedPort, baudRate); // Adjust baud rate as needed
+    thread("serialThread");
   } else if (event.isFrom("Send")) {
     for (int i = 0; i < 5; i++) {
       String input = textfields[i].getText();
@@ -267,8 +316,10 @@ void send(byte command, byte[] payload) {
   tx_packet = new dataPacket(command, payload);
   tx_packet.logPacket();
   if (myPort != null) {
-    println(tx_packet.getPacket());
-    myPort.write(tx_packet.getPacket());
+    byte[] packet = tx_packet.getPacket();
+    println(packet);
+    // myPort.write(tx_packet.getPacket());
+    tx_queue.add(packet);
   } else {
     println("No serial port selected!");
   }
