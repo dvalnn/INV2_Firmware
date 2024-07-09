@@ -14,12 +14,14 @@ dataPacket rx_packet;
 boolean port_selected = false;
 int last_read_time = 0;
 int TIMEOUT = 800;
+byte MyID = (byte) 0x00;
+byte targetID;
 LinkedBlockingQueue<byte[]> tx_queue = new LinkedBlockingQueue<byte[]>(); 
             
-// packet structure : "SYNC", "CMD", "PLEN", "PAYLOAD", "ID", "CRC1", "CRC2"
-byte CMD=0, PLEN=0 /*, ID, CRC1, CRC2 */;
+// packet structure : "SYNC", "CMD", "ID", "PLEN", "PAYLOAD", "CRC1", "CRC2"
+byte CMD=0, PLEN=0, ID=0; /* CRC1, CRC2 */
 byte[] rx_payload = new byte[100];
-int currentParseState = 0;
+ParseState currentParseState = ParseState.START;
 int rx_payload_index = 0;
 
 HashMap<String, boolean[]> prog_args = new HashMap<String, boolean[]>();
@@ -31,6 +33,7 @@ byte[] prog_cmds = {(byte)0x01, (byte)0x02, (byte)0x03, (byte)0x01, (byte)0x02};
 
 List<String> programs = Arrays.asList("fp1", "fp2", "fp3", "rp1", "rp2");
 List<String> vars = Arrays.asList("tp1", "tp2", "tp3", "tl1", "tl2");
+List<String> IDs = Arrays.asList( "1 : Filling Station", "2 : Rocket");
 CColor gray = new CColor();
 CColor blue = new CColor();
 
@@ -126,7 +129,7 @@ void setup() {
   // List available serial ports and add them to a new ScrollableList
   List<String> portNames = Arrays.asList(Serial.list());
   cp5.addScrollableList("serialPort")
-    .setPosition(50, 600) // Adjust position based on your UI layout
+    .setPosition(100, 600) 
     .setSize(250, 500)
     .setBarHeight(50)
     .setItemHeight(50)
@@ -135,6 +138,17 @@ void setup() {
     .setColorBackground(color(50, 50, 50))
     .setColorForeground(color(0, 144, 0))
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
+  
+  cp5.addScrollableList("Select ID")
+     .setPosition(1500, 400)
+     .setSize(320, 500)
+     .setBarHeight(50)
+     .setItemHeight(50)
+     .addItems(IDs)
+     .setFont(font)
+     .setColorBackground(color(50, 50, 50))
+     .setColorForeground(color(0, 144, 0))
+     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
   
   log_display = cp5.addTextlabel("Log")
       .setText("Logging Packet goes here")
@@ -149,12 +163,9 @@ void draw() {
 void serialThread() {
     myPort = new Serial(this, selectedPort, baudRate);
     port_selected = true;
-    // myPort.clear();
-    println(myPort.available());
+    myPort.clear();
     while (port_selected) {
       while(myPort.available() > 0) {
-        println(myPort.available());
-
         byte rx_byte = (byte) myPort.read();
         // log_display.setText(str(char(rx_byte)));
         parseIncomingByte(rx_byte);
@@ -174,72 +185,84 @@ void serialThread() {
 void parseIncomingByte(byte rx_byte) {
   
   if(last_read_time == 0 || millis() - last_read_time > TIMEOUT) {
-    currentParseState = 0;
+    currentParseState = ParseState.START;
   }
   last_read_time = millis();
   switch(currentParseState) {
-  case 0:
+  case START:
     if (rx_byte == (byte) 0x55) {
-      currentParseState = 1;
+      currentParseState = ParseState.CMD;
     } else {
       println("Start byte not received");
     }
     break;
-  case 1:
+  case CMD:
     CMD = rx_byte;
     if (CMD == (byte) 0x00) {
       println("Status cmd received " + (int) CMD);
-      currentParseState = 2;
+      currentParseState = ParseState.ID;
+    }
+    else {
+      println("Command Received: " + (int) CMD);
     }
     break;
-  case 2:
+  case ID:
+    println("Reading ID");
+    ID = rx_byte;
+    if(ID != MyID) {
+      currentParseState = ParseState.START;
+      println("Wrong ID");
+    }
+    else {
+      currentParseState = ParseState.PAYLOAD_LENGTH;
+    }
+    break;
+  case PAYLOAD_LENGTH:
     PLEN = rx_byte;
     println("Payload length " + (int) PLEN);
     if ((int) PLEN > 0) {
-      currentParseState = 3;
+      currentParseState = ParseState.PAYLOAD;
       rx_payload_index = 0;
     } else {
-      currentParseState = 4;
+      currentParseState = ParseState.CRC1;
     }
-  case 3:
+    break;
+  case PAYLOAD:
     println("Reading Payload");
     if(rx_payload_index < (int) PLEN) {
       rx_payload[rx_payload_index] = rx_byte;
       rx_payload_index++;
+      currentParseState = ParseState.PAYLOAD;
     }
     else {
-      currentParseState = 4;
+      currentParseState = ParseState.CRC1;
       rx_payload_index = 0;
     }
     break;
-  case 4:
-    println("Reading ID");
-    // ID = rx_byte;
-    currentParseState = 5;
-    break;
-  case 5:
+  case CRC1:
     println("Reading CRC1");
     // CRC1 = rx_byte;
-    currentParseState = 6;
+    currentParseState = ParseState.CRC2;
     break;
-  case 6:
+  case CRC2:
     println("Reading CRC2");
     // CRC2 = rx_byte;
     processPacket();
+    currentParseState = ParseState.START;
   }
 }
 
 void processPacket() {
-  dataPacket new_packet = new dataPacket(CMD, rx_payload);
+  dataPacket new_packet = new dataPacket(CMD, targetID, rx_payload);
   new_packet.logPacket();
   rx_packet = new_packet;
-  String state = str(Byte.toUnsignedInt(rx_packet.payload[1]));
-  String imu_ax = str((Byte.toUnsignedInt(rx_packet.payload[2]) << 8) | Byte.toUnsignedInt(rx_packet.payload[3]));
-  String imu_ay = str((Byte.toUnsignedInt(rx_packet.payload[4]) << 8) | Byte.toUnsignedInt(rx_packet.payload[5]));
-  String imu_az = str((Byte.toUnsignedInt(rx_packet.payload[6]) << 8) | Byte.toUnsignedInt(rx_packet.payload[7]));
-  String imu_gx = str((Byte.toUnsignedInt(rx_packet.payload[8]) << 8) | Byte.toUnsignedInt(rx_packet.payload[9]));
-  String imu_gy = str((Byte.toUnsignedInt(rx_packet.payload[10]) << 8) | Byte.toUnsignedInt(rx_packet.payload[11]));
-  String imu_gz = str((Byte.toUnsignedInt(rx_packet.payload[12]) << 8) | Byte.toUnsignedInt(rx_packet.payload[13]));
+  String state = str(Byte.toUnsignedInt(rx_packet.payload[0]));
+  String imu_ax = str((Byte.toUnsignedInt(rx_packet.payload[1]) << 8) | Byte.toUnsignedInt(rx_packet.payload[2]));
+  String imu_ay = str((Byte.toUnsignedInt(rx_packet.payload[3]) << 8) | Byte.toUnsignedInt(rx_packet.payload[4]));
+  String imu_az = str((Byte.toUnsignedInt(rx_packet.payload[5]) << 8) | Byte.toUnsignedInt(rx_packet.payload[6]));
+  String imu_gx = str((Byte.toUnsignedInt(rx_packet.payload[7]) << 8) | Byte.toUnsignedInt(rx_packet.payload[8]));
+  String imu_gy = str((Byte.toUnsignedInt(rx_packet.payload[9]) << 8) | Byte.toUnsignedInt(rx_packet.payload[10]));
+  String imu_gz = str((Byte.toUnsignedInt(rx_packet.payload[11]) << 8) | Byte.toUnsignedInt(rx_packet.payload[12]));
   
   log_display.setText(state + " " + imu_ax + "," + imu_ay+ "," + imu_az + " " + imu_gx + "," + imu_gy+ "," + imu_gz);
 }
@@ -308,17 +331,18 @@ public void controlEvent(ControlEvent event) {
   } else if (event.isFrom("Status")) {
     byte[] placeholder = {};
     send((byte)0x00, placeholder);
+  } else if (event.isFrom("Select ID")) {
+    targetID = (byte) (event.getValue() + 1);
   }
 }
 
 void send(byte command, byte[] payload) {
   println(command, payload);
-  tx_packet = new dataPacket(command, payload);
+  tx_packet = new dataPacket(command, targetID, payload);
   tx_packet.logPacket();
   if (myPort != null) {
     byte[] packet = tx_packet.getPacket();
     println(packet);
-    // myPort.write(tx_packet.getPacket());
     tx_queue.add(packet);
   } else {
     println("No serial port selected!");
