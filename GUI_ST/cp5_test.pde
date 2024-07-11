@@ -13,7 +13,7 @@ String selectedPort;
 dataPacket rx_packet;
 boolean port_selected = false;
 int last_read_time = 0;
-int TIMEOUT = 800;
+int TIMEOUT = 250;
 byte MyID = (byte) 0x00;
 byte targetID;
 LinkedBlockingQueue<byte[]> tx_queue = new LinkedBlockingQueue<byte[]>();
@@ -31,7 +31,9 @@ int rx_payload_index = 0;
 
 HashMap<String, boolean[]> prog_args = new HashMap<String, boolean[]>();
 Textfield[] textfields = new Textfield[5];
-Textlabel log_display;
+Textlabel log_display_rocket;
+Textlabel log_display_filling;
+
 int[] prog_inputs = new int[5];
 int selected_index = -1;
 byte[] prog_cmds = {(byte)0x01, (byte)0x02, (byte)0x03, (byte)0x01, (byte)0x02};
@@ -135,7 +137,7 @@ void setup() {
   List<String> portNames = Arrays.asList(Serial.list());
   cp5.addScrollableList("serialPort")
     .setPosition(displayWidth*.05, displayHeight*.5)
-    .setSize((int)(displayWidth*.13), (int)(displayHeight*.46))
+    .setSize((int)(displayWidth*.2), (int)(displayHeight*.46))
     .setBarHeight((int)(displayHeight*.05))
     .setItemHeight((int)(displayHeight*.05))
     .addItems(portNames)
@@ -155,9 +157,13 @@ void setup() {
     .setColorForeground(color(0, 144, 0))
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
 
-  log_display = cp5.addTextlabel("Log")
+  log_display_rocket = cp5.addTextlabel("Rocket Log")
     .setText("Logging Packet goes here")
     .setPosition(displayWidth*.15, displayHeight*.8)
+    .setFont(font);
+  log_display_filling = cp5.addTextlabel("Filling Log")
+    .setText("Logging Packet goes here")
+    .setPosition(displayWidth*.6, displayHeight*.8)
     .setFont(font);
 }
 
@@ -172,7 +178,6 @@ void serialThread() {
   while (port_selected) {
     while (myPort.available() > 0) {
       byte rx_byte = (byte) myPort.read();
-      // log_display.setText(str(char(rx_byte)));
       parseIncomingByte(rx_byte);
     }
 
@@ -198,22 +203,22 @@ void parseIncomingByte(byte rx_byte) {
     if (rx_byte == (byte) 0x55) {
       currentParseState = ParseState.CMD;
     } else {
-      println("Start byte not received");
+      // println("Start byte not received");
     }
     break;
   case CMD:
     CMD = rx_byte;
     currentParseState = ParseState.ID;
-    println("Command Received: " + (int) CMD);
+    //println("Command Received: " + (int) CMD);
     break;
   case ID:
-    println("Reading ID");
     ID = rx_byte;
     currentParseState = ParseState.PAYLOAD_LENGTH;
+    println("Reading ID : " + ID);
     break;
   case PAYLOAD_LENGTH:
     PLEN = rx_byte;
-    println("Payload length " + (int) PLEN);
+    //println("Payload length " + (int) PLEN);
     if ((int) PLEN > 0) {
       currentParseState = ParseState.PAYLOAD;
       rx_payload_index = 0;
@@ -222,14 +227,10 @@ void parseIncomingByte(byte rx_byte) {
     }
     break;
   case PAYLOAD:
-    println("Reading Payload");
-    if (rx_payload_index < (int) PLEN) {
-      rx_payload[rx_payload_index] = rx_byte;
-      rx_payload_index++;
-      currentParseState = ParseState.PAYLOAD;
-    } else {
+    rx_payload[rx_payload_index] = rx_byte;
+    rx_payload_index++;
+    if (rx_payload_index >= PLEN) {
       currentParseState = ParseState.CRC1;
-      rx_payload_index = 0;
     }
     break;
   case CRC1:
@@ -245,20 +246,54 @@ void parseIncomingByte(byte rx_byte) {
   }
 }
 
-void processPacket() {
+void processPacket() { // TODO passar para funcoes individuais
   dataPacket new_packet = new dataPacket(CMD, ID, rx_payload);
   new_packet.logPacket();
   rx_packet = new_packet;
-  String ID = str(Byte.toUnsignedInt(rx_packet.id));
-  String state = str(Byte.toUnsignedInt(rx_packet.payload[0]));
-  String imu_ax = str((Byte.toUnsignedInt(rx_packet.payload[1]) << 8) | Byte.toUnsignedInt(rx_packet.payload[2]));
-  String imu_ay = str((Byte.toUnsignedInt(rx_packet.payload[3]) << 8) | Byte.toUnsignedInt(rx_packet.payload[4]));
-  String imu_az = str((Byte.toUnsignedInt(rx_packet.payload[5]) << 8) | Byte.toUnsignedInt(rx_packet.payload[6]));
-  String imu_gx = str((Byte.toUnsignedInt(rx_packet.payload[7]) << 8) | Byte.toUnsignedInt(rx_packet.payload[8]));
-  String imu_gy = str((Byte.toUnsignedInt(rx_packet.payload[9]) << 8) | Byte.toUnsignedInt(rx_packet.payload[10]));
-  String imu_gz = str((Byte.toUnsignedInt(rx_packet.payload[11]) << 8) | Byte.toUnsignedInt(rx_packet.payload[12]));
+  String stringID = str(Byte.toUnsignedInt(rx_packet.id));
+  if (CMD == (byte) 0x00) { // LOG COMANDO PLACEHOLDER 0x01 se tudo correr bem
+    if (ID == (byte) 0x01) {
+      String state = "State: " + str(Byte.toUnsignedInt(rx_packet.payload[0])) + "\n";
+      String tank_temp1 = "Tank Temperature 1: " + str((Byte.toUnsignedInt(rx_packet.payload[1]) << 8) | Byte.toUnsignedInt(rx_packet.payload[2])) + "\n";
+      String tank_temp2 = "Tank Temperature 2: " + str((Byte.toUnsignedInt(rx_packet.payload[3]) << 8) | Byte.toUnsignedInt(rx_packet.payload[4])) + "\n";
+      String tank_press1 = "Tank Pressure 1; " + str((Byte.toUnsignedInt(rx_packet.payload[5]) << 8) | Byte.toUnsignedInt(rx_packet.payload[6])) + "\n";
+      String tank_press2 = "Tank Pressure 2: " + str((Byte.toUnsignedInt(rx_packet.payload[7]) << 8) | Byte.toUnsignedInt(rx_packet.payload[8])) + "\n";
 
-  log_display.setText("ID: " + ID + ", State: " + state + ", IMU Ax: " + imu_ax + ", IMU Ay: " + imu_ay+ ", IMU Az: " + imu_az + ", IMU Gx: " + imu_gx + ", IMU Gy: " + imu_gy+ ", IMU Gz: " + imu_gz);
+      String t1 = "Tank Pressure: " + str((Byte.toUnsignedInt(rx_packet.payload[1]) << 8) | Byte.toUnsignedInt(rx_packet.payload[2])) + "\n";
+      String t2 = "Tank L: " + str((Byte.toUnsignedInt(rx_packet.payload[3]) << 8) | Byte.toUnsignedInt(rx_packet.payload[4])) + "\n";
+
+      //log_display.setText("Status ACK rocket: " + state + tank_temp1 + tank_temp2 + tank_press1 + tank_press2);
+      log_display_rocket.setText("Status ACK rocket: " + state + t1 + t2);
+      println("Status ACK rocket");
+    } else if (ID == (byte) 0x02) {
+      // log_display.setText("Status ACK filling");
+      String state = "Filling State: " + str(Byte.toUnsignedInt(rx_packet.payload[0])) + "\n";
+      String t1 = "Tank Pressure: " + str((Byte.toUnsignedInt(rx_packet.payload[1]) << 8) | Byte.toUnsignedInt(rx_packet.payload[2])) + "\n";
+      String t2 = "Tank L: " + str((Byte.toUnsignedInt(rx_packet.payload[3]) << 8) | Byte.toUnsignedInt(rx_packet.payload[4])) + "\n";
+      log_display_filling.setText("Status ACK filling: " + state + t1 + t2);
+      println("Status ACK filling");
+    }
+  } else if (CMD == (byte) 0x13) {
+    if (targetID == 1) { // rocket
+      String state = "State: " + str(Byte.toUnsignedInt(rx_packet.payload[0])) + "\n";
+      String tank_temp1 = "Tank Temperature 1: " + str((Byte.toUnsignedInt(rx_packet.payload[1]) << 8) | Byte.toUnsignedInt(rx_packet.payload[2])) + "\n";
+      String tank_temp2 = "Tank Temperature 2: " + str((Byte.toUnsignedInt(rx_packet.payload[3]) << 8) | Byte.toUnsignedInt(rx_packet.payload[4])) + "\n";
+      String tank_press1 = "Tank Pressure 1; " + str((Byte.toUnsignedInt(rx_packet.payload[5]) << 8) | Byte.toUnsignedInt(rx_packet.payload[6])) + "\n";
+      String tank_press2 = "Tank Pressure 2: " + str((Byte.toUnsignedInt(rx_packet.payload[7]) << 8) | Byte.toUnsignedInt(rx_packet.payload[8])) + "\n";
+
+      String t1 = "Tank Pressure: " + str((Byte.toUnsignedInt(rx_packet.payload[1]) << 8) | Byte.toUnsignedInt(rx_packet.payload[2])) + "\n";
+      String t2 = "Tank L: " + str((Byte.toUnsignedInt(rx_packet.payload[3]) << 8) | Byte.toUnsignedInt(rx_packet.payload[4])) + "\n";
+
+      //log_display.setText("Status ACK rocket: " + state + tank_temp1 + tank_temp2 + tank_press1 + tank_press2);
+      log_display_rocket.setText("Status ACK rocket: " + state + t1 + t2);
+    } else if (targetID == 2) { // filling
+      // log_display.setText("Log filling");
+      String state = "Filling State: " + str(Byte.toUnsignedInt(rx_packet.payload[0])) + "\n";
+      String t1 = "Tank Pressure: " + str((Byte.toUnsignedInt(rx_packet.payload[1]) << 8) | Byte.toUnsignedInt(rx_packet.payload[2])) + "\n";
+      String t2 = "Tank L: " + str((Byte.toUnsignedInt(rx_packet.payload[3]) << 8) | Byte.toUnsignedInt(rx_packet.payload[4])) + "\n";
+      log_display_filling.setText("Status ACK filling: " + state + t1 + t2);
+    }
+  }
 }
 
 public void controlEvent(ControlEvent event) {
@@ -297,7 +332,7 @@ public void controlEvent(ControlEvent event) {
         (byte)((prog_inputs[4] >> 8) & 0xff),
         (byte) (prog_inputs[4] & 0xff)};
       println(payload);
-      send((byte) 0x02, payload);
+      send((byte) 0x03, payload);
     } else {
       println("No program selected");
     }
@@ -315,10 +350,10 @@ public void controlEvent(ControlEvent event) {
     println(program);
   } else if (event.isFrom("Stop")) {
     byte[] placeholder = {};
-    send((byte)0x03, placeholder);
+    send((byte)0x04, placeholder);
   } else if (event.isFrom("Start Filling")) {
     byte[] placeholder = {};
-    send((byte)0x04, placeholder);
+    send((byte)0x05, placeholder);
   } else if (event.isFrom("Resume")) {
     byte[] placeholder = {};
     send((byte)0x0a, placeholder);
@@ -335,10 +370,10 @@ void send(byte command, byte[] payload) {
   tx_packet = new dataPacket(command, targetID, payload);
   tx_packet.logPacket();
   if (myPort != null) {
-    if(targetID > 0) {
-    byte[] packet = tx_packet.getPacket();
-    println(packet);
-    tx_queue.add(packet);
+    if (targetID > 0) {
+      byte[] packet = tx_packet.getPacket();
+      println(packet);
+      tx_queue.add(packet);
     } else {
       println("Target ID not selected");
     }
