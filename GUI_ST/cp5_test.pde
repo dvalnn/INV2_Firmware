@@ -1,7 +1,7 @@
 import controlP5.*;
 import processing.serial.*;
 import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue; 
+import java.util.concurrent.LinkedBlockingQueue;
 
 ControlP5 cp5;
 PFont font;
@@ -16,8 +16,13 @@ int last_read_time = 0;
 int TIMEOUT = 800;
 byte MyID = (byte) 0x00;
 byte targetID;
-LinkedBlockingQueue<byte[]> tx_queue = new LinkedBlockingQueue<byte[]>(); 
-            
+LinkedBlockingQueue<byte[]> tx_queue = new LinkedBlockingQueue<byte[]>();
+
+// GUI Positions and Sizes
+float button_x = .78; // * displayWidth
+float button_height = .04; // * displayHeight
+
+
 // packet structure : "SYNC", "CMD", "ID", "PLEN", "PAYLOAD", "CRC1", "CRC2"
 byte CMD=0, PLEN=0, ID=0; /* CRC1, CRC2 */
 byte[] rx_payload = new byte[100];
@@ -33,7 +38,7 @@ byte[] prog_cmds = {(byte)0x01, (byte)0x02, (byte)0x03, (byte)0x01, (byte)0x02};
 
 List<String> programs = Arrays.asList("fp1", "fp2", "fp3", "rp1", "rp2");
 List<String> vars = Arrays.asList("tp1", "tp2", "tp3", "tl1", "tl2");
-List<String> IDs = Arrays.asList( "1 : Filling Station", "2 : Rocket");
+List<String> IDs = Arrays.asList( "1 : Rocket", "2 : Filling Station", "3 : Broadcast");
 CColor gray = new CColor();
 CColor blue = new CColor();
 
@@ -45,7 +50,7 @@ void setup() {
   //size(displayWidth, displayHeight);
   fullScreen();
   background(0);
-  font = createFont("arial", 30);
+  font = createFont("arial", displayWidth*.016);
   cp5 = new ControlP5(this);
   gray.setForeground(color(0, 0, 0))
     .setBackground(color(50, 50, 50));
@@ -66,10 +71,10 @@ void setup() {
 
 
   cp5.addScrollableList("program")
-    .setPosition(100, 100)
-    .setSize(300, 500)
-    .setBarHeight(50)
-    .setItemHeight(50)
+    .setPosition(displayWidth*.05, displayHeight*.1)
+    .setSize((int)(displayWidth*.15), (int)(displayHeight*.46))
+    .setBarHeight((int)(displayHeight*.05))
+    .setItemHeight((int)(displayHeight*.05))
     .addItems(programs)
     .setFont(font)
     .setColor(blue)
@@ -80,8 +85,8 @@ void setup() {
     textfields[i-1] = cp5.addTextfield("tp" + i)
       .setAutoClear(false)
       .setColor(blue)
-      .setPosition(300 + i * 170, 100)
-      .setSize(150, 50)
+      .setPosition(displayWidth*.15 + i * displayWidth*.09, displayHeight*.09)
+      .setSize((int)(displayWidth*.08), (int)(displayHeight*.05))
       .setFont(font)
       .setInputFilter(ControlP5.FLOAT);
   }
@@ -90,70 +95,70 @@ void setup() {
     textfields[i+2] = cp5.addTextfield("tl" + i)
       .setAutoClear(false)
       .setColor(blue)
-      .setPosition(810 + i * 170, 100)
-      .setSize(150, 50)
+      .setPosition(displayWidth*.42 + i * displayWidth*.09, displayHeight*.09)
+      .setSize((int)(displayWidth*.08), (int)(displayHeight*.05))
       .setFont(font)
       .setInputFilter(ControlP5.FLOAT);
   }
 
   // Send button
   cp5.addButton("Send")
-    .setPosition(1500, 100)
-    .setSize(100, 50)
+    .setPosition(displayWidth*button_x, displayHeight*.05)
+    .setSize((int)(displayWidth*.1), (int)(displayHeight*.04))
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
   cp5.addButton("Start Filling")
-    .setPosition(1500, 160)
-    .setSize(250, 50)
+    .setPosition(displayWidth*button_x, displayHeight*.1)
+    .setSize((int)(displayWidth*.13), (int)(displayHeight*button_height))
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
   cp5.addButton("Stop")
-    .setPosition(1500, 220)
-    .setSize(100, 50)
+    .setPosition(displayWidth*button_x, displayHeight*.15)
+    .setSize((int)(displayWidth*.05), (int)(displayHeight*button_height))
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
   cp5.addButton("Resume")
-    .setPosition(1500, 280)
-    .setSize(150, 50)
+    .setPosition(displayWidth*button_x, displayHeight*.20)
+    .setSize((int)(displayWidth*.07), (int)(displayHeight*button_height))
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
   cp5.addButton("Status")
-    .setPosition(1500, 340)
-    .setSize(150, 50)
+    .setPosition(displayWidth*button_x, displayHeight*.25)
+    .setSize((int)(displayWidth*.07), (int)(displayHeight*button_height))
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
   // List available serial ports and add them to a new ScrollableList
   List<String> portNames = Arrays.asList(Serial.list());
   cp5.addScrollableList("serialPort")
-    .setPosition(100, 600) 
-    .setSize(250, 500)
-    .setBarHeight(50)
-    .setItemHeight(50)
+    .setPosition(displayWidth*.05, displayHeight*.5)
+    .setSize((int)(displayWidth*.13), (int)(displayHeight*.46))
+    .setBarHeight((int)(displayHeight*.05))
+    .setItemHeight((int)(displayHeight*.05))
     .addItems(portNames)
     .setFont(font)
     .setColorBackground(color(50, 50, 50))
     .setColorForeground(color(0, 144, 0))
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
-  
+
   cp5.addScrollableList("Select ID")
-     .setPosition(1500, 400)
-     .setSize(320, 500)
-     .setBarHeight(50)
-     .setItemHeight(50)
-     .addItems(IDs)
-     .setFont(font)
-     .setColorBackground(color(50, 50, 50))
-     .setColorForeground(color(0, 144, 0))
-     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
-  
+    .setPosition(displayWidth*button_x, displayHeight*.5)
+    .setSize((int)(displayWidth*.17), (int)(displayHeight*.5))
+    .setBarHeight((int)(displayHeight*.05))
+    .setItemHeight((int)(displayHeight*.05))
+    .addItems(IDs)
+    .setFont(font)
+    .setColorBackground(color(50, 50, 50))
+    .setColorForeground(color(0, 144, 0))
+    .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
+
   log_display = cp5.addTextlabel("Log")
-      .setText("Logging Packet goes here")
-      .setPosition(width/2-200, height/2-200)
-      .setFont(font);
+    .setText("Logging Packet goes here")
+    .setPosition(displayWidth*.15, displayHeight*.8)
+    .setFont(font);
 }
 
 void draw() {
@@ -161,30 +166,30 @@ void draw() {
 }
 
 void serialThread() {
-    myPort = new Serial(this, selectedPort, baudRate);
-    port_selected = true;
-    myPort.clear();
-    while (port_selected) {
-      while(myPort.available() > 0) {
-        byte rx_byte = (byte) myPort.read();
-        // log_display.setText(str(char(rx_byte)));
-        parseIncomingByte(rx_byte);
-      }
-      
-      // Send packets in queue
-      byte[] head = tx_queue.peek();
-      while(head != null) {
-        myPort.write(head);
-        tx_queue.remove();
-        head = tx_queue.peek();
-      }
+  myPort = new Serial(this, selectedPort, baudRate);
+  port_selected = true;
+  myPort.clear();
+  while (port_selected) {
+    while (myPort.available() > 0) {
+      byte rx_byte = (byte) myPort.read();
+      // log_display.setText(str(char(rx_byte)));
+      parseIncomingByte(rx_byte);
     }
-    // log_display.setText(str(selected_index));
+
+    // Send packets in queue
+    byte[] head = tx_queue.peek();
+    while (head != null) {
+      myPort.write(head);
+      tx_queue.remove();
+      head = tx_queue.peek();
+    }
+  }
+  // log_display.setText(str(selected_index));
 }
 
 void parseIncomingByte(byte rx_byte) {
-  
-  if(last_read_time == 0 || millis() - last_read_time > TIMEOUT) {
+
+  if (last_read_time == 0 || millis() - last_read_time > TIMEOUT) {
     currentParseState = ParseState.START;
   }
   last_read_time = millis();
@@ -198,24 +203,13 @@ void parseIncomingByte(byte rx_byte) {
     break;
   case CMD:
     CMD = rx_byte;
-    if (CMD == (byte) 0x00) {
-      println("Status cmd received " + (int) CMD);
-      currentParseState = ParseState.ID;
-    }
-    else {
-      println("Command Received: " + (int) CMD);
-    }
+    currentParseState = ParseState.ID;
+    println("Command Received: " + (int) CMD);
     break;
   case ID:
     println("Reading ID");
     ID = rx_byte;
-    if(ID != MyID) {
-      currentParseState = ParseState.START;
-      println("Wrong ID");
-    }
-    else {
-      currentParseState = ParseState.PAYLOAD_LENGTH;
-    }
+    currentParseState = ParseState.PAYLOAD_LENGTH;
     break;
   case PAYLOAD_LENGTH:
     PLEN = rx_byte;
@@ -229,12 +223,11 @@ void parseIncomingByte(byte rx_byte) {
     break;
   case PAYLOAD:
     println("Reading Payload");
-    if(rx_payload_index < (int) PLEN) {
+    if (rx_payload_index < (int) PLEN) {
       rx_payload[rx_payload_index] = rx_byte;
       rx_payload_index++;
       currentParseState = ParseState.PAYLOAD;
-    }
-    else {
+    } else {
       currentParseState = ParseState.CRC1;
       rx_payload_index = 0;
     }
@@ -253,9 +246,10 @@ void parseIncomingByte(byte rx_byte) {
 }
 
 void processPacket() {
-  dataPacket new_packet = new dataPacket(CMD, targetID, rx_payload);
+  dataPacket new_packet = new dataPacket(CMD, ID, rx_payload);
   new_packet.logPacket();
   rx_packet = new_packet;
+  String ID = str(Byte.toUnsignedInt(rx_packet.id));
   String state = str(Byte.toUnsignedInt(rx_packet.payload[0]));
   String imu_ax = str((Byte.toUnsignedInt(rx_packet.payload[1]) << 8) | Byte.toUnsignedInt(rx_packet.payload[2]));
   String imu_ay = str((Byte.toUnsignedInt(rx_packet.payload[3]) << 8) | Byte.toUnsignedInt(rx_packet.payload[4]));
@@ -263,8 +257,8 @@ void processPacket() {
   String imu_gx = str((Byte.toUnsignedInt(rx_packet.payload[7]) << 8) | Byte.toUnsignedInt(rx_packet.payload[8]));
   String imu_gy = str((Byte.toUnsignedInt(rx_packet.payload[9]) << 8) | Byte.toUnsignedInt(rx_packet.payload[10]));
   String imu_gz = str((Byte.toUnsignedInt(rx_packet.payload[11]) << 8) | Byte.toUnsignedInt(rx_packet.payload[12]));
-  
-  log_display.setText(state + " " + imu_ax + "," + imu_ay+ "," + imu_az + " " + imu_gx + "," + imu_gy+ "," + imu_gz);
+
+  log_display.setText("ID: " + ID + ", State: " + state + ", IMU Ax: " + imu_ax + ", IMU Ay: " + imu_ay+ ", IMU Az: " + imu_az + ", IMU Gx: " + imu_gx + ", IMU Gy: " + imu_gy+ ", IMU Gz: " + imu_gz);
 }
 
 public void controlEvent(ControlEvent event) {
@@ -303,9 +297,9 @@ public void controlEvent(ControlEvent event) {
         (byte)((prog_inputs[4] >> 8) & 0xff),
         (byte) (prog_inputs[4] & 0xff)};
       println(payload);
-      send((byte) 0x02, payload); // placeholder command value -> replace with EXEC_PROG command value
+      send((byte) 0x02, payload);
     } else {
-      print("No program selected");
+      println("No program selected");
     }
   } else if (event.isFrom("program")) {
     selected_index = (int) event.getValue();
@@ -341,9 +335,13 @@ void send(byte command, byte[] payload) {
   tx_packet = new dataPacket(command, targetID, payload);
   tx_packet.logPacket();
   if (myPort != null) {
+    if(targetID > 0) {
     byte[] packet = tx_packet.getPacket();
     println(packet);
     tx_queue.add(packet);
+    } else {
+      println("Target ID not selected");
+    }
   } else {
     println("No serial port selected!");
   }
