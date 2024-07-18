@@ -133,6 +133,18 @@ void setup() {
     .setSize((int)(displayWidth*.07), (int)(displayHeight*button_height))
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
+
+  cp5.addButton("Abort")
+    .setPosition(displayWidth*button_x, displayHeight*.30)
+    .setSize((int)(displayWidth*.07), (int)(displayHeight*button_height))
+    .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
+    .setFont(font);
+ cp5.addButton("Arm")
+    .setPosition(displayWidth*button_x, displayHeight*.35)
+    .setSize((int)(displayWidth*.07), (int)(displayHeight*button_height))
+    .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
+    .setFont(font);
+
   // List available serial ports and add them to a new ScrollableList
   List<String> portNames = Arrays.asList(Serial.list());
   cp5.addScrollableList("serialPort")
@@ -362,6 +374,12 @@ public void controlEvent(ControlEvent event) {
     send((byte)0x00, placeholder);
   } else if (event.isFrom("Select ID")) {
     targetID = (byte) (event.getValue() + 1);
+  } else if (event.isFrom("Abort")) {
+    byte[] placeholder = {};
+    send((byte)0x02, placeholder);
+  } else if (event.isFrom("Arm")) {
+    byte[] placeholder = {};
+    send((byte)0x08, placeholder);
   }
 }
 
