@@ -2,6 +2,7 @@ import controlP5.*;
 import processing.serial.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
+import processing.core.PApplet;
 
 ControlP5 cp5;
 PFont font;
@@ -13,6 +14,11 @@ String selectedPort;
 dataPacket rx_packet;
 boolean port_selected = false;
 int last_read_time = 0;
+int last_r_log_time = 0;
+float r_log_rate = 0;
+int last_f_log_time = 0;
+float f_log_rate = 0;
+int last_received_log_id = 0;
 int TIMEOUT = 250;
 
 byte MyID = (byte) 0x00;
@@ -21,8 +27,10 @@ byte targetID;
 LinkedBlockingQueue<byte[]> tx_queue = new LinkedBlockingQueue<byte[]>();
 
 // GUI Positions and Sizes
-float button_x = .78; // * displayWidth
+float button_x1 = .7; // * displayWidth
+float button_x2 = .85;
 float button_height = .04; // * displayHeight
+float button_width = .13; // * displayWidth
 
 
 // packet structure : "SYNC", "CMD", "ID", "PLEN", "PAYLOAD", "CRC1", "CRC2"
@@ -33,25 +41,33 @@ int rx_payload_index = 0;
 byte[] empty_payload = {};
 
 HashMap<String, boolean[]> prog_args = new HashMap<String, boolean[]>();
+Map<Integer, String> state_map_rocket = new HashMap<>();
+Map<Integer, String> state_map_filling = new HashMap<>();
 
-Textfield[] textfields = new Textfield[5];
+Textfield[] textfields = new Textfield[3];
 Textlabel log_display_rocket;
 Textlabel log_display_filling;
+Textlabel ack_display;
+Textlabel log_stats;
 Chart rocketChart;
 Chart fillingChart;
 
-float rp, rl, fp, fl;
+float tank_top_temp, tank_bot_temp, chamber_temp1, chamber_temp2, chamber_temp3, tank_top_press, tank_bot_press, r_tank_press, r_tank_liquid;
+byte tank_tactile;
+float f_tank_press, f_tank_liquid, he_temp, n2o_temp, line_temp, he_press, n2o_press, line_press, ematch_v, weight1;
 int max_r, max_f;
 
-int[] prog_inputs = new int[5];
+int[] prog_inputs = new int[3];
 int selected_index = -1;
-byte[] prog_cmds = {(byte)0x01, (byte)0x02, (byte)0x03, (byte)0x01, (byte)0x02};
+byte[] prog_cmds = {(byte)0x00, (byte)0x01, (byte)0x02, (byte)0x03, (byte)0x04, (byte)0x05};
 
-List<String> programs = Arrays.asList("fp1", "fp2", "fp3", "rp1", "rp2");
-List<String> vars = Arrays.asList("tp1", "tp2", "tp3", "tl1", "tl2");
+List<String> programs = Arrays.asList("Safety Pressure", "Purge Pressure", "Purge Liquid", "Fill He", "Fill N2O", "Purge Line");
+List<String> vars = Arrays.asList("Target Pressure", "Trigger Pressure", "Target Liquid");
 List<String> IDs = Arrays.asList( "1 : Rocket", "2 : Filling Station", "3 : Broadcast");
 CColor gray = new CColor();
 CColor blue = new CColor();
+
+Window window;
 
 void setup() {
   //inits
@@ -61,33 +77,61 @@ void setup() {
   //size(displayWidth, displayHeight);
   fullScreen();
   background(0);
-  font = createFont("arial", displayWidth*.016);
+  font = createFont("arial", displayWidth*.013);
   cp5 = new ControlP5(this);
   gray.setForeground(color(0, 0, 0))
     .setBackground(color(50, 50, 50));
   blue.setForeground(color(50, 60, 150))
     .setBackground(color(0, 31, 84));
 
-  // tp1, tp2, tp3, tl1, tl2
-  boolean[] _bl1 = {true, false, false, false, false};
-  prog_args.put("fp1", _bl1);
-  boolean[] _bl2 = {false, true, false, true, true};
-  prog_args.put("fp2", _bl2);
-  boolean[] _bl3 = {false, false, true, false, false};
-  prog_args.put("fp3", _bl3);
-  boolean[] _bl4 = {true, true, false, false, false};
-  prog_args.put("rp1", _bl4);
-  boolean[] _bl5 = {false, false, true, false, false};
-  prog_args.put("rp2", _bl5);
+  boolean[] _bl1 = {true, true, false};
+  prog_args.put("Safety Pressure", _bl1);
+  boolean[] _bl2 = {true, false, false};
+  prog_args.put("Purge Pressure", _bl2);
+  boolean[] _bl3 = {false, false, true};
+  prog_args.put("Purge Liquid", _bl3);
+  boolean[] _bl4 = {true, false, false};
+  prog_args.put("Fill He", _bl4);
+  boolean[] _bl5 = {false, true, true};
+  prog_args.put("Fill N2O", _bl5);
+  boolean[] _bl6 = {true, false, false};
+  prog_args.put("Purge Line", _bl6);
 
-  setupControllers(); // in setup controllers tab
-  setupCharts(); // in chart functions tab  
+  state_map_rocket.put(0, "IDLE");
+  state_map_rocket.put(1, "FUELING");
+  state_map_rocket.put(2, "MANUAL");
+  state_map_rocket.put(3, "SAFETY_PRESSURE");
+  state_map_rocket.put(4, "PURGE_PRESSURE");
+  state_map_rocket.put(5, "PURGE_LIQUID");
+  state_map_rocket.put(6, "SAFETY_PRESSURE_ACTIVE");
+  state_map_rocket.put(7, "READY");
+  state_map_rocket.put(8, "ARMED");
+  state_map_rocket.put(9, "LAUNCH");
+  state_map_rocket.put(10, "ABORT");
+  state_map_rocket.put(11, "IMU_CALIB");
   
+  state_map_filling.put(0, "IDLE");
+  state_map_filling.put(1, "FUELING");
+  state_map_filling.put(2, "MANUEL");
+  state_map_filling.put(3, "FILL_He");
+  state_map_filling.put(4, "FILL_N2O");
+  state_map_filling.put(5, "PURGE_LINE");
+  state_map_filling.put(6, "SAFETY");
+  state_map_filling.put(7, "ABORT");
+  state_map_filling.put(8, "READY");
+  state_map_filling.put(9, "ARMED");
+  state_map_filling.put(10, "FIRE");
+  state_map_filling.put(11, "LAUNCH");
+  
+  setupControllers(); // in setup controllers tab
+  setupCharts(); // in chart functions tab
+  
+  window = new Window();
 }
 
 void draw() {
   background(0);
-  updateCharts(rp, rl, fp, fl);
+  // updateCharts(rp, rl, fp, fl);
 }
 
 public void controlEvent(ControlEvent event) {
@@ -102,7 +146,7 @@ public void controlEvent(ControlEvent event) {
     }
     thread("serialThread");
   } else if (event.isFrom("Send")) {
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 3; i++) {
       String input = textfields[i].getText();
       try {
         prog_inputs[i] = Integer.parseInt(input);
@@ -120,11 +164,7 @@ public void controlEvent(ControlEvent event) {
         (byte)((prog_inputs[1] >> 8) & 0xff),
         (byte) (prog_inputs[1] & 0xff),
         (byte)((prog_inputs[2] >> 8) & 0xff),
-        (byte) (prog_inputs[2] & 0xff),
-        (byte)((prog_inputs[3] >> 8) & 0xff),
-        (byte) (prog_inputs[3] & 0xff),
-        (byte)((prog_inputs[4] >> 8) & 0xff),
-        (byte) (prog_inputs[4] & 0xff)};
+        (byte) (prog_inputs[2] & 0xff)};
       println(payload);
       send((byte) 0x03, payload);
     } else {
@@ -147,7 +187,7 @@ public void controlEvent(ControlEvent event) {
   } else if (event.isFrom("Start Filling")) {
     send((byte)0x05, empty_payload);
   } else if (event.isFrom("Resume")) {
-    send((byte)0x0a, empty_payload);
+    send((byte)0x0b, empty_payload);
   } else if (event.isFrom("Status")) {
     send((byte)0x00, empty_payload);
   } else if (event.isFrom("Select ID")) {
@@ -155,22 +195,29 @@ public void controlEvent(ControlEvent event) {
   } else if (event.isFrom("Abort")) {
     send((byte)0x02, empty_payload);
   } else if (event.isFrom("Arm")) {
+    send((byte)0x09, empty_payload);
+  } else if (event.isFrom("Ready")) {
     send((byte)0x08, empty_payload);
+  } else if (event.isFrom("Manual")) {
+    window.open();
+  } else if (event.isFrom("Fire")) {
+    send((byte)0x0c, empty_payload);
+  } else if (event.isFrom("Allow Launch")) {
+    send((byte)0x0a, empty_payload);
   }
 }
 
 void send(byte command, byte[] payload) {
   println(command, payload);
+  if(targetID == 3) {
+    targetID = (byte)0xFF;
+  }
   tx_packet = new dataPacket(command, targetID, payload);
   tx_packet.logPacket();
   if (myPort != null) {
-    if (targetID > 0) {
       byte[] packet = tx_packet.getPacket();
       println(packet);
       tx_queue.add(packet);
-    } else {
-      println("Target ID not selected");
-    }
   } else {
     println("No serial port selected!");
   }
