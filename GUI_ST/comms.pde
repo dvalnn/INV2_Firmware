@@ -20,7 +20,7 @@ void serialThread() {
 
 void parseIncomingByte(byte rx_byte) {
 
-  if (last_read_time == 0 || millis() - last_read_time > TIMEOUT) {
+  if (last_read_time == 0 || millis() - last_read_time > packet_read_timeout) {
     currentParseState = ParseState.START;
   }
   last_read_time = millis();
@@ -71,6 +71,7 @@ void processPacket() {
   dataPacket new_packet = new dataPacket(CMD, ID, rx_payload);
   new_packet.logPacket();
   rx_packet = new_packet;
+  println(rx_packet.getPacket());
   String stringID = str(Byte.toUnsignedInt(rx_packet.id));
   if (CMD == (byte) 0x00) { // LOG COMANDO PLACEHOLDER 0x01 se tudo correr bem
     if (ID == (byte) 0x02) {
@@ -81,6 +82,7 @@ void processPacket() {
       updateLogStats(2);
     }
   } else if (CMD == (byte) 0x0e) { // STATUS ACK
+    displayAck((int)0x0e);
     if (targetID == 1) {
       displayStatusRocket();
     } else if (targetID == 2) {
@@ -92,16 +94,22 @@ void processPacket() {
 }
 
 void updateLogStats(int id) {
+  if (last_received_log_id == id) {
+    log_packet_loss++;
+  }
   if (id == 1) {
     int r_log_interval = millis() - last_r_log_time;
     last_r_log_time = millis();
     r_log_rate = 1000.00 / r_log_interval;
+    last_received_log_id = 1;
   } else if (id == 2) {
     int f_log_interval = millis() - last_f_log_time;
     last_f_log_time = millis();
     f_log_rate = 1000.00 / f_log_interval;
+    last_received_log_id = 2;
   }
-  log_stats.setText("Rocket Log Rate: " + String.format("%.2f", r_log_rate) + "\n" + "Filling Log Rate: " + String.format("%.2f", f_log_rate));
+
+  log_stats.setText("Rocket Log Rate: " + String.format("%.2f", r_log_rate) + "\nFilling Log Rate: " + String.format("%.2f", f_log_rate) + "\nLog Packets Lost: " + log_packet_loss + "\nAck Packets Lost: " + ack_packet_loss);
 }
 void displayLogRocket() {
   String state = "\n" + "State: " + state_map_rocket.get(Byte.toUnsignedInt(rx_packet.payload[0]));
@@ -181,7 +189,7 @@ void displayStatusRocket() {
   String rtl = "\n" + "Tank Liquid: " + str(r_tank_liquid);
   String tt = "\n" + "Tank Tactile: " + String.format("%8s", Integer.toBinaryString(tank_tactile & 0xFF)).replace(' ', '0');
 
-  log_display_rocket.setText("Rocket\n" + state + ttp + tbt + ct1 + ct2 + ct3 + ttp + tbp + rtp + rtl + tt);
+  log_display_rocket.setText("Rocket\n" + state + ttt + tbt + ct1 + ct2 + ct3 + ttp + tbp + rtp + rtl + tt);
 }
 
 void displayStatusFilling() {
@@ -212,6 +220,10 @@ void displayStatusFilling() {
 }
 
 void displayAck(int ackValue) {
+  if((byte) ackValue != (last_cmd_sent + (byte) cmd_size)) {
+    ack_packet_loss++;
+  } 
+  last_cmd_sent = 0;
   String ackName;
   switch (ackValue) {
   case 14: // Status Ack

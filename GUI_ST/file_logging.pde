@@ -3,9 +3,6 @@
 
 PrintWriter logFile, dataFile;
 
-String logFileName = "log.txt";
-String dataFileName = "data.csv";
-
 void initializeWriters(){
     logFile = createWriter(logFileName);
     dataFile = createWriter(dataFileName);

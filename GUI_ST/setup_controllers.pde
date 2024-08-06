@@ -146,7 +146,7 @@ void setupControllers() {
     .setText("Logging Packet goes here")
     .setPosition(displayWidth*.46, displayHeight*.62)
     .setFont(font);
-  
+
   ack_display = cp5.addTextlabel("Ack Display")
     .setText("Acks go here")
     .setPosition(displayWidth*button_x2, displayHeight*.17)
@@ -156,5 +156,15 @@ void setupControllers() {
     .setText("Log stats go here")
     .setPosition(displayWidth*button_x2, displayHeight*.25)
     .setFont(font);
-  
+
+  status_toggle = cp5.addToggle("Status Toggle")
+    .setPosition(width*.02, height*.42)
+    .setSize((int)(width*.05), (int)(width*.02))
+    .setValue(false)
+    .setMode(ControlP5.SWITCH)
+    .setLabel("Toggle Status")
+    .setFont(font)
+    .setColorForeground(color(255, 0, 0))  // Red when off
+    .setColorBackground(color(100, 0, 0))
+    .setColorActive(color(255, 0, 0));
 }

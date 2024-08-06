@@ -9,28 +9,28 @@ PFont font;
 
 Serial myPort; // For serial communication
 dataPacket tx_packet;
-int baudRate = 115200;
 String selectedPort;
 dataPacket rx_packet;
 boolean port_selected = false;
+
 int last_read_time = 0;
+
 int last_r_log_time = 0;
 float r_log_rate = 0;
 int last_f_log_time = 0;
 float f_log_rate = 0;
-int last_received_log_id = 0;
-int TIMEOUT = 250;
 
-byte MyID = (byte) 0x00;
+int last_received_log_id = 0;
+int log_packet_loss = 0;
+int ack_packet_loss = 0;
+byte last_cmd_sent = (byte) 0x00;
+int last_cmd_sent_time = 0;
+
+int last_status_time = 0;
+
 byte targetID;
 
 LinkedBlockingQueue<byte[]> tx_queue = new LinkedBlockingQueue<byte[]>();
-
-// GUI Positions and Sizes
-float button_x1 = .7; // * displayWidth
-float button_x2 = .85;
-float button_height = .04; // * displayHeight
-float button_width = .13; // * displayWidth
 
 
 // packet structure : "SYNC", "CMD", "ID", "PLEN", "PAYLOAD", "CRC1", "CRC2"
@@ -52,6 +52,10 @@ Textlabel log_stats;
 Chart rocketChart;
 Chart fillingChart;
 
+Toggle status_toggle;
+int status_toggle_state = 0;
+int last_status_request = 0;
+
 float tank_top_temp, tank_bot_temp, chamber_temp1, chamber_temp2, chamber_temp3, tank_top_press, tank_bot_press, r_tank_press, r_tank_liquid;
 byte tank_tactile;
 float f_tank_press, f_tank_liquid, he_temp, n2o_temp, line_temp, he_press, n2o_press, line_press, ematch_v, weight1;
@@ -59,11 +63,7 @@ int max_r, max_f;
 
 int[] prog_inputs = new int[3];
 int selected_index = -1;
-byte[] prog_cmds = {(byte)0x00, (byte)0x01, (byte)0x02, (byte)0x03, (byte)0x04, (byte)0x05};
 
-List<String> programs = Arrays.asList("Safety Pressure", "Purge Pressure", "Purge Liquid", "Fill He", "Fill N2O", "Purge Line");
-List<String> vars = Arrays.asList("Target Pressure", "Trigger Pressure", "Target Liquid");
-List<String> IDs = Arrays.asList( "1 : Rocket", "2 : Filling Station", "3 : Broadcast");
 CColor gray = new CColor();
 CColor blue = new CColor();
 
@@ -109,7 +109,7 @@ void setup() {
   state_map_rocket.put(9, "LAUNCH");
   state_map_rocket.put(10, "ABORT");
   state_map_rocket.put(11, "IMU_CALIB");
-  
+
   state_map_filling.put(0, "IDLE");
   state_map_filling.put(1, "FUELING");
   state_map_filling.put(2, "MANUEL");
@@ -122,16 +122,27 @@ void setup() {
   state_map_filling.put(9, "ARMED");
   state_map_filling.put(10, "FIRE");
   state_map_filling.put(11, "LAUNCH");
-  
+
   setupControllers(); // in setup controllers tab
   setupCharts(); // in chart functions tab
-  
+
   window = new Window();
 }
 
 void draw() {
   background(0);
-  // updateCharts(rp, rl, fp, fl);
+  updateCharts(r_tank_press, r_tank_liquid, f_tank_press, f_tank_liquid);
+  if (millis() - last_status_request > status_interval && status_toggle_state == 1) {
+    send((byte)0x00, empty_payload);
+    last_status_request = millis();
+  }
+  
+  if(last_cmd_sent != (byte)0x00) {
+    if(millis() - last_cmd_sent_time > packet_loss_timeout) {
+      ack_packet_loss++;
+      last_cmd_sent = (byte)0x00;
+    }
+  }
 }
 
 public void controlEvent(ControlEvent event) {
@@ -204,20 +215,36 @@ public void controlEvent(ControlEvent event) {
     send((byte)0x0c, empty_payload);
   } else if (event.isFrom("Allow Launch")) {
     send((byte)0x0a, empty_payload);
+  } else if (event.isFrom(status_toggle)) {
+    status_toggle_state = (int) event.getController().getValue();
+    if (status_toggle_state == 1) {
+      status_toggle.setColorForeground(color(0, 255, 0))
+        .setColorBackground(color(0, 100, 0))
+        .setColorActive(color(0, 255, 0));     // Green when on
+    } else if (status_toggle_state == 0) {
+      status_toggle.setColorForeground(color(255, 0, 0))// Red when off
+        .setColorActive(color(255, 0, 0))    // Red when off
+        .setColorBackground(color(100, 0, 0));
+    }
   }
 }
 
 void send(byte command, byte[] payload) {
   println(command, payload);
-  if(targetID == 3) {
+  if (targetID == 3) {
     targetID = (byte)0xFF;
   }
   tx_packet = new dataPacket(command, targetID, payload);
   tx_packet.logPacket();
   if (myPort != null) {
-      byte[] packet = tx_packet.getPacket();
-      println(packet);
-      tx_queue.add(packet);
+    byte[] packet = tx_packet.getPacket();
+    println(packet);
+    tx_queue.add(packet);
+    if(last_cmd_sent != 0) {
+      ack_packet_loss++;
+    }
+    last_cmd_sent = command;
+    last_cmd_sent_time = millis();
   } else {
     println("No serial port selected!");
   }
