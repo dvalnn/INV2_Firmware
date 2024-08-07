@@ -67,8 +67,6 @@ int selected_index = -1;
 CColor gray = new CColor();
 CColor blue = new CColor();
 
-Window window;
-
 void setup() {
   //inits
   initializeWriters();
@@ -125,8 +123,6 @@ void setup() {
 
   setupControllers(); // in setup controllers tab
   setupCharts(); // in chart functions tab
-
-  window = new Window();
 }
 
 void draw() {
@@ -136,9 +132,9 @@ void draw() {
     send((byte)0x00, empty_payload);
     last_status_request = millis();
   }
-  
-  if(last_cmd_sent != (byte)0x00) {
-    if(millis() - last_cmd_sent_time > packet_loss_timeout) {
+
+  if (last_cmd_sent != (byte)0x00) {
+    if (millis() - last_cmd_sent_time > packet_loss_timeout) {
       ack_packet_loss++;
       last_cmd_sent = (byte)0x00;
     }
@@ -210,7 +206,10 @@ public void controlEvent(ControlEvent event) {
   } else if (event.isFrom("Ready")) {
     send((byte)0x08, empty_payload);
   } else if (event.isFrom("Manual")) {
-    window.open();
+    Window window = new Window();
+    String[] args = {"Manual Window"};
+    //window.open();
+    PApplet.runSketch(args, window);
   } else if (event.isFrom("Fire")) {
     send((byte)0x0c, empty_payload);
   } else if (event.isFrom("Allow Launch")) {
@@ -240,7 +239,7 @@ void send(byte command, byte[] payload) {
     byte[] packet = tx_packet.getPacket();
     println(packet);
     tx_queue.add(packet);
-    if(last_cmd_sent != 0) {
+    if (last_cmd_sent != 0) {
       ack_packet_loss++;
     }
     last_cmd_sent = command;

@@ -21,7 +21,44 @@ public class Window extends PApplet {
   }
 
   public void setup() {
+    man_setup();
+  }
+
+
+  public void controlEvent(ControlEvent event) {
+    for (int i = 0; i < man_commands.size(); i++) {
+      if (event.isFrom(man_commands.get(i))) {
+        byte[] man_payload = {man_commands_map.get(man_commands.get(i))};
+        send((byte)0x07, man_payload);
+      }
+    }
+    if (event.isFrom("Start Manual")) {
+      send((byte)0x06, empty_payload);
+    } else if (event.isFrom("Change Valve State")) {
+      if (valve_selected > -1) {
+        byte[] man_payload = {(byte) 0x04, (byte) valve_selected, (byte) valve_toggle_state};
+        send((byte)0x07, man_payload);
+      }
+    } else if (event.isFrom("Select Valve")) {
+      valve_selected = (int)event.getValue();
+    } else if (event.isFrom("")) {
+    } else if (event.isFrom(valve_toggle)) {
+      valve_toggle_state = (int) event.getController().getValue();
+      if (valve_toggle_state == 1) {
+        valve_toggle.setColorForeground(color(0, 255, 0))
+          .setColorBackground(color(0, 100, 0))
+          .setColorActive(color(0, 255, 0));     // Green when on
+      } else if (valve_toggle_state == 0) {
+        valve_toggle.setColorForeground(color(255, 0, 0))// Red when off
+          .setColorActive(color(255, 0, 0))    // Red when off
+          .setColorBackground(color(100, 0, 0));
+      }
+    }
+  }
+
+  public void man_setup() {
     background(100);
+    windowResizable(true);
     font = createFont("arial", displayWidth*.013);
     cp5 = new ControlP5(this);
 
@@ -30,10 +67,6 @@ public class Window extends PApplet {
     man_commands_map.put("Flash IDs", (byte) 2);
     man_commands_map.put("Loadcell Calibrate", (byte) 6);
     man_commands_map.put("Loadcell Tare", (byte) 7);
-    cp5.addTextlabel("Close Warning")
-      .setText("Do not close! Only minimize")
-      .setPosition(width*.02, height*.02)
-      .setFont(font);
 
     cp5.addButton("Start Manual")
       .setPosition(width*.75, height*.1)
@@ -78,37 +111,6 @@ public class Window extends PApplet {
     }
   }
 
-
-  public void controlEvent(ControlEvent event) {
-    for (int i = 0; i < man_commands.size(); i++) {
-      if (event.isFrom(man_commands.get(i))) {
-        byte[] man_payload = {man_commands_map.get(man_commands.get(i))};
-        send((byte)0x07, man_payload);
-      }
-    }
-    if (event.isFrom("Start Manual")) {
-      send((byte)0x06, empty_payload);
-    } else if (event.isFrom("Change Valve State")) {
-      if (valve_selected > -1) {
-        byte[] man_payload = {(byte) 0x04, (byte) valve_selected, (byte) valve_toggle_state};
-        send((byte)0x07, man_payload);
-      }
-    } else if (event.isFrom("Select Valve")) {
-      valve_selected = (int)event.getValue();
-    } else if (event.isFrom("")) {
-    } else if (event.isFrom(valve_toggle)) {
-      valve_toggle_state = (int) event.getController().getValue();
-      if (valve_toggle_state == 1) {
-        valve_toggle.setColorForeground(color(0, 255, 0))
-          .setColorBackground(color(0, 100, 0))
-          .setColorActive(color(0, 255, 0));     // Green when on
-      } else if (valve_toggle_state == 0) {
-        valve_toggle.setColorForeground(color(255, 0, 0))// Red when off
-          .setColorActive(color(255, 0, 0))    // Red when off
-          .setColorBackground(color(100, 0, 0));
-      }
-    }
-  }
   public void draw() {
     // Nothing needed here if the UI is static
     background(100);
@@ -117,13 +119,13 @@ public class Window extends PApplet {
   public void open() {
     if (!open) {
       PApplet.runSketch(new String[]{"Window"}, this);
+      man_setup();
       open = true;
     }
   }
 
   public void close() {
     if (open) {
-      dispose();
       open = false;
     }
   }
@@ -134,6 +136,7 @@ public class Window extends PApplet {
 
   @Override
     public void exit() {
+    dispose();
     close();
   }
 }
