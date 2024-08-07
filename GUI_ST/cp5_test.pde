@@ -3,6 +3,7 @@ import processing.serial.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import processing.core.PApplet;
+import java.nio.*;
 
 ControlP5 cp5;
 PFont font;
@@ -56,16 +57,21 @@ Toggle status_toggle;
 int status_toggle_state = 0;
 int last_status_request = 0;
 
-float tank_top_temp, tank_bot_temp, chamber_temp1, chamber_temp2, chamber_temp3, tank_top_press, tank_bot_press, r_tank_press, r_tank_liquid;
-byte tank_tactile;
-float f_tank_press, f_tank_liquid, he_temp, n2o_temp, line_temp, he_press, n2o_press, line_press, ematch_v, weight1;
-int max_r, max_f;
+short tank_top_temp, tank_bot_temp, chamber_temp1, chamber_temp2, chamber_temp3, tank_top_press, tank_bot_press, r_tank_press, r_tank_liquid, r_weight1, r_weight2, r_weight3;
+byte r_bools;
+short f_tank_press, f_tank_liquid, he_temp, n2o_temp, line_temp, he_press, n2o_press, line_press, ematch_v;
+int f_weight1;
+int max_r = 1, max_f = 1;
+
+boolean man_window_open = false;
 
 int[] prog_inputs = new int[3];
 int selected_index = -1;
 
 CColor gray = new CColor();
 CColor blue = new CColor();
+
+Window window;
 
 void setup() {
   //inits
@@ -127,7 +133,7 @@ void setup() {
 
 void draw() {
   background(0);
-  updateCharts(r_tank_press, r_tank_liquid, f_tank_press, f_tank_liquid);
+  updateCharts((int)r_tank_press, (int)r_tank_liquid, (int)f_tank_press, (int)f_tank_liquid);
   if (millis() - last_status_request > status_interval && status_toggle_state == 1) {
     send((byte)0x00, empty_payload);
     last_status_request = millis();
@@ -206,10 +212,11 @@ public void controlEvent(ControlEvent event) {
   } else if (event.isFrom("Ready")) {
     send((byte)0x08, empty_payload);
   } else if (event.isFrom("Manual")) {
-    Window window = new Window();
-    String[] args = {"Manual Window"};
-    //window.open();
-    PApplet.runSketch(args, window);
+    if (!man_window_open) {
+      window = new Window();
+      String[] args = {"Manual Window"};
+      PApplet.runSketch(args, window);
+    }
   } else if (event.isFrom("Fire")) {
     send((byte)0x0c, empty_payload);
   } else if (event.isFrom("Allow Launch")) {

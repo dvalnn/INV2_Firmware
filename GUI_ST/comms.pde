@@ -76,17 +76,23 @@ void processPacket() {
   if (CMD == (byte) 0x00) { // LOG COMANDO PLACEHOLDER 0x01 se tudo correr bem
     if (ID == (byte) 0x02) {
       displayLogRocket();
+      if (man_window_open) {
+        window.man_displayLogRocket();
+      }
       updateLogStats(1);
     } else if (ID == (byte) 0x01) {
       displayLogFilling();
+      if (man_window_open) {
+        window.man_displayLogFilling();
+      }
       updateLogStats(2);
     }
   } else if (CMD == (byte) 0x0e) { // STATUS ACK
     displayAck((int)0x0e);
     if (targetID == 1) {
-      displayStatusRocket();
+      displayLogRocket();
     } else if (targetID == 2) {
-      displayStatusFilling();
+      displayLogFilling();
     }
   } else if (CMD >= (byte)0x0f && CMD <= (byte)0x1a) {
     displayAck((int)CMD);
@@ -113,16 +119,16 @@ void updateLogStats(int id) {
 }
 void displayLogRocket() {
   String state = "\n" + "State: " + state_map_rocket.get(Byte.toUnsignedInt(rx_packet.payload[0]));
-  tank_top_temp = float((Byte.toUnsignedInt(rx_packet.payload[1]) << 8) | Byte.toUnsignedInt(rx_packet.payload[2]));
-  tank_bot_temp = float((Byte.toUnsignedInt(rx_packet.payload[3]) << 8) | Byte.toUnsignedInt(rx_packet.payload[4]));
-  chamber_temp1 = float((Byte.toUnsignedInt(rx_packet.payload[5]) << 8) | Byte.toUnsignedInt(rx_packet.payload[6]));
-  chamber_temp2 = float((Byte.toUnsignedInt(rx_packet.payload[7]) << 8) | Byte.toUnsignedInt(rx_packet.payload[8]));
-  chamber_temp3 = float((Byte.toUnsignedInt(rx_packet.payload[9]) << 8) | Byte.toUnsignedInt(rx_packet.payload[10]));
-  tank_top_press = float((Byte.toUnsignedInt(rx_packet.payload[11]) << 8) | Byte.toUnsignedInt(rx_packet.payload[12]));
-  tank_bot_press = float((Byte.toUnsignedInt(rx_packet.payload[13]) << 8) | Byte.toUnsignedInt(rx_packet.payload[12]));
-  r_tank_press = float((Byte.toUnsignedInt(rx_packet.payload[15]) << 8) | Byte.toUnsignedInt(rx_packet.payload[16]));
-  r_tank_liquid = float((Byte.toUnsignedInt(rx_packet.payload[17]) << 8) | Byte.toUnsignedInt(rx_packet.payload[18]));
-  tank_tactile = rx_packet.payload[19];
+  tank_top_temp = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 1, 3))).getShort();
+  tank_bot_temp = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 3, 5))).getShort();
+  chamber_temp1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 5, 7))).getShort();
+  chamber_temp2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 7, 9))).getShort();
+  chamber_temp3 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 9, 11))).getShort();
+  tank_top_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 11, 13))).getShort();
+  tank_bot_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 13, 15))).getShort();
+  r_tank_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 15, 17))).getShort();
+  r_tank_liquid = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 17, 19))).getShort();
+  r_bools = rx_packet.payload[19];
 
   String ttt = "\n" + "Tank Top Temperature: " + str(tank_top_temp);
   String tbt = "\n" + "Tank Bottom Temperature: " + str(tank_bot_temp);
@@ -133,23 +139,29 @@ void displayLogRocket() {
   String tbp = "\n" + "Tank Bottom Pressure: " + str(tank_bot_press);
   String rtp = "\n" + "Tank Pressure: " + str(r_tank_press);
   String rtl = "\n" + "Tank Liquid: " + str(r_tank_liquid);
-  String tt = "\n" + "Tank Tactile: " + String.format("%8s", Integer.toBinaryString(tank_tactile & 0xFF)).replace(' ', '0');
 
-  log_display_rocket.setText("Rocket\n" + state + ttt + tbt + ct1 + ct2 + ct3 + ttp + tbp + rtp + rtl + tt);
+  String bools = String.format("%8s", Integer.toBinaryString(r_bools & 0xFF)).replace(' ', '0');
+  String log_running = "\nLog Running: " + bools.substring(0, 1);
+  String tt_valve = "\nTank Top Valve: " + bools.substring(1, 2);
+  String tb_valve = "\nTank Bottom Valve: " + bools.substring(2, 3);
+  String tactiles = "\nTactiles: " + bools.substring(3);
+
+  log_display_rocket.setText("Rocket" + state + ttt + tbt + ct1 + ct2 + ct3 + ttp + tbp + rtp + rtl + log_running + tt_valve + tb_valve + tactiles);
 }
 
 void displayLogFilling() {
   String state = "\n" + "State: " + state_map_filling.get(Byte.toUnsignedInt(rx_packet.payload[0]));
-  f_tank_press = float((Byte.toUnsignedInt(rx_packet.payload[1]) << 8) | Byte.toUnsignedInt(rx_packet.payload[2]));
-  f_tank_liquid = float((Byte.toUnsignedInt(rx_packet.payload[3]) << 8) | Byte.toUnsignedInt(rx_packet.payload[4]));
-  he_temp = float((Byte.toUnsignedInt(rx_packet.payload[5]) << 8) | Byte.toUnsignedInt(rx_packet.payload[6]));
-  n2o_temp = float((Byte.toUnsignedInt(rx_packet.payload[7]) << 8) | Byte.toUnsignedInt(rx_packet.payload[8]));
-  line_temp = float((Byte.toUnsignedInt(rx_packet.payload[9]) << 8) | Byte.toUnsignedInt(rx_packet.payload[10]));
-  he_press = float((Byte.toUnsignedInt(rx_packet.payload[11]) << 8) | Byte.toUnsignedInt(rx_packet.payload[12]));
-  n2o_press = float((Byte.toUnsignedInt(rx_packet.payload[13]) << 8) | Byte.toUnsignedInt(rx_packet.payload[12]));
-  line_press = float((Byte.toUnsignedInt(rx_packet.payload[15]) << 8) | Byte.toUnsignedInt(rx_packet.payload[16]));
-  ematch_v = float((Byte.toUnsignedInt(rx_packet.payload[17]) << 8) | Byte.toUnsignedInt(rx_packet.payload[18]));
-  weight1 = float(((Byte.toUnsignedInt(rx_packet.payload[19]) << 24) | Byte.toUnsignedInt(rx_packet.payload[20]) << 16) | ((Byte.toUnsignedInt(rx_packet.payload[21]) << 8) | Byte.toUnsignedInt(rx_packet.payload[22])));
+  f_tank_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 1, 3))).getShort();
+  f_tank_liquid = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 3, 5))).getShort();
+  he_temp = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 5, 7))).getShort();
+  n2o_temp = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 7, 9))).getShort();
+  line_temp = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 9, 11))).getShort();
+  he_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 11, 13))).getShort();
+  n2o_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 13, 15))).getShort();
+  line_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 15, 17))).getShort();
+  ematch_v = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 17, 19))).getShort();
+  //f_weight1 = int(((Byte.toUnsignedInt(rx_packet.payload[19]) << 24) | Byte.toUnsignedInt(rx_packet.payload[20]) << 16) | ((Byte.toUnsignedInt(rx_packet.payload[21]) << 8) | Byte.toUnsignedInt(rx_packet.payload[22])));
+  f_weight1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 19, 23))).getInt();
 
   String ftp = "\n" + "Tank Temperature: " + str(f_tank_press);
   String ftl = "\n" + "Tank Liquid: " + str(f_tank_liquid);
@@ -160,69 +172,15 @@ void displayLogFilling() {
   String np = "\n" + "N2O Pressure: " + str(n2o_press);
   String lp = "\n" + "Line Pressure: " + str(line_press);
   String ev = "\n" + "eMatch reading: " + str(ematch_v);
-  String w1 = "\n" + "Weight 1: " + str(weight1);
-
-  log_display_filling.setText("Filling Station\n" + state + ftp + ftl + ht + nt + lt + hp + np + lp + ev + w1);
-}
-
-void displayStatusRocket() {
-  String state = "\n" + "State: " + state_map_rocket.get(Byte.toUnsignedInt(rx_packet.payload[0]));
-  tank_top_temp = float((Byte.toUnsignedInt(rx_packet.payload[1]) << 8) | Byte.toUnsignedInt(rx_packet.payload[2]));
-  tank_bot_temp = float((Byte.toUnsignedInt(rx_packet.payload[3]) << 8) | Byte.toUnsignedInt(rx_packet.payload[4]));
-  chamber_temp1 = float((Byte.toUnsignedInt(rx_packet.payload[5]) << 8) | Byte.toUnsignedInt(rx_packet.payload[6]));
-  chamber_temp2 = float((Byte.toUnsignedInt(rx_packet.payload[7]) << 8) | Byte.toUnsignedInt(rx_packet.payload[8]));
-  chamber_temp3 = float((Byte.toUnsignedInt(rx_packet.payload[9]) << 8) | Byte.toUnsignedInt(rx_packet.payload[10]));
-  tank_top_press = float((Byte.toUnsignedInt(rx_packet.payload[11]) << 8) | Byte.toUnsignedInt(rx_packet.payload[12]));
-  tank_bot_press = float((Byte.toUnsignedInt(rx_packet.payload[13]) << 8) | Byte.toUnsignedInt(rx_packet.payload[12]));
-  r_tank_press = float((Byte.toUnsignedInt(rx_packet.payload[15]) << 8) | Byte.toUnsignedInt(rx_packet.payload[16]));
-  r_tank_liquid = float((Byte.toUnsignedInt(rx_packet.payload[17]) << 8) | Byte.toUnsignedInt(rx_packet.payload[18]));
-  tank_tactile = rx_packet.payload[19];
-
-  String ttt = "\n" + "Tank Top Temperature: " + str(tank_top_temp);
-  String tbt = "\n" + "Tank Bottom Temperature: " + str(tank_bot_temp);
-  String ct1 = "\n" + "Chamber Temperature 1: " + str(chamber_temp1);
-  String ct2 = "\n" + "Chamber Temperature 2: " + str(chamber_temp2);
-  String ct3 = "\n" + "Chamber Temperature 3: " + str(chamber_temp3);
-  String ttp = "\n" + "Tank Top Pressure: " + str(tank_top_press);
-  String tbp = "\n" + "Tank Bottom Pressure: " + str(tank_bot_press);
-  String rtp = "\n" + "Tank Pressure: " + str(r_tank_press);
-  String rtl = "\n" + "Tank Liquid: " + str(r_tank_liquid);
-  String tt = "\n" + "Tank Tactile: " + String.format("%8s", Integer.toBinaryString(tank_tactile & 0xFF)).replace(' ', '0');
-
-  log_display_rocket.setText("Rocket\n" + state + ttt + tbt + ct1 + ct2 + ct3 + ttp + tbp + rtp + rtl + tt);
-}
-
-void displayStatusFilling() {
-  String state = "\n" + "State: " + state_map_filling.get(Byte.toUnsignedInt(rx_packet.payload[0]));
-  f_tank_press = float((Byte.toUnsignedInt(rx_packet.payload[1]) << 8) | Byte.toUnsignedInt(rx_packet.payload[2]));
-  f_tank_liquid = float((Byte.toUnsignedInt(rx_packet.payload[3]) << 8) | Byte.toUnsignedInt(rx_packet.payload[4]));
-  he_temp = float((Byte.toUnsignedInt(rx_packet.payload[5]) << 8) | Byte.toUnsignedInt(rx_packet.payload[6]));
-  n2o_temp = float((Byte.toUnsignedInt(rx_packet.payload[7]) << 8) | Byte.toUnsignedInt(rx_packet.payload[8]));
-  line_temp = float((Byte.toUnsignedInt(rx_packet.payload[9]) << 8) | Byte.toUnsignedInt(rx_packet.payload[10]));
-  he_press = float((Byte.toUnsignedInt(rx_packet.payload[11]) << 8) | Byte.toUnsignedInt(rx_packet.payload[12]));
-  n2o_press = float((Byte.toUnsignedInt(rx_packet.payload[13]) << 8) | Byte.toUnsignedInt(rx_packet.payload[12]));
-  line_press = float((Byte.toUnsignedInt(rx_packet.payload[15]) << 8) | Byte.toUnsignedInt(rx_packet.payload[16]));
-  ematch_v = float((Byte.toUnsignedInt(rx_packet.payload[17]) << 8) | Byte.toUnsignedInt(rx_packet.payload[18]));
-  weight1 = float(((Byte.toUnsignedInt(rx_packet.payload[19]) << 24) | Byte.toUnsignedInt(rx_packet.payload[20]) << 16) | ((Byte.toUnsignedInt(rx_packet.payload[21]) << 8) | Byte.toUnsignedInt(rx_packet.payload[22])));
-
-  String ftp = "\n" + "Tank Temperature: " + str(f_tank_press);
-  String ftl = "\n" + "Tank Liquid: " + str(f_tank_liquid);
-  String ht = "\n" + "He Temperature: " + str(he_temp);
-  String nt = "\n" + "N2O Temperature: " + str(n2o_temp);
-  String lt = "\n" + "Line Temperature: " + str(line_temp);
-  String hp = "\n" + "He Pressure: " + str(he_press);
-  String np = "\n" + "N2O Pressure: " + str(n2o_press);
-  String lp = "\n" + "Line Pressure: " + str(line_press);
-  String ev = "\n" + "eMatch reading: " + str(ematch_v);
-  String w1 = "\n" + "Weight 1: " + str(weight1);
+  String w1 = "\n" + "Weight 1: " + str(f_weight1);
 
   log_display_filling.setText("Filling Station\n" + state + ftp + ftl + ht + nt + lt + hp + np + lp + ev + w1);
 }
 
 void displayAck(int ackValue) {
-  if((byte) ackValue != (last_cmd_sent + (byte) cmd_size)) {
+  if ((byte) ackValue != (last_cmd_sent + (byte) cmd_size)) {
     ack_packet_loss++;
-  } 
+  }
   last_cmd_sent = 0;
   String ackName;
   switch (ackValue) {
