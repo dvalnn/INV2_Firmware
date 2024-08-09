@@ -1,3 +1,13 @@
+enum ParseState {
+  START,
+    CMD,
+    ID,
+    PAYLOAD_LENGTH,
+    PAYLOAD,
+    CRC1,
+    CRC2,
+};
+
 void serialThread() {
   myPort = new Serial(this, selectedPort, baudRate);
   port_selected = true;
@@ -46,6 +56,7 @@ void parseIncomingByte(byte rx_byte) {
     //println("Payload length " + (int) PLEN);
     if ((int) PLEN > 0) {
       currentParseState = ParseState.PAYLOAD;
+      rx_payload = new byte[PLEN];
       rx_payload_index = 0;
     } else {
       currentParseState = ParseState.CRC1;
@@ -69,10 +80,9 @@ void parseIncomingByte(byte rx_byte) {
 
 void processPacket() {
   dataPacket new_packet = new dataPacket(CMD, ID, rx_payload);
-  new_packet.logPacket();
   rx_packet = new_packet;
+  rx_packet.logPacket(LogEvent.MSG_RECEIVED);
   println(rx_packet.getPacket());
-  String stringID = str(Byte.toUnsignedInt(rx_packet.id));
   if (CMD == (byte) 0x00) { // LOG COMANDO PLACEHOLDER 0x01 se tudo correr bem
     if (ID == (byte) 0x02) {
       displayLogRocket();
@@ -228,4 +238,25 @@ void displayAck(int ackValue) {
     break;
   }
   ack_display.setText("Last Ack Received: \n" + ackName);
+}
+
+void send(byte command, byte[] payload) {
+  println(command, payload);
+  if (targetID == 3) {
+    targetID = (byte)0xFF;
+  }
+  tx_packet = new dataPacket(command, targetID, payload);
+  // tx_packet.logPacket(LogEvent.MSG_SENT);
+  if (myPort != null) {
+    byte[] packet = tx_packet.getPacket();
+    println(packet);
+    tx_queue.add(packet);
+    if (last_cmd_sent != 0) {
+      ack_packet_loss++;
+    }
+    last_cmd_sent = command;
+    last_cmd_sent_time = millis();
+  } else {
+    println("No serial port selected!");
+  }
 }

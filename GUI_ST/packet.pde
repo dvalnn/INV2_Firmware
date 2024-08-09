@@ -12,13 +12,12 @@ class dataPacket {
     this.command = command;
     this.payload = payload;
     this.payloadLength = (byte)payload.length;
-    this.id = id; // placeholder id
+    this.id = id; 
     this.crc = (byte) 0x00;
   }
 
-  void logPacket() {
-    // This method is for displaying the packet's content for debugging or verification
-    log(new String(getPacket()));
+  void logPacket(LogEvent event) {
+    flash_log(this, event);
   }
   
   byte[] getPacket() {

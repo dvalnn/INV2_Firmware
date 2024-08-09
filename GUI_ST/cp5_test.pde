@@ -36,7 +36,7 @@ LinkedBlockingQueue<byte[]> tx_queue = new LinkedBlockingQueue<byte[]>();
 
 // packet structure : "SYNC", "CMD", "ID", "PLEN", "PAYLOAD", "CRC1", "CRC2"
 byte CMD=0, PLEN=0, ID=0; /* CRC1, CRC2 */
-byte[] rx_payload = new byte[100];
+byte[] rx_payload;
 ParseState currentParseState = ParseState.START;
 int rx_payload_index = 0;
 byte[] empty_payload = {};
@@ -74,13 +74,10 @@ CColor blue = new CColor();
 Window window;
 
 void setup() {
-  //inits
-  initializeWriters();
   frameRate(60);
-  //windowRatio(1920, 1080);
-  //size(displayWidth, displayHeight);
   fullScreen();
   background(0);
+  
   font = createFont("arial", displayWidth*.013);
   cp5 = new ControlP5(this);
   gray.setForeground(color(0, 0, 0))
@@ -129,6 +126,7 @@ void setup() {
 
   setupControllers(); // in setup controllers tab
   setupCharts(); // in chart functions tab
+  init_log(); // log initialization
 }
 
 void draw() {
@@ -235,30 +233,16 @@ public void controlEvent(ControlEvent event) {
   }
 }
 
-void send(byte command, byte[] payload) {
-  println(command, payload);
-  if (targetID == 3) {
-    targetID = (byte)0xFF;
-  }
-  tx_packet = new dataPacket(command, targetID, payload);
-  tx_packet.logPacket();
-  if (myPort != null) {
-    byte[] packet = tx_packet.getPacket();
-    println(packet);
-    tx_queue.add(packet);
-    if (last_cmd_sent != 0) {
-      ack_packet_loss++;
-    }
-    last_cmd_sent = command;
-    last_cmd_sent_time = millis();
-  } else {
-    println("No serial port selected!");
-  }
-}
+
 
 // This method ensures the serial port is closed properly when the program is exited
 void stop() {
-  flushWriters();
+  try {
+    logStream.close();
+  }
+  catch (IOException e) {
+    println(e);
+  }
   if (myPort != null) {
     myPort.stop();
   }

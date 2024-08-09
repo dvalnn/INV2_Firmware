@@ -19,6 +19,5 @@ List<String> vars = Arrays.asList("Target Pressure", "Trigger Pressure", "Target
 List<String> IDs = Arrays.asList( "1 : Rocket", "2 : Filling Station", "3 : Broadcast");
 
 String logFileName = "log.txt";
-String dataFileName = "data.csv";
 
 int cmd_size = 14; // 13 comandos + 1
