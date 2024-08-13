@@ -139,6 +139,9 @@ void displayLogRocket() {
   r_tank_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 15, 17))).getShort();
   r_tank_liquid = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 17, 19))).getShort();
   r_bools = rx_packet.payload[19];
+  r_weight1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 20, 22))).getShort();
+  r_weight2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 22, 24))).getShort();
+  r_weight3 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 24, 26))).getShort();
 
   String ttt = "\n" + "Tank Top Temperature: " + str(tank_top_temp);
   String tbt = "\n" + "Tank Bottom Temperature: " + str(tank_bot_temp);
@@ -149,6 +152,9 @@ void displayLogRocket() {
   String tbp = "\n" + "Tank Bottom Pressure: " + str(tank_bot_press);
   String rtp = "\n" + "Tank Pressure: " + str(r_tank_press);
   String rtl = "\n" + "Tank Liquid: " + str(r_tank_liquid);
+  String w1 = "\n" + "Weight 1: " + str(r_weight1);
+  String w2 = "\n" + "Weight 2: " + str(r_weight2);
+  String w3 = "\n" + "Weight 3: " + str(r_weight3);
 
   String bools = String.format("%8s", Integer.toBinaryString(r_bools & 0xFF)).replace(' ', '0');
   String log_running = "\nLog Running: " + bools.substring(0, 1);
@@ -156,7 +162,7 @@ void displayLogRocket() {
   String tb_valve = "\nTank Bottom Valve: " + bools.substring(2, 3);
   String tactiles = "\nTactiles: " + bools.substring(3);
 
-  log_display_rocket.setText("Rocket" + state + ttt + tbt + ct1 + ct2 + ct3 + ttp + tbp + rtp + rtl + log_running + tt_valve + tb_valve + tactiles);
+  log_display_rocket.setText("Rocket" + state + ttt + tbt + ct1 + ct2 + ct3 + ttp + tbp + rtp + rtl + log_running + tt_valve + tb_valve + tactiles + w1 + w2 + w3);
 }
 
 void displayLogFilling() {
@@ -170,7 +176,6 @@ void displayLogFilling() {
   n2o_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 13, 15))).getShort();
   line_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 15, 17))).getShort();
   ematch_v = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 17, 19))).getShort();
-  //f_weight1 = int(((Byte.toUnsignedInt(rx_packet.payload[19]) << 24) | Byte.toUnsignedInt(rx_packet.payload[20]) << 16) | ((Byte.toUnsignedInt(rx_packet.payload[21]) << 8) | Byte.toUnsignedInt(rx_packet.payload[22])));
   f_weight1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 19, 23))).getInt();
 
   String ftp = "\n" + "Tank Temperature: " + str(f_tank_press);

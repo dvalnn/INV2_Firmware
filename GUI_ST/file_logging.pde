@@ -1,5 +1,3 @@
-//  for now I am creating a logFile to save every packet that's sent and received as well as every user interaction and a
-//data file to save just the important sensor data
 import java.io.FileOutputStream;
 import java.io.File;
 import java.io.OutputStream;
