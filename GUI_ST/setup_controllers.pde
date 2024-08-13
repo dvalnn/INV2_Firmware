@@ -104,7 +104,7 @@ void setupControllers() {
     .setFont(font);
 
   fillingChart = cp5.addChart("Filling P+L")
-    .setPosition(displayWidth*.23, displayHeight*.4)
+    .setPosition(displayWidth*.23, displayHeight*.35)
     .setSize((int)(displayWidth*.39), (int)(displayHeight*.15))
     .setRange(0, 1000) // TODO change min and max (maybe dynamic)
     .setView(Chart.LINE) // use Chart.LINE, Chart.PIE, Chart.AREA, Chart.BAR_CENTERED
@@ -139,12 +139,12 @@ void setupControllers() {
 
   log_display_rocket = cp5.addTextlabel("Rocket Log")
     .setText("Logging Packet goes here")
-    .setPosition(displayWidth*.23, displayHeight*.62)
+    .setPosition(displayWidth*.23, displayHeight*.54)
     .setFont(font);
 
   log_display_filling = cp5.addTextlabel("Filling Log")
     .setText("Logging Packet goes here")
-    .setPosition(displayWidth*.46, displayHeight*.62)
+    .setPosition(displayWidth*.46, displayHeight*.54)
     .setFont(font);
 
   ack_display = cp5.addTextlabel("Ack Display")

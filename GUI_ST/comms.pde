@@ -100,8 +100,14 @@ void processPacket() {
   } else if (CMD == (byte) 0x0e) { // STATUS ACK
     displayAck((int)0x0e);
     if (targetID == 1) {
+      if (man_window_open) {
+        window.man_displayLogRocket();
+      }
       displayLogRocket();
     } else if (targetID == 2) {
+      if (man_window_open) {
+        window.man_displayLogFilling();
+      }
       displayLogFilling();
     }
   } else if (CMD >= (byte)0x0f && CMD <= (byte)0x1a) {

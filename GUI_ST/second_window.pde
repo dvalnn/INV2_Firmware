@@ -59,6 +59,8 @@ public class Window extends PApplet {
       send((byte)0x04, empty_payload);
     } else if (event.isFrom("Abort")) {
       send((byte)0x02, empty_payload);
+    } else if (event.isFrom("Select ID")) {
+      targetID = (byte) (event.getValue() + 1);
     }
   }
 
@@ -109,13 +111,13 @@ public class Window extends PApplet {
       .setColorActive(color(255, 0, 0));
 
     cp5.addButton("Stop")
-      .setPosition(width*.75, height*.2)
+      .setPosition(width*.75, height*.17)
       .setSize((int)(width*.22), (int)(height*.05))
       .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
       .setFont(font);
 
     cp5.addButton("Abort")
-      .setPosition(width*.75, height*.3)
+      .setPosition(width*.75, height*.24)
       .setSize((int)(width*.22), (int)(height*.05))
       .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
       .setFont(font);
@@ -127,6 +129,17 @@ public class Window extends PApplet {
         .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
         .setFont(font);
     }
+
+    cp5.addScrollableList("Select ID")
+      .setPosition(displayWidth*.02, displayHeight*.5)
+      .setSize((int)(displayWidth*.17), (int)(displayHeight*.5))
+      .setBarHeight((int)(displayHeight*.05))
+      .setItemHeight((int)(displayHeight*.05))
+      .addItems(IDs)
+      .setFont(font)
+      .setColorBackground(color(50, 50, 50))
+      .setColorForeground(color(0, 144, 0))
+      .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
 
     man_log_display_rocket = cp5.addTextlabel("Rocket Log")
       .setText("Logging Packet goes here")
