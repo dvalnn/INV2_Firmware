@@ -78,7 +78,7 @@ void setup() {
   fullScreen();
   background(0);
   
-  logDir = sketchPath() + "/logs/";
+  logDir = sketchPath() + "/logs/"; 
   file = new File(logDir+"log_"+day()+"_"+month()+"_"+year()+"_"+hour()+minute()+second()+".bin");
   
   font = createFont("arial", displayWidth*.013);
@@ -217,6 +217,12 @@ public void controlEvent(ControlEvent event) {
       window = new Window();
       String[] args = {"Manual Window"};
       PApplet.runSketch(args, window);
+    } else {
+      if (window.isWindowVisible) {
+        window.exit(); // Hide the window if it's open
+      } else {
+        window.showWindow(); // Show the window if it's hidden
+      }
     }
   } else if (event.isFrom("Fire")) {
     send((byte)0x0c, empty_payload);
@@ -236,6 +242,14 @@ public void controlEvent(ControlEvent event) {
   }
 }
 
+@Override
+public void exit() {
+  // Ensure the secondary window closes when the main window is closed
+  if (window != null) {
+    window.dispose(); // This will hide the secondary window if it's open
+  }
+  super.exit(); // Continue with the default exit behavior
+}
 
 
 // This method ensures the serial port is closed properly when the program is exited

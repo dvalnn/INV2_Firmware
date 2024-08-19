@@ -2,9 +2,7 @@ import processing.core.PApplet;
 import controlP5.*;
 
 public class Window extends PApplet {
-  private ControlP5 cp5;
-
-  PFont font;
+  private ControlP5 m_cp5;
 
   Toggle valve_toggle;
   int valve_toggle_state = 0;
@@ -14,7 +12,7 @@ public class Window extends PApplet {
   List<String> man_commands = Arrays.asList("Flash Log Start", "Flash Log Stop", "Flash IDs", "Loadcell Calibrate", "Loadcell Tare");
   HashMap<String, Byte> man_commands_map = new HashMap<String, Byte>();
   List<String> valves = Arrays.asList("VPU Valve", "Engine Valve", "He Valve", "N2O Valve", "Line Valve");
-
+  boolean isWindowVisible = true;
   int valve_selected = -1;
 
   public void settings() {
@@ -55,11 +53,11 @@ public class Window extends PApplet {
           .setColorActive(color(255, 0, 0))    // Red when off
           .setColorBackground(color(100, 0, 0));
       }
-    } else if (event.isFrom("Stop")) {
+    } else if (event.isFrom("Manual Stop")) {
       send((byte)0x04, empty_payload);
-    } else if (event.isFrom("Abort")) {
+    } else if (event.isFrom("Manual Abort")) {
       send((byte)0x02, empty_payload);
-    } else if (event.isFrom("Select ID")) {
+    } else if (event.isFrom("Manual Select ID")) {
       targetID = (byte) (event.getValue() + 1);
     }
   }
@@ -68,7 +66,7 @@ public class Window extends PApplet {
     background(100);
     windowResizable(true);
     font = createFont("arial", displayWidth*.013);
-    cp5 = new ControlP5(this);
+    m_cp5 = new ControlP5(this);
 
     man_commands_map.put("Flash Log Start", (byte) 0);
     man_commands_map.put("Flash Log Stop", (byte) 1);
@@ -76,13 +74,13 @@ public class Window extends PApplet {
     man_commands_map.put("Loadcell Calibrate", (byte) 6);
     man_commands_map.put("Loadcell Tare", (byte) 7);
 
-    cp5.addButton("Start Manual")
+    m_cp5.addButton("Start Manual")
       .setPosition(width*.75, height*.1)
       .setSize((int)(width*.22), (int)(height*.05))
       .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
       .setFont(font);
 
-    cp5.addScrollableList("Select Valve")
+    m_cp5.addScrollableList("Select Valve")
       .setPosition(width*.02, height*.02)
       .setSize((int)(width*.17), (int)(height*.5))
       .setBarHeight((int)(height*.05))
@@ -93,13 +91,13 @@ public class Window extends PApplet {
       .setColorForeground(color(0, 144, 0))
       .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
 
-    cp5.addButton("Change Valve State")
+    m_cp5.addButton("Change Valve State")
       .setPosition(width*.02, height*.5)
       .setSize((int)(width*.22), (int)(height*.05))
       .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
       .setFont(font);
 
-    valve_toggle = cp5.addToggle("Valve Toggle")
+    valve_toggle = m_cp5.addToggle("Valve Toggle")
       .setPosition(width*.02, height*.4)
       .setSize((int)(width*.05), (int)(width*.02))
       .setValue(false)
@@ -110,27 +108,27 @@ public class Window extends PApplet {
       .setColorBackground(color(100, 0, 0))
       .setColorActive(color(255, 0, 0));
 
-    cp5.addButton("Stop")
+    m_cp5.addButton("Manual Stop")
       .setPosition(width*.75, height*.17)
       .setSize((int)(width*.22), (int)(height*.05))
       .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
       .setFont(font);
 
-    cp5.addButton("Abort")
+    m_cp5.addButton("Manual Abort")
       .setPosition(width*.75, height*.24)
       .setSize((int)(width*.22), (int)(height*.05))
       .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
       .setFont(font);
 
     for (int i = 0; i < man_commands.size(); i++) {
-      cp5.addButton(man_commands.get(i))
+      m_cp5.addButton(man_commands.get(i))
         .setPosition(width*.75, height*.45 + height*.06*i)
         .setSize((int)(width*.22), (int)(height*.05))
         .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
         .setFont(font);
     }
 
-    cp5.addScrollableList("Select ID")
+    m_cp5.addScrollableList("Manual Select ID")
       .setPosition(displayWidth*.02, displayHeight*.5)
       .setSize((int)(displayWidth*.17), (int)(displayHeight*.5))
       .setBarHeight((int)(displayHeight*.05))
@@ -141,12 +139,12 @@ public class Window extends PApplet {
       .setColorForeground(color(0, 144, 0))
       .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
 
-    man_log_display_rocket = cp5.addTextlabel("Rocket Log")
+    man_log_display_rocket = m_cp5.addTextlabel("Manual Rocket Log")
       .setText("Logging Packet goes here")
       .setPosition(displayWidth*.17, displayHeight*.02)
       .setFont(font);
 
-    man_log_display_filling = cp5.addTextlabel("Filling Log")
+    man_log_display_filling = m_cp5.addTextlabel("Manual Filling Log")
       .setText("Logging Packet goes here")
       .setPosition(displayWidth*.37, displayHeight*.02)
       .setFont(font);
@@ -189,13 +187,24 @@ public class Window extends PApplet {
     man_log_display_filling.setText("Filling Station" + state + ftp + ftl + ht + nt + lt + hp + np + lp + ev + w1);
   }
   public void draw() {
-    // Nothing needed here if the UI is static
     background(100);
   }
 
+  //@Override
+  //  public void exit() {
+  //  man_window_open = false;
+  //  this.dispose();
+  //}
+
   @Override
     public void exit() {
-    this.dispose();
-    man_window_open = false;
+    // Hide the window instead of closing it
+    isWindowVisible = false;
+    this.getSurface().setVisible(false);
+  }
+
+  public void showWindow() {
+    isWindowVisible = true;
+    this.getSurface().setVisible(true);
   }
 }
