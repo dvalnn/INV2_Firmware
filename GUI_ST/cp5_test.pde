@@ -78,6 +78,9 @@ void setup() {
   fullScreen();
   background(0);
   
+  logDir = sketchPath() + "/logs/";
+  file = new File(logDir+"log_"+day()+"_"+month()+"_"+year()+"_"+hour()+minute()+second()+".bin");
+  
   font = createFont("arial", displayWidth*.013);
   cp5 = new ControlP5(this);
   gray.setForeground(color(0, 0, 0))

@@ -4,8 +4,8 @@ import java.io.OutputStream;
 
 boolean logRunning = false;
 OutputStream logStream;
-static String dir = "D:/FEUP/PST/GROUND_PST/GUI_ST/logs/";
-static File file = new File(dir+"log_"+day()+"_"+month()+"_"+year()+"_"+hour()+minute()+second()+".bin");
+String logDir;
+File file;
 
 void init_log() {
   try {
