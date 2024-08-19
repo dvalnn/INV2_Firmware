@@ -6,7 +6,7 @@ public class Window extends PApplet {
 
   Toggle valve_toggle;
   int valve_toggle_state = 0;
-
+  int last_open_valve = -1;
   Textlabel man_log_display_rocket, man_log_display_filling;
 
   List<String> man_commands = Arrays.asList("Flash Log Start", "Flash Log Stop", "Flash IDs", "Loadcell Calibrate", "Loadcell Tare");
@@ -161,6 +161,9 @@ public class Window extends PApplet {
     String tbp = "\n" + "Tank Bottom Pressure: " + str(tank_bot_press);
     String rtp = "\n" + "Tank Pressure: " + str(r_tank_press);
     String rtl = "\n" + "Tank Liquid: " + str(r_tank_liquid);
+    String w1 = "\n" + "Weight 1: " + str(r_weight1);
+    String w2 = "\n" + "Weight 2: " + str(r_weight2);
+    String w3 = "\n" + "Weight 3: " + str(r_weight3);
 
     String bools = String.format("%8s", Integer.toBinaryString(r_bools & 0xFF)).replace(' ', '0');
     String log_running = "\nLog Running: " + bools.substring(0, 1);
@@ -168,7 +171,7 @@ public class Window extends PApplet {
     String tb_valve = "\nTank Bottom Valve: " + bools.substring(2, 3);
     String tactiles = "\nTactiles: " + bools.substring(3);
 
-    man_log_display_rocket.setText("Rocket" + state + ttt + tbt + ct1 + ct2 + ct3 + ttp + tbp + rtp + rtl + log_running + tt_valve + tb_valve + tactiles);
+    man_log_display_rocket.setText("Rocket" + state + ttt + tbt + ct1 + ct2 + ct3 + ttp + tbp + rtp + rtl + log_running + tt_valve + tb_valve + tactiles + w1 + w2 + w3);
   }
 
   public void man_displayLogFilling() {
@@ -184,7 +187,13 @@ public class Window extends PApplet {
     String ev = "\n" + "eMatch reading: " + str(ematch_v);
     String w1 = "\n" + "Weight 1: " + str(f_weight1);
 
-    man_log_display_filling.setText("Filling Station" + state + ftp + ftl + ht + nt + lt + hp + np + lp + ev + w1);
+    String bools = String.format("%8s", Integer.toBinaryString(f_bools & 0xFF)).replace(' ', '0');
+    String log_running = "\nLog Running: " + bools.substring(0, 1);
+    String he_valve = "\nHelium Valve: " + bools.substring(1, 2);
+    String n2o_valve = "\nN2O Valve: " + bools.substring(2, 3);
+    String line_valve = "\nLine Valve: " + bools.substring(3, 4);
+
+    log_display_filling.setText("Filling Station\n" + state + ftp + ftl + ht + nt + lt + hp + np + lp + ev + w1 + log_running + he_valve + n2o_valve + line_valve);
   }
   public void draw() {
     background(100);

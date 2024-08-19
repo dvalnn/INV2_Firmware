@@ -59,7 +59,7 @@ int last_status_request = 0;
 
 short tank_top_temp, tank_bot_temp, chamber_temp1, chamber_temp2, chamber_temp3, tank_top_press, tank_bot_press, r_tank_press, r_tank_liquid, r_weight1, r_weight2, r_weight3;
 byte r_bools;
-short f_tank_press, f_tank_liquid, he_temp, n2o_temp, line_temp, he_press, n2o_press, line_press, ematch_v;
+short f_tank_press, f_tank_liquid, he_temp, n2o_temp, line_temp, he_press, n2o_press, line_press, ematch_v, f_bools;
 int f_weight1;
 int max_r = 1, max_f = 1;
 
@@ -72,6 +72,8 @@ CColor gray = new CColor();
 CColor blue = new CColor();
 
 Window window;
+
+Tab fillTab;
 
 void setup() {
   frameRate(60);
@@ -134,7 +136,7 @@ void setup() {
 
 void draw() {
   background(0);
-  updateCharts((int)r_tank_press, (int)r_tank_liquid, (int)f_tank_press, (int)f_tank_liquid);
+  updateCharts((int)r_tank_press, (int)r_tank_liquid);
   if (millis() - last_status_request > status_interval && status_toggle_state == 1) {
     send((byte)0x00, empty_payload);
     last_status_request = millis();

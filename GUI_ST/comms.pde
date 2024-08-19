@@ -182,7 +182,8 @@ void displayLogFilling() {
   n2o_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 13, 15))).getShort();
   line_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 15, 17))).getShort();
   ematch_v = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 17, 19))).getShort();
-  f_weight1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 19, 23))).getInt();
+  f_weight1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 19, 21))).getShort();
+  f_bools = rx_packet.payload[21];
 
   String ftp = "\n" + "Tank Temperature: " + str(f_tank_press);
   String ftl = "\n" + "Tank Liquid: " + str(f_tank_liquid);
@@ -194,8 +195,14 @@ void displayLogFilling() {
   String lp = "\n" + "Line Pressure: " + str(line_press);
   String ev = "\n" + "eMatch reading: " + str(ematch_v);
   String w1 = "\n" + "Weight 1: " + str(f_weight1);
-
-  log_display_filling.setText("Filling Station\n" + state + ftp + ftl + ht + nt + lt + hp + np + lp + ev + w1);
+  
+  String bools = String.format("%8s", Integer.toBinaryString(f_bools & 0xFF)).replace(' ', '0');
+  String log_running = "\nLog Running: " + bools.substring(0, 1);
+  String he_valve = "\nHelium Valve: " + bools.substring(1, 2);
+  String n2o_valve = "\nN2O Valve: " + bools.substring(2, 3);
+  String line_valve = "\nLine Valve: " + bools.substring(3, 4);
+ 
+  log_display_filling.setText("Filling Station\n" + state + ftp + ftl + ht + nt + lt + hp + np + lp + ev + w1 + log_running + he_valve + n2o_valve + line_valve);
 }
 
 void displayAck(int ackValue) {

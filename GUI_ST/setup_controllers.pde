@@ -1,4 +1,19 @@
 void setupControllers() {
+  fillTab = cp5.addTab("extra")
+    .setColorBackground(color(0, 160, 100))
+    .setColorLabel(color(255))
+    .setColorActive(color(255, 128, 0))
+    .setHeight((int)(displayHeight*.03))
+    .setWidth((int)(displayHeight*.08))
+    ;
+
+  fillTab.getCaptionLabel()
+    .setFont(font);
+
+  cp5.getTab("default")
+    .getCaptionLabel()
+    .setFont(font);
+
   cp5.addScrollableList("program")
     .setPosition(displayWidth*.02, displayHeight*.05)
     .setSize((int)(displayWidth*.15), (int)(displayHeight*.46))
@@ -103,14 +118,14 @@ void setupControllers() {
     .setColorCaptionLabel(color(255))
     .setFont(font);
 
-  fillingChart = cp5.addChart("Filling P+L")
-    .setPosition(displayWidth*.23, displayHeight*.35)
-    .setSize((int)(displayWidth*.39), (int)(displayHeight*.15))
-    .setRange(0, 1000) // TODO change min and max (maybe dynamic)
-    .setView(Chart.LINE) // use Chart.LINE, Chart.PIE, Chart.AREA, Chart.BAR_CENTERED
-    .setStrokeWeight(1.5)
-    .setColorCaptionLabel(color(255))
-    .setFont(font);
+  //fillingChart = cp5.addChart("Filling P+L")
+  //.setPosition(displayWidth*.23, displayHeight*.35)
+  //.setSize((int)(displayWidth*.39), (int)(displayHeight*.15))
+  //.setRange(0, 1000) // TODO change min and max (maybe dynamic)
+  //.setView(Chart.LINE) // use Chart.LINE, Chart.PIE, Chart.AREA, Chart.BAR_CENTERED
+  //.setStrokeWeight(1.5)
+  //.setColorCaptionLabel(color(255))
+  //.setFont(font);
 
 
   List<String> portNames = Arrays.asList(Serial.list());   // List available serial ports and add them to a new ScrollableList
