@@ -3,8 +3,8 @@ int packet_read_timeout = 250; // ms
 int packet_loss_timeout = 250;
 
 // GUI Positions and Sizes
-float button_x1 = .7; // * displayWidth
-float button_x2 = .85;
+float button_x1 = .8; // * displayWidth
+float button_x2 = .89;
 float button_height = .04; // * displayHeight
 float button_width = .13; // * displayWidth
 
@@ -21,3 +21,5 @@ List<String> IDs = Arrays.asList( "1 : Rocket", "2 : Filling Station", "3 : Broa
 String logFileName = "log.txt";
 
 int cmd_size = 14; // 13 comandos + 1
+
+// colors

@@ -1,8 +1,8 @@
 void setupCharts() {
   rocketChart.addDataSet("Pressure");
   rocketChart.addDataSet("Liquid");
-  rocketChart.setData("Pressure", new float[10000]);
-  rocketChart.setData("Liquid", new float[10000]);
+  rocketChart.setData("Pressure", new float[max_size]);
+  rocketChart.setData("Liquid", new float[max_size]);
   rocketChart.setColors("Pressure", color(0, 255, 0));
   rocketChart.setColors("Liquid", color(255, 255, 0));
   
@@ -15,13 +15,15 @@ void setupCharts() {
 }
 
 void updateCharts(int rp, int rl) {
-  rocketChart.push("Pressure", rp);
-  rocketChart.push("Liquid", rl);
-  max_r = max(max_r, rp);
-  max_r = max(max_r, rl);
+  mock_value1 += random(-10, 10);
+  mock_value2 += random(-5, 5);
+  rocketChart.push("Pressure", mock_value1);
+  rocketChart.push("Liquid", mock_value2);
+  //max_r = max(max_r, rp);
+  //max_r = max(max_r, rl);
+  max_r = max(max_r, mock_value1);
+  max_r = max(max_r, mock_value2);
   rocketChart.setRange(0, max_r*2);
-  text("Pressure: " + str(rp), rocketChart.getPosition()[0] + rocketChart.getWidth() + 10, rocketChart.getPosition()[1] + rocketChart.getHeight() * (1 - ((float)rp / max_r*.5)));
-  text("Liquid: " + str(rl), rocketChart.getPosition()[0] + rocketChart.getWidth() + 10, 10 + rocketChart.getPosition()[1] + rocketChart.getHeight() * (1 - ((float)rl / max_r*.5)));
   
   //fillingChart.push("Pressure", fp);
   //fillingChart.push("Liquid", fl);

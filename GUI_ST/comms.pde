@@ -86,28 +86,16 @@ void processPacket() {
   if (CMD == (byte) 0x00) { // LOG COMANDO PLACEHOLDER 0x01 se tudo correr bem
     if (ID == (byte) 0x02) {
       displayLogRocket();
-      if (man_window_open) {
-        window.man_displayLogRocket();
-      }
       updateLogStats(1);
     } else if (ID == (byte) 0x01) {
       displayLogFilling();
-      if (man_window_open) {
-        window.man_displayLogFilling();
-      }
       updateLogStats(2);
     }
   } else if (CMD == (byte) 0x0e) { // STATUS ACK
     displayAck((int)0x0e);
     if (targetID == 1) {
-      if (man_window_open) {
-        window.man_displayLogRocket();
-      }
       displayLogRocket();
     } else if (targetID == 2) {
-      if (man_window_open) {
-        window.man_displayLogFilling();
-      }
       displayLogFilling();
     }
   } else if (CMD >= (byte)0x0f && CMD <= (byte)0x1a) {

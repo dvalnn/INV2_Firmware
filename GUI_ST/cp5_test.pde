@@ -61,28 +61,42 @@ short tank_top_temp, tank_bot_temp, chamber_temp1, chamber_temp2, chamber_temp3,
 byte r_bools;
 short f_tank_press, f_tank_liquid, he_temp, n2o_temp, line_temp, he_press, n2o_press, line_press, ematch_v, f_bools;
 int f_weight1;
-int max_r = 1, max_f = 1;
+float max_r = 1, max_f = 1;
+int max_size = 100000;
 
 boolean man_window_open = false;
 
 int[] prog_inputs = new int[3];
 int selected_index = -1;
 
+float mock_value1, mock_value2;
+
 CColor gray = new CColor();
 CColor blue = new CColor();
 
-Window window;
-
 Tab fillTab;
+Tab launchTab;
+
+// manual stuff
+Toggle valve_toggle;
+int valve_toggle_state = 0;
+int last_open_valve = -1;
+Textlabel man_log_display_rocket, man_log_display_filling;
+
+List<String> man_commands = Arrays.asList("Flash Log Start", "Flash Log Stop", "Flash IDs", "Loadcell Calibrate", "Loadcell Tare");
+HashMap<String, Byte> man_commands_map = new HashMap<String, Byte>();
+List<String> valves = Arrays.asList("VPU Valve", "Engine Valve", "He Valve", "N2O Valve", "Line Valve");
+boolean isWindowVisible = true;
+int valve_selected = -1;
 
 void setup() {
   frameRate(60);
   fullScreen();
   background(0);
-  
-  logDir = sketchPath() + "/logs/"; 
+
+  logDir = sketchPath() + "/logs/";
   file = new File(logDir+"log_"+day()+"_"+month()+"_"+year()+"_"+hour()+minute()+second()+".bin");
-  
+
   font = createFont("arial", displayWidth*.013);
   cp5 = new ControlP5(this);
   gray.setForeground(color(0, 0, 0))
@@ -214,18 +228,6 @@ public void controlEvent(ControlEvent event) {
     send((byte)0x09, empty_payload);
   } else if (event.isFrom("Ready")) {
     send((byte)0x08, empty_payload);
-  } else if (event.isFrom("Manual")) {
-    if (!man_window_open) {
-      window = new Window();
-      String[] args = {"Manual Window"};
-      PApplet.runSketch(args, window);
-    } else {
-      if (window.isWindowVisible) {
-        window.exit(); // Hide the window if it's open
-      } else {
-        window.showWindow(); // Show the window if it's hidden
-      }
-    }
   } else if (event.isFrom("Fire")) {
     send((byte)0x0c, empty_payload);
   } else if (event.isFrom("Allow Launch")) {
@@ -241,16 +243,35 @@ public void controlEvent(ControlEvent event) {
         .setColorActive(color(255, 0, 0))    // Red when off
         .setColorBackground(color(100, 0, 0));
     }
+    for (int i = 0; i < man_commands.size(); i++) {
+      if (event.isFrom(man_commands.get(i))) {
+        byte[] man_payload = {man_commands_map.get(man_commands.get(i))};
+        send((byte)0x07, man_payload);
+      }
+    }
+    if (event.isFrom("Start Manual")) {
+      send((byte)0x06, empty_payload);
+    } else if (event.isFrom("Change Valve State")) {
+      if (valve_selected > -1) {
+        byte[] man_payload = {(byte) 0x04, (byte) valve_selected, (byte) valve_toggle_state};
+        send((byte)0x07, man_payload);
+      }
+    } else if (event.isFrom("Select Valve")) {
+      valve_selected = (int)event.getValue();
+    } else if (event.isFrom("")) {
+    } else if (event.isFrom(valve_toggle)) {
+      valve_toggle_state = (int) event.getController().getValue();
+      if (valve_toggle_state == 1) {
+        valve_toggle.setColorForeground(color(0, 255, 0))
+          .setColorBackground(color(0, 100, 0))
+          .setColorActive(color(0, 255, 0));     // Green when on
+      } else if (valve_toggle_state == 0) {
+        valve_toggle.setColorForeground(color(255, 0, 0))// Red when off
+          .setColorActive(color(255, 0, 0))    // Red when off
+          .setColorBackground(color(100, 0, 0));
+      }
+    }
   }
-}
-
-@Override
-public void exit() {
-  // Ensure the secondary window closes when the main window is closed
-  if (window != null) {
-    window.dispose(); // This will hide the secondary window if it's open
-  }
-  super.exit(); // Continue with the default exit behavior
 }
 
 
