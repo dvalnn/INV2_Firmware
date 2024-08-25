@@ -2,7 +2,7 @@ void setupControllers() {
   manual_setup();
   filling_setup();
   launch_setup();
-  
+
   cp5.addScrollableList("program")
     .setPosition(displayWidth*.02, displayHeight*.05)
     .setSize((int)(displayWidth*.15), (int)(displayHeight*.46))
@@ -10,33 +10,33 @@ void setupControllers() {
     .setItemHeight((int)(displayHeight*.05))
     .addItems(programs)
     .setFont(font)
-    .setColor(blue)
+    .setColor(colors2)
     .moveTo("filling")
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
-    
+
 
   // Textfields for parameters and limits
   textfields[0] = cp5.addTextfield("Target Pressure")
     .setAutoClear(false)
-    .setColor(blue)
+    .setColor(colors1)
     .setPosition(displayWidth*.23, displayHeight*.05)
     .setSize((int)(displayWidth*.13), (int)(displayHeight*.05))
     .setFont(font)
     .setInputFilter(ControlP5.FLOAT)
     .moveTo("filling");
-    
+
   textfields[1] = cp5.addTextfield("Trigger Pressure")
     .setAutoClear(false)
-    .setColor(blue)
+    .setColor(colors1)
     .setPosition(displayWidth*.37, displayHeight*.05)
     .setSize((int)(displayWidth*.14), (int)(displayHeight*.05))
     .setFont(font)
     .setInputFilter(ControlP5.FLOAT)
     .moveTo("filling");
-    
+
   textfields[2] = cp5.addTextfield("Target Liquid")
     .setAutoClear(false)
-    .setColor(blue)
+    .setColor(colors1)
     .setPosition(displayWidth*.52, displayHeight*.05)
     .setSize((int)(displayWidth*.1), (int)(displayHeight*.05))
     .setFont(font)
@@ -48,13 +48,15 @@ void setupControllers() {
     .setPosition(displayWidth*.63, displayHeight*.05)
     .setSize((int)(displayWidth*.1), (int)(displayHeight*button_height))
     .moveTo("filling")
+    .setColor(colors2)
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
   cp5.addButton("Start Filling")
-    .setPosition(displayWidth*button_x1, displayHeight*.3)
+    .setPosition(displayWidth*button_x1, displayHeight*.4)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
     .moveTo("filling")
+    .setColor(colors2)
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
@@ -62,6 +64,7 @@ void setupControllers() {
     .setPosition(displayWidth*button_x1, displayHeight*.1)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
     .moveTo("global")
+    .setColor(colors2)
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
@@ -69,6 +72,7 @@ void setupControllers() {
     .setPosition(displayWidth*button_x1, displayHeight*.15)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
     .moveTo("global")
+    .setColor(colors2)
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
@@ -76,53 +80,83 @@ void setupControllers() {
     .setPosition(displayWidth*button_x1, displayHeight*.20)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
     .moveTo("global")
+    .setColor(colors2)
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
   cp5.addButton("Abort")
     .setPosition(displayWidth*button_x1, displayHeight*.05)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
+    .setColor(colors2)
     .moveTo("global")
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
-    
+
   cp5.addButton("Arm")
     .setPosition(displayWidth*button_x1, displayHeight*.27)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
     .moveTo("launch")
+    .setColor(colors2)
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
-    
+
   cp5.addButton("Ready")
     .setPosition(displayWidth*button_x1, displayHeight*.32)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
     .moveTo("launch")
+    .setColor(colors2)
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
-    
+
   cp5.addButton("Fire")
     .setPosition(displayWidth*button_x1, displayHeight*.37)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
     .moveTo("launch")
+    .setColor(colors2)
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
-    
+
   cp5.addButton("Allow Launch")
     .setPosition(displayWidth*button_x1, displayHeight*.42)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
     .moveTo("launch")
+    .setColor(colors2)
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
-  rocketChart = cp5.addChart("Rocket P+L")
+  rocketChart = cp5.addChart("Rocket Chart")
     .setPosition(displayWidth*.23, displayHeight*.16)
     .setSize((int)(displayWidth*.39), (int)(displayHeight*.15))
     .setRange(0, 1000) // TODO change min and max (maybe dynamic)
     .setView(Chart.LINE) // use Chart.LINE, Chart.PIE, Chart.AREA, Chart.BAR_CENTERED
     .setStrokeWeight(1.5)
+    .setColor(colors2)
     .setColorCaptionLabel(color(255))
     .moveTo("filling")
     .setFont(font);
+
+  pressureLabel = cp5.addLabel("Pressure: ")
+    .setColor(color(0, 255, 0))
+    .setFont(font)
+    .moveTo("filling")
+    .setPosition(displayWidth*.63, displayHeight*.17)
+    .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
+    ;
+  liquidLabel = cp5.addLabel("Liquid: ")
+    .setColor(color(255, 255, 0))
+    .setFont(font)
+    .moveTo("filling")
+    .setPosition(displayWidth*.63, displayHeight*.22)
+    .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
+    ;
+  temperatureLabel = cp5.addLabel("Temperature: ")
+    .setColor(color(255, 150, 255))
+    .setFont(font)
+    .moveTo("filling")
+    .setPosition(displayWidth*.63, displayHeight*.27)
+    .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
+    ;
+
 
   //fillingChart = cp5.addChart("Filling P+L")
   //.setPosition(displayWidth*.23, displayHeight*.35)
@@ -143,8 +177,7 @@ void setupControllers() {
     .setItemHeight((int)(displayHeight*.05))
     .addItems(portNames)
     .setFont(font)
-    .setColorBackground(color(50, 50, 50))
-    .setColorForeground(color(0, 144, 0))
+    .setColor(colors2)
     .moveTo("global")
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
 
@@ -155,8 +188,7 @@ void setupControllers() {
     .setItemHeight((int)(displayHeight*.05))
     .addItems(IDs)
     .setFont(font)
-    .setColorBackground(color(50, 50, 50))
-    .setColorForeground(color(0, 144, 0))
+    .setColor(colors2)
     .moveTo("global")
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
 
@@ -174,13 +206,13 @@ void setupControllers() {
 
   ack_display = cp5.addTextlabel("Ack Display")
     .setText("Acks go here")
-    .setPosition(displayWidth*button_x1, displayHeight*.5)
+    .setPosition(displayWidth*.66, displayHeight*.54)
     .moveTo("global")
     .setFont(font);
 
   log_stats = cp5.addTextlabel("Log Stats")
     .setText("Log stats go here")
-    .setPosition(displayWidth*button_x1, displayHeight*.55)
+    .setPosition(displayWidth*.66, displayHeight*.6)
     .moveTo("global")
     .setFont(font);
 
@@ -195,60 +227,64 @@ void setupControllers() {
     .setColorForeground(color(255, 0, 0))  // Red when off
     .setColorBackground(color(100, 0, 0))
     .setColorActive(color(255, 0, 0));
-    
-    // manual
-    cp5.addButton("Start Manual")
-      .setPosition(width*.8, height*.59)
+
+  // manual
+  cp5.addButton("Start Manual")
+    .setPosition(width*.8, height*.54)
+    .setSize((int)(width*.17), (int)(height*.05))
+    .moveTo("default")
+    .setColor(colors2)
+    .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
+    .setFont(font);
+
+  cp5.addScrollableList("Select Valve")
+    .setPosition(width*.02, height*.05)
+    .setSize((int)(width*.17), (int)(height*.5))
+    .setBarHeight((int)(height*.05))
+    .setItemHeight((int)(height*.05))
+    .addItems(valves)
+    .setFont(font)
+    .setColor(colors2)
+    .moveTo("default")
+    .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
+
+  cp5.addButton("Change Valve State")
+    .setPosition(width*.02, height*.45)
+    .setSize((int)(width*.17), (int)(height*.05))
+    .moveTo("default")
+    .setColor(colors2)
+    .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
+    .setFont(font);
+
+  valve_toggle = cp5.addToggle("Valve Toggle")
+    .setPosition(width*.02, height*.37)
+    .setSize((int)(width*.05), (int)(width*.02))
+    .setValue(false)
+    .setMode(ControlP5.SWITCH)
+    .setLabel("Valve State")
+    .setFont(font)
+    .setColorForeground(color(255, 0, 0))  // Red when off
+    .setColorBackground(color(100, 0, 0))
+    .setColorActive(color(255, 0, 0))
+    .moveTo("default");
+
+  for (int i = 0; i < man_commands.size(); i++) {
+    cp5.addButton(man_commands.get(i))
+      .setPosition(width*.8, height*.6 + height*.06*i)
       .setSize((int)(width*.17), (int)(height*.05))
       .moveTo("default")
+      .setColor(colors2)
       .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
       .setFont(font);
-
-    cp5.addScrollableList("Select Valve")
-      .setPosition(width*.02, height*.05)
-      .setSize((int)(width*.17), (int)(height*.5))
-      .setBarHeight((int)(height*.05))
-      .setItemHeight((int)(height*.05))
-      .addItems(valves)
-      .setFont(font)
-      .setColorBackground(color(10, 10, 10))
-      .setColorForeground(color(0, 144, 0))
-      .moveTo("default")
-      .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
-
-    cp5.addButton("Change Valve State")
-      .setPosition(width*.02, height*.45)
-      .setSize((int)(width*.22), (int)(height*.05))
-      .moveTo("default")
-      .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
-      .setFont(font);
-
-    valve_toggle = cp5.addToggle("Valve Toggle")
-      .setPosition(width*.02, height*.37)
-      .setSize((int)(width*.05), (int)(width*.02))
-      .setValue(false)
-      .setMode(ControlP5.SWITCH)
-      .setLabel("Valve State")
-      .setFont(font)
-      .setColorForeground(color(255, 0, 0))  // Red when off
-      .setColorBackground(color(100, 0, 0))
-      .setColorActive(color(255, 0, 0))
-      .moveTo("default");
-
-    for (int i = 0; i < man_commands.size(); i++) {
-      cp5.addButton(man_commands.get(i))
-        .setPosition(width*.8, height*.65 + height*.06*i)
-        .setSize((int)(width*.17), (int)(height*.05))
-        .moveTo("default")
-        .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
-        .setFont(font);
-    }
+  }
 }
 
 void launch_setup() {
   launchTab = cp5.addTab("launch")
     .setColorLabel(color(255))
-    .setColorActive(color(150, 50, 0))
+    .setColorActive(red)
+    .setColorForeground(blue)
+    .setColorBackground(dark_blue)
     .setHeight((int)(displayHeight*.03))
     .setWidth((int)(displayWidth*.055))
     ;
@@ -260,7 +296,9 @@ void launch_setup() {
 void filling_setup() {
   fillTab = cp5.addTab("filling")
     .setColorLabel(color(255))
-    .setColorActive(color(150, 50, 0))
+    .setColorActive(red)
+    .setColorForeground(blue)
+    .setColorBackground(dark_blue)
     .setHeight((int)(displayHeight*.03))
     .setWidth((int)(displayWidth*.055))
     ;
@@ -272,10 +310,12 @@ void filling_setup() {
 void manual_setup() {
   cp5.getTab("default")
     .setColorLabel(color(255))
-    .setColorActive(color(255, 128, 0))
+    .setColorActive(red)
+    .setColorForeground(blue)
+    .setColorBackground(dark_blue)
     .setHeight((int)(displayHeight*.03))
     .setWidth((int)(displayWidth*.06))
-  .setLabel("manual")
+    .setLabel("manual")
     .getCaptionLabel()
     .setFont(font);
 }

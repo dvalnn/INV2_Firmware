@@ -23,3 +23,19 @@ String logFileName = "log.txt";
 int cmd_size = 14; // 13 comandos + 1
 
 // colors
+int bgColor = color(0, 0, 0);
+int red = color(140, 45, 25);
+int dark_red = color(117, 39, 23);
+int blue = color(0, 100, 117);
+int dark_blue = color(0, 47, 55);
+
+CColor colors1 = new CColor();
+CColor colors2 = new CColor();
+
+void setupColors() {
+  colors1.setForeground(dark_blue)
+    .setBackground(blue);
+  colors2.setForeground(blue)
+    .setBackground(dark_blue)
+    .setActive(red);
+}

@@ -69,10 +69,7 @@ boolean man_window_open = false;
 int[] prog_inputs = new int[3];
 int selected_index = -1;
 
-float mock_value1, mock_value2;
-
-CColor gray = new CColor();
-CColor blue = new CColor();
+float mock_value1, mock_value2, mock_value3;
 
 Tab fillTab;
 Tab launchTab;
@@ -81,7 +78,9 @@ Tab launchTab;
 Toggle valve_toggle;
 int valve_toggle_state = 0;
 int last_open_valve = -1;
+
 Textlabel man_log_display_rocket, man_log_display_filling;
+Textlabel pressureLabel, liquidLabel, temperatureLabel;
 
 List<String> man_commands = Arrays.asList("Flash Log Start", "Flash Log Stop", "Flash IDs", "Loadcell Calibrate", "Loadcell Tare");
 HashMap<String, Byte> man_commands_map = new HashMap<String, Byte>();
@@ -92,17 +91,16 @@ int valve_selected = -1;
 void setup() {
   frameRate(60);
   fullScreen();
-  background(0);
+  background(bgColor);
 
   logDir = sketchPath() + "/logs/";
   file = new File(logDir+"log_"+day()+"_"+month()+"_"+year()+"_"+hour()+minute()+second()+".bin");
 
   font = createFont("arial", displayWidth*.013);
   cp5 = new ControlP5(this);
-  gray.setForeground(color(0, 0, 0))
-    .setBackground(color(50, 50, 50));
-  blue.setForeground(color(50, 60, 150))
-    .setBackground(color(0, 31, 84));
+  
+  setupColors();
+  
 
   boolean[] _bl1 = {true, true, false};
   prog_args.put("Safety Pressure", _bl1);
@@ -149,7 +147,7 @@ void setup() {
 }
 
 void draw() {
-  background(0);
+  background(bgColor);
   updateCharts((int)r_tank_press, (int)r_tank_liquid);
   if (millis() - last_status_request > status_interval && status_toggle_state == 1) {
     send((byte)0x00, empty_payload);
@@ -206,9 +204,9 @@ public void controlEvent(ControlEvent event) {
     for (int i = 0; i < 5; i++) {
       String arg = vars.get(i);
       if (prog_args.get(program)[i]) {
-        cp5.getController(arg).setColor(blue);
+        cp5.getController(arg).setColor(colors1);
       } else {
-        cp5.getController(arg).setColor(gray);
+        cp5.getController(arg).setColor(colors2);
       }
     }
     println(program);
@@ -243,6 +241,19 @@ public void controlEvent(ControlEvent event) {
         .setColorActive(color(255, 0, 0))    // Red when off
         .setColorBackground(color(100, 0, 0));
     }
+  } else if (event.isFrom(valve_toggle)) {
+      valve_toggle_state = (int) event.getController().getValue();
+      if (valve_toggle_state == 1) {
+        valve_toggle.setColorForeground(color(0, 255, 0))
+          .setColorBackground(color(0, 100, 0))
+          .setColorActive(color(0, 255, 0));     // Green when on
+      } else if (valve_toggle_state == 0) {
+        valve_toggle.setColorForeground(color(255, 0, 0))// Red when off
+          .setColorActive(color(255, 0, 0))    // Red when off
+          .setColorBackground(color(100, 0, 0));
+      }
+    }
+  
     for (int i = 0; i < man_commands.size(); i++) {
       if (event.isFrom(man_commands.get(i))) {
         byte[] man_payload = {man_commands_map.get(man_commands.get(i))};
@@ -258,21 +269,8 @@ public void controlEvent(ControlEvent event) {
       }
     } else if (event.isFrom("Select Valve")) {
       valve_selected = (int)event.getValue();
-    } else if (event.isFrom("")) {
-    } else if (event.isFrom(valve_toggle)) {
-      valve_toggle_state = (int) event.getController().getValue();
-      if (valve_toggle_state == 1) {
-        valve_toggle.setColorForeground(color(0, 255, 0))
-          .setColorBackground(color(0, 100, 0))
-          .setColorActive(color(0, 255, 0));     // Green when on
-      } else if (valve_toggle_state == 0) {
-        valve_toggle.setColorForeground(color(255, 0, 0))// Red when off
-          .setColorActive(color(255, 0, 0))    // Red when off
-          .setColorBackground(color(100, 0, 0));
-      }
     }
   }
-}
 
 
 // This method ensures the serial port is closed properly when the program is exited
