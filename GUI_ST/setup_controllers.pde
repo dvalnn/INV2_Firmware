@@ -18,7 +18,7 @@ void setupControllers() {
   // Textfields for parameters and limits
   textfields[0] = cp5.addTextfield("Target Pressure")
     .setAutoClear(false)
-    .setColor(colors1)
+    .setColor(colors2)
     .setPosition(displayWidth*.23, displayHeight*.05)
     .setSize((int)(displayWidth*.13), (int)(displayHeight*.05))
     .setFont(font)
@@ -27,7 +27,7 @@ void setupControllers() {
 
   textfields[1] = cp5.addTextfield("Trigger Pressure")
     .setAutoClear(false)
-    .setColor(colors1)
+    .setColor(colors2)
     .setPosition(displayWidth*.37, displayHeight*.05)
     .setSize((int)(displayWidth*.14), (int)(displayHeight*.05))
     .setFont(font)
@@ -36,7 +36,7 @@ void setupControllers() {
 
   textfields[2] = cp5.addTextfield("Target Liquid")
     .setAutoClear(false)
-    .setColor(colors1)
+    .setColor(colors2)
     .setPosition(displayWidth*.52, displayHeight*.05)
     .setSize((int)(displayWidth*.1), (int)(displayHeight*.05))
     .setFont(font)
@@ -53,7 +53,7 @@ void setupControllers() {
     .setFont(font);
 
   cp5.addButton("Start Filling")
-    .setPosition(displayWidth*button_x1, displayHeight*.4)
+    .setPosition(displayWidth*button_x1, displayHeight*.3)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
     .moveTo("filling")
     .setColor(colors2)
@@ -87,7 +87,7 @@ void setupControllers() {
   cp5.addButton("Abort")
     .setPosition(displayWidth*button_x1, displayHeight*.05)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
-    .setColor(colors2)
+    .setColor(abortColor)
     .moveTo("global")
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
@@ -134,28 +134,44 @@ void setupControllers() {
     .setColorCaptionLabel(color(255))
     .moveTo("filling")
     .setFont(font);
+    
+    cp5.addButton("Reset Chart")
+    .setPosition(displayWidth*.49, displayHeight*.32)
+    .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
+    .moveTo("filling")
+    .setColor(colors2)
+    .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
+    .setFont(font);
 
   pressureLabel = cp5.addLabel("Pressure: ")
     .setColor(color(0, 255, 0))
     .setFont(font)
     .moveTo("filling")
-    .setPosition(displayWidth*.63, displayHeight*.17)
+    .setPosition(displayWidth*.63, displayHeight*.16)
     .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
     ;
   liquidLabel = cp5.addLabel("Liquid: ")
     .setColor(color(255, 255, 0))
     .setFont(font)
     .moveTo("filling")
-    .setPosition(displayWidth*.63, displayHeight*.22)
+    .setPosition(displayWidth*.63, displayHeight*.20)
     .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
     ;
   temperatureLabel = cp5.addLabel("Temperature: ")
     .setColor(color(255, 150, 255))
     .setFont(font)
     .moveTo("filling")
-    .setPosition(displayWidth*.63, displayHeight*.27)
+    .setPosition(displayWidth*.63, displayHeight*.24)
     .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
     ;
+  weightLabel = cp5.addLabel("Weight: ")
+    .setColor(color(0, 255, 255))
+    .setFont(font)
+    .moveTo("filling")
+    .setPosition(displayWidth*.63, displayHeight*.28)
+    .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
+    ;
+
 
 
   //fillingChart = cp5.addChart("Filling P+L")
@@ -194,24 +210,26 @@ void setupControllers() {
 
   log_display_rocket = cp5.addTextlabel("Rocket Log")
     .setText("Logging Packet goes here")
-    .setPosition(displayWidth*.23, displayHeight*.54)
+    .setPosition(displayWidth*.66, displayHeight*.67)
     .moveTo("global")
     .setFont(font);
 
   log_display_filling = cp5.addTextlabel("Filling Log")
     .setText("Logging Packet goes here")
-    .setPosition(displayWidth*.46, displayHeight*.54)
+    .setPosition(displayWidth*.66, displayHeight*.77)
     .moveTo("global")
     .setFont(font);
 
   ack_display = cp5.addTextlabel("Ack Display")
     .setText("Acks go here")
+    .setColor(color(180, 180, 180))
     .setPosition(displayWidth*.66, displayHeight*.54)
     .moveTo("global")
     .setFont(font);
 
   log_stats = cp5.addTextlabel("Log Stats")
     .setText("Log stats go here")
+    .setColor(color(180, 180, 180))
     .setPosition(displayWidth*.66, displayHeight*.6)
     .moveTo("global")
     .setFont(font);
@@ -230,7 +248,7 @@ void setupControllers() {
 
   // manual
   cp5.addButton("Start Manual")
-    .setPosition(width*.8, height*.54)
+    .setPosition(width*button_x1, height*.3)
     .setSize((int)(width*.17), (int)(height*.05))
     .moveTo("default")
     .setColor(colors2)
@@ -270,7 +288,7 @@ void setupControllers() {
 
   for (int i = 0; i < man_commands.size(); i++) {
     cp5.addButton(man_commands.get(i))
-      .setPosition(width*.8, height*.6 + height*.06*i)
+      .setPosition(width*.35, height*.54 + height*.06*i)
       .setSize((int)(width*.17), (int)(height*.05))
       .moveTo("default")
       .setColor(colors2)

@@ -20,6 +20,8 @@ List<String> IDs = Arrays.asList( "1 : Rocket", "2 : Filling Station", "3 : Broa
 
 String logFileName = "log.txt";
 
+String fill_img = "diagrams/filling.png";
+
 int cmd_size = 14; // 13 comandos + 1
 
 // colors
@@ -29,13 +31,19 @@ int dark_red = color(117, 39, 23);
 int blue = color(0, 100, 117);
 int dark_blue = color(0, 47, 55);
 
-CColor colors1 = new CColor();
+CColor abortColor = new CColor();
+CColor stopColor = new CColor();
 CColor colors2 = new CColor();
+CColor unactiveColor = new CColor();
 
 void setupColors() {
-  colors1.setForeground(dark_blue)
-    .setBackground(blue);
+  abortColor.setForeground(red)
+    .setBackground(dark_red)
+    .setActive(blue);
   colors2.setForeground(blue)
     .setBackground(dark_blue)
     .setActive(red);
+  unactiveColor.setForeground(bgColor)
+  .setBackground(dark_red)
+  .setActive(red);
 }

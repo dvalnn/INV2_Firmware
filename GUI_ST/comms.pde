@@ -121,31 +121,36 @@ void updateLogStats(int id) {
 
   log_stats.setText("Rocket Log Rate: " + String.format("%.2f", r_log_rate) + "\nFilling Log Rate: " + String.format("%.2f", f_log_rate) + "\nLog Packets Lost: " + log_packet_loss + "\nAck Packets Lost: " + ack_packet_loss);
 }
+
+void updateLogStats() {
+  log_stats.setText("Rocket Log Rate: " + String.format("%.2f", r_log_rate) + "\nFilling Log Rate: " + String.format("%.2f", f_log_rate) + "\nLog Packets Lost: " + log_packet_loss + "\nAck Packets Lost: " + ack_packet_loss);
+}
+
 void displayLogRocket() {
   String state = "\n" + "State: " + state_map_rocket.get(Byte.toUnsignedInt(rx_packet.payload[0]));
   tank_top_temp = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 1, 3))).getShort();
   tank_bot_temp = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 3, 5))).getShort();
-  chamber_temp1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 5, 7))).getShort();
-  chamber_temp2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 7, 9))).getShort();
-  chamber_temp3 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 9, 11))).getShort();
+  chamber_temp1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 5, 7))).getShort(); // launch
+  chamber_temp2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 7, 9))).getShort(); // launch
+  chamber_temp3 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 9, 11))).getShort(); // launch
   tank_top_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 11, 13))).getShort();
   tank_bot_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 13, 15))).getShort();
   r_tank_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 15, 17))).getShort();
   r_tank_liquid = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 17, 19))).getShort();
   r_bools = rx_packet.payload[19];
-  r_weight1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 20, 22))).getShort();
-  r_weight2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 22, 24))).getShort();
-  r_weight3 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 24, 26))).getShort();
+  r_weight1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 20, 22))).getShort(); // launch
+  r_weight2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 22, 24))).getShort(); // launch
+  r_weight3 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 24, 26))).getShort(); // launch
 
-  String ttt = "\n" + "Tank Top Temperature: " + str(tank_top_temp);
-  String tbt = "\n" + "Tank Bottom Temperature: " + str(tank_bot_temp);
+  String ttt = "\n" + "Tank Top Temperature: " + str(tank_top_temp); // fill diagram
+  String tbt = "\n" + "Tank Bottom Temperature: " + str(tank_bot_temp); // fill diagram
   String ct1 = "\n" + "Chamber Temperature 1: " + str(chamber_temp1);
   String ct2 = "\n" + "Chamber Temperature 2: " + str(chamber_temp2);
   String ct3 = "\n" + "Chamber Temperature 3: " + str(chamber_temp3);
-  String ttp = "\n" + "Tank Top Pressure: " + str(tank_top_press);
-  String tbp = "\n" + "Tank Bottom Pressure: " + str(tank_bot_press);
-  String rtp = "\n" + "Tank Pressure: " + str(r_tank_press);
-  String rtl = "\n" + "Tank Liquid: " + str(r_tank_liquid);
+  String ttp = "\n" + "Tank Top Pressure: " + str(tank_top_press); // fill diagram
+  String tbp = "\n" + "Tank Bottom Pressure: " + str(tank_bot_press); // fill diagram
+  //String rtp = "\n" + "Tank Pressure: " + str(r_tank_press);
+  //String rtl = "\n" + "Tank Liquid: " + str(r_tank_liquid);
   String w1 = "\n" + "Weight 1: " + str(r_weight1);
   String w2 = "\n" + "Weight 2: " + str(r_weight2);
   String w3 = "\n" + "Weight 3: " + str(r_weight3);
@@ -156,7 +161,7 @@ void displayLogRocket() {
   String tb_valve = "\nTank Bottom Valve: " + bools.substring(2, 3);
   String tactiles = "\nTactiles: " + bools.substring(3);
 
-  log_display_rocket.setText("Rocket" + state + ttt + tbt + ct1 + ct2 + ct3 + ttp + tbp + rtp + rtl + log_running + tt_valve + tb_valve + tactiles + w1 + w2 + w3);
+  log_display_rocket.setText("Rocket" + state);
 }
 
 void displayLogFilling() {
@@ -173,29 +178,30 @@ void displayLogFilling() {
   f_weight1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 19, 21))).getShort();
   f_bools = rx_packet.payload[21];
 
-  String ftp = "\n" + "Tank Temperature: " + str(f_tank_press);
-  String ftl = "\n" + "Tank Liquid: " + str(f_tank_liquid);
-  String ht = "\n" + "He Temperature: " + str(he_temp);
-  String nt = "\n" + "N2O Temperature: " + str(n2o_temp);
-  String lt = "\n" + "Line Temperature: " + str(line_temp);
-  String hp = "\n" + "He Pressure: " + str(he_press);
-  String np = "\n" + "N2O Pressure: " + str(n2o_press);
-  String lp = "\n" + "Line Pressure: " + str(line_press);
-  String ev = "\n" + "eMatch reading: " + str(ematch_v);
-  String w1 = "\n" + "Weight 1: " + str(f_weight1);
-  
+  //String ftp = "\n" + "Tank Temperature: " + str(f_tank_press);
+  //String ftl = "\n" + "Tank Liquid: " + str(f_tank_liquid);
+  String ht = "\n" + "He Temperature: " + str(he_temp); // fill diagram
+  String nt = "\n" + "N2O Temperature: " + str(n2o_temp); // fill diagram
+  String lt = "\n" + "Line Temperature: " + str(line_temp); // fill diagram
+  String hp = "\n" + "He Pressure: " + str(he_press); // fill diagram
+  String np = "\n" + "N2O Pressure: " + str(n2o_press); // fill diagram
+  String lp = "\n" + "Line Pressure: " + str(line_press); // fill diagram
+  //String ev = "\n" + "eMatch reading: " + str(ematch_v);
+  String w1 = "\n" + "Weight 1: " + str(f_weight1); // filling graph
+
   String bools = String.format("%8s", Integer.toBinaryString(f_bools & 0xFF)).replace(' ', '0');
   String log_running = "\nLog Running: " + bools.substring(0, 1);
   String he_valve = "\nHelium Valve: " + bools.substring(1, 2);
   String n2o_valve = "\nN2O Valve: " + bools.substring(2, 3);
   String line_valve = "\nLine Valve: " + bools.substring(3, 4);
- 
-  log_display_filling.setText("Filling Station\n" + state + ftp + ftl + ht + nt + lt + hp + np + lp + ev + w1 + log_running + he_valve + n2o_valve + line_valve);
+
+  log_display_filling.setText("Filling Station" + state);
 }
 
 void displayAck(int ackValue) {
   if ((byte) ackValue != (last_cmd_sent + (byte) cmd_size)) {
     ack_packet_loss++;
+    updateLogStats();
   }
   last_cmd_sent = 0;
   String ackName;
