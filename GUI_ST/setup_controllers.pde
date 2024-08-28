@@ -64,7 +64,7 @@ void setupControllers() {
     .setPosition(displayWidth*button_x1, displayHeight*.1)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
     .moveTo("global")
-    .setColor(colors2)
+    .setColor(stopColor)
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 

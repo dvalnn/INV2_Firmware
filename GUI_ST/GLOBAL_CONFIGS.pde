@@ -26,10 +26,12 @@ int cmd_size = 14; // 13 comandos + 1
 
 // colors
 int bgColor = color(0, 0, 0);
-int red = color(140, 45, 25);
-int dark_red = color(117, 39, 23);
+int red = color(150, 55, 35);
+int dark_red = color(150, 39, 23);
 int blue = color(0, 100, 117);
 int dark_blue = color(0, 47, 55);
+int orange = color(92, 67, 0);
+int light_orange = color(110, 93, 23);
 
 CColor abortColor = new CColor();
 CColor stopColor = new CColor();
@@ -44,6 +46,9 @@ void setupColors() {
     .setBackground(dark_blue)
     .setActive(red);
   unactiveColor.setForeground(bgColor)
-  .setBackground(dark_red)
-  .setActive(red);
+    .setBackground(dark_red)
+    .setActive(red);
+  stopColor.setForeground(light_orange)
+  .setBackground(orange)
+  .setActive(blue);
 }
