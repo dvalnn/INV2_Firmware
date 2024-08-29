@@ -69,15 +69,15 @@ void setupControllers() {
     .setFont(font);
 
   cp5.addButton("Resume")
-    .setPosition(displayWidth*button_x1, displayHeight*.15)
+    .setPosition(displayWidth*button_x1, displayHeight*.35)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
-    .moveTo("global")
+    .moveTo("filling")
     .setColor(colors2)
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
   cp5.addButton("Status")
-    .setPosition(displayWidth*button_x1, displayHeight*.20)
+    .setPosition(displayWidth*button_x1, displayHeight*.15)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
     .moveTo("global")
     .setColor(colors2)
@@ -109,7 +109,7 @@ void setupControllers() {
     .setFont(font);
 
   cp5.addButton("Fire")
-    .setPosition(displayWidth*button_x1, displayHeight*.37)
+    .setPosition(displayWidth*button_x1, displayHeight*.42)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
     .moveTo("launch")
     .setColor(colors2)
@@ -117,7 +117,7 @@ void setupControllers() {
     .setFont(font);
 
   cp5.addButton("Allow Launch")
-    .setPosition(displayWidth*button_x1, displayHeight*.42)
+    .setPosition(displayWidth*button_x1, displayHeight*.47)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
     .moveTo("launch")
     .setColor(colors2)
@@ -134,8 +134,8 @@ void setupControllers() {
     .setColorCaptionLabel(color(255))
     .moveTo("filling")
     .setFont(font);
-    
-    cp5.addButton("Reset Chart")
+
+  cp5.addButton("Reset Chart")
     .setPosition(displayWidth*.49, displayHeight*.32)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
     .moveTo("filling")
@@ -210,13 +210,13 @@ void setupControllers() {
 
   log_display_rocket = cp5.addTextlabel("Rocket Log")
     .setText("Logging Packet goes here")
-    .setPosition(displayWidth*.66, displayHeight*.67)
+    .setPosition(displayWidth*.66, displayHeight*.7)
     .moveTo("global")
     .setFont(font);
 
   log_display_filling = cp5.addTextlabel("Filling Log")
     .setText("Logging Packet goes here")
-    .setPosition(displayWidth*.66, displayHeight*.77)
+    .setPosition(displayWidth*.66, displayHeight*.8)
     .moveTo("global")
     .setFont(font);
 
@@ -288,7 +288,7 @@ void setupControllers() {
 
   for (int i = 0; i < man_commands.size(); i++) {
     cp5.addButton(man_commands.get(i))
-      .setPosition(width*.35, height*.54 + height*.06*i)
+      .setPosition(width*.5, height*.05 + height*.06*i)
       .setSize((int)(width*.17), (int)(height*.05))
       .moveTo("default")
       .setColor(colors2)
@@ -299,6 +299,7 @@ void setupControllers() {
 
 void launch_setup() {
   launchTab = cp5.addTab("launch")
+    .activateEvent(true)
     .setColorLabel(color(255))
     .setColorActive(red)
     .setColorForeground(blue)
@@ -313,6 +314,7 @@ void launch_setup() {
 
 void filling_setup() {
   fillTab = cp5.addTab("filling")
+    .activateEvent(true)
     .setColorLabel(color(255))
     .setColorActive(red)
     .setColorForeground(blue)
@@ -327,6 +329,7 @@ void filling_setup() {
 
 void manual_setup() {
   cp5.getTab("default")
+    .activateEvent(true)
     .setColorLabel(color(255))
     .setColorActive(red)
     .setColorForeground(blue)

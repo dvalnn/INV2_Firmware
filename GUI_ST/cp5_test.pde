@@ -26,7 +26,7 @@ int log_packet_loss = 0;
 int ack_packet_loss = 0;
 byte last_cmd_sent = (byte) 0x00;
 int last_cmd_sent_time = 0;
-
+int last_chart_time = 0;
 int last_status_time = 0;
 
 byte targetID;
@@ -80,6 +80,7 @@ Textlabel man_log_display_rocket, man_log_display_filling;
 Textlabel pressureLabel, liquidLabel, temperatureLabel, weightLabel;
 Textlabel he_label, n2o_label, line_label, tt_label, tb_label;
 
+List<Textlabel> diagram_labels;
 List<String> man_commands = Arrays.asList("Flash Log Start", "Flash Log Stop", "Flash IDs", "Loadcell Calibrate", "Loadcell Tare");
 HashMap<String, Byte> man_commands_map = new HashMap<String, Byte>();
 List<String> valves = Arrays.asList("VPU Valve", "Engine Valve", "He Valve", "N2O Valve", "Line Valve");
@@ -152,15 +153,18 @@ void setup() {
 
 void draw() {
   updateDiagrams();
-  updateCharts((int)r_tank_press, (int)r_tank_liquid);
+  if (millis() - last_chart_time > chart_interval) {
+    updateCharts((int)r_tank_press, (int)r_tank_liquid, (int) tank_top_temp, f_weight1);
+    last_chart_time = millis();
+  }
   if (millis() - last_status_request > status_interval && status_toggle_state == 1) {
     send((byte)0x00, empty_payload);
     last_status_request = millis();
   }
-  if (last_cmd_sent != (byte)0x00) {
+  if (last_cmd_sent != (byte)0xff) {
     if (millis() - last_cmd_sent_time > packet_loss_timeout) {
       ack_packet_loss++;
-      last_cmd_sent = (byte)0x00;
+      last_cmd_sent = (byte)0xff;
       updateLogStats();
       ack_display.setText("Last Ack Received:\nFAIL");
     }
@@ -278,6 +282,10 @@ public void controlEvent(ControlEvent event) {
     rocketChart.setData("Liquid", new float[0]);
     rocketChart.setData("Temperature", new float[0]);
     rocketChart.setData("Weight", new float[0]);
+  } else if (event.isTab()) {
+    print("event from tab");
+    multi_tab_controllers(event.getTab().getName());
+    print(event.getTab().getName());
   }
 }
 

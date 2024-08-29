@@ -138,9 +138,9 @@ void displayLogRocket() {
   r_tank_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 15, 17))).getShort();
   r_tank_liquid = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 17, 19))).getShort();
   r_bools = rx_packet.payload[19];
-  r_weight1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 20, 22))).getShort(); // launch
-  r_weight2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 22, 24))).getShort(); // launch
-  r_weight3 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 24, 26))).getShort(); // launch
+  //r_weight1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 20, 22))).getShort(); // launch
+  //r_weight2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 22, 24))).getShort(); // launch
+  //r_weight3 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 24, 26))).getShort(); // launch
 
   //String ttt = "\n" + "Tank Top Temperature: " + str(tank_top_temp); // fill diagram
   //String tbt = "\n" + "Tank Bottom Temperature: " + str(tank_bot_temp); // fill diagram
@@ -200,7 +200,7 @@ void displayLogFilling() {
   log_display_filling.setText("Filling Station" + state);
   he_label.setText("He\nT : " + str(he_temp) + "\nP : " + str(he_press));
   n2o_label.setText("N2O\nT : " + str(n2o_temp) + "\nP : " + str(n2o_press));
-  he_label.setText("Line\nT : " + str(line_temp) + "\nP : " + str(line_press));
+  line_label.setText("Line\nT : " + str(line_temp) + "\nP : " + str(line_press));
 }
 
 void displayAck(int ackValue) {
@@ -208,7 +208,7 @@ void displayAck(int ackValue) {
     ack_packet_loss++;
     updateLogStats();
   }
-  last_cmd_sent = 0;
+  last_cmd_sent = (byte) 0xff;
   String ackName;
   switch (ackValue) {
   case 14: // Status Ack
@@ -258,6 +258,10 @@ void displayAck(int ackValue) {
 }
 
 void send(byte command, byte[] payload) {
+  if(targetID == 0) {
+    print("No ID selected");
+    return;
+  }
   println(command, payload);
   if (targetID == 3) {
     targetID = (byte)0xFF;
