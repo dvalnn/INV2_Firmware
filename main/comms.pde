@@ -165,8 +165,8 @@ void displayLogRocket() {
   }
   
   log_display_rocket.setText("Rocket" + state);
-  tt_label.setText("Tank Top\nT : " + str(tank_top_temp * .1) + "\nP : " + str(tank_top_press * .01));
-  tb_label.setText("Tank Bottom\nT : " + str(tank_bot_temp * .1) + "\nP : " + str(tank_bot_press * .01));
+  tt_label.setText("Tank Top\nT : " + String.format("%.2f", tank_top_temp * .1) + "\nP : " + String.format("%.2f", tank_top_press * .01));
+  tb_label.setText("Tank Bottom\nT : " + String.format("%.2f", tank_bot_temp * .1) + "\nP : " + String.format("%.2f", tank_bot_press * .01));
 }
 
 void displayLogFilling() {
@@ -206,9 +206,9 @@ void displayLogFilling() {
   //String line_valve = "\nLine Valve: " + bools.substring(3, 4);
 
   log_display_filling.setText("Filling Station" + state);
-  he_label.setText("He\nT : " + str(he_temp * .1) + "\nP : " + str(he_press * .01));
-  n2o_label.setText("N2O\nT : " + str(n2o_temp * .1) + "\nP : " + str(n2o_press * .01));
-  line_label.setText("Line\nT : " + str(line_temp * .1) + "\nP : " + str(line_press * .01));
+  he_label.setText("He\nT : " + String.format("%.2f", he_temp * .1) + "\nP : " + String.format("%.2f", he_press * .01));
+  n2o_label.setText("N2O\nT : " + String.format("%.2f", n2o_temp * .1) + "\nP : " + String.format("%.2f", n2o_press * .01));
+  line_label.setText("Line\nT : " + String.format("%.2f", line_temp * .1) + "\nP : " + String.format("%.2f", line_press * .01));
 }
 
 void displayAck(int ackValue) {
