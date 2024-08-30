@@ -162,6 +162,12 @@ void setupControllers() {
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
+  ematch_label = cp5.addTextlabel("eMatch Value")
+    .setText("E-Match value goes here")
+    .setPosition(displayWidth*.4, displayHeight*.05)
+    .moveTo("launch")
+    .setFont(font);
+    
   List<String> portNames = Arrays.asList(Serial.list());   // List available serial ports and add them to a new ScrollableList
 
   cp5.addScrollableList("serialPort")

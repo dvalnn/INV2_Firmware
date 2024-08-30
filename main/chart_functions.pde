@@ -89,40 +89,40 @@ void setupCharts() {
 
 void updateCharts(int p, int l, int t, int w0, int w1, int w2, int w3, int tp, int cp) {
   // filling chart
-  fillingChart.addData("Pressure", p);
+  fillingChart.addData("Pressure", float(p) * .01);
   fillingChart.addData("Liquid", l);
-  fillingChart.addData("Temperature", t);
+  fillingChart.addData("Temperature", float(t) * .1);
   fillingChart.addData("Weight", w0);
-  max_f = max(max_f, p);
+  max_f = max(max_f, float(p) * .01);
   max_f = max(max_f, l);
   max_f = max(max_f, t);
   max_f = max(max_f, w0);
 
   fillingChart.setRange(0, max_f*1.3);
 
-  pressureLabel.setText("Pressure: " + p);
+  pressureLabel.setText("Pressure: " + df.format(float(p) * .01));
   liquidLabel.setText("Liquid: " + l);
-  temperatureLabel.setText("Temperature: " + t);
+  temperatureLabel.setText("Temperature: " + df.format(float(t) * .1));
   weightLabel.setText("Weight: " + w0);
   
   // launch chart
   launchChart.addData("Weight 1", w1);
   launchChart.addData("Weight 2", w2);
   launchChart.addData("Weight 3", w3);
-  launchChart.addData("Tank Pressure", tp);
-  launchChart.addData("Chamber Pressure", cp);
+  launchChart.addData("Tank Pressure", float(tp) * .01);
+  launchChart.addData("Chamber Pressure", float(cp) * .01);
 
   max_l = max(max_l, w1);
   max_l = max(max_l, w2);
   max_l = max(max_l, w3);
-  max_l = max(max_l, tp);
-  max_l = max(max_l, cp);
+  max_l = max(max_l, float(tp) * .01);
+  max_l = max(max_l, float(cp) * .01);
   
   weight1Label.setText("Weight 1: " + w1);
   weight2Label.setText("Weight 2: " + w2);
   weight3Label.setText("Weight 3: " + w3);
-  tankPressureLabel.setText("Tank Pressure: " + tp);
-  chamberPressureLabel.setText("Chamber Pressure: " + cp);
+  tankPressureLabel.setText("Tank Pressure: " + df.format(float(tp) * .01));
+  chamberPressureLabel.setText("Chamber Pressure: " + df.format(float(cp) * .01));
 
   fillingChart.setRange(0, max_l*1.3);
 }

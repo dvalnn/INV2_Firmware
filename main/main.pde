@@ -4,6 +4,8 @@ import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import processing.core.PApplet;
 import java.nio.*;
+import java.text.DecimalFormat;
+
 
 ControlP5 cp5;
 PFont font;
@@ -33,6 +35,7 @@ byte targetID;
 
 LinkedBlockingQueue<byte[]> tx_queue = new LinkedBlockingQueue<byte[]>();
 
+DecimalFormat df = new DecimalFormat("#.00");
 
 // packet structure : "SYNC", "CMD", "ID", "PLEN", "PAYLOAD", "CRC1", "CRC2"
 byte CMD=0, PLEN=0, ID=0; /* CRC1, CRC2 */
@@ -80,6 +83,7 @@ int last_open_valve = -1;
 Textlabel man_log_display_rocket, man_log_display_filling;
 Textlabel pressureLabel, liquidLabel, temperatureLabel, weightLabel;
 Textlabel weight1Label, weight2Label, weight3Label, tankPressureLabel, chamberPressureLabel;
+Textlabel ematch_label;
 Textlabel he_label, n2o_label, line_label, tt_label, tb_label;
 
 //Textfield
