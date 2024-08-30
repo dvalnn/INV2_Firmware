@@ -138,9 +138,10 @@ void displayLogRocket() {
   r_tank_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 15, 17))).getShort();
   r_tank_liquid = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 17, 19))).getShort();
   r_bools = rx_packet.payload[19];
-  //r_weight1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 20, 22))).getShort(); // launch
-  //r_weight2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 22, 24))).getShort(); // launch
-  //r_weight3 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 24, 26))).getShort(); // launch
+  r_weight1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 20, 22))).getShort(); // launch
+  r_weight2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 22, 24))).getShort(); // launch
+  r_weight3 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 24, 26))).getShort(); // launch
+  r_chamber_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 26, 28))).getShort();
 
   //String ttt = "\n" + "Tank Top Temperature: " + str(tank_top_temp); // fill diagram
   //String tbt = "\n" + "Tank Bottom Temperature: " + str(tank_bot_temp); // fill diagram
@@ -156,14 +157,16 @@ void displayLogRocket() {
   //String w3 = "\n" + "Weight 3: " + str(r_weight3);
 
   String bools = String.format("%8s", Integer.toBinaryString(r_bools & 0xFF)).replace(' ', '0');
-  String log_running = "\nLog Running: " + bools.substring(0, 1);
-  String tt_valve = "\nTank Top Valve: " + bools.substring(1, 2);
-  String tb_valve = "\nTank Bottom Valve: " + bools.substring(2, 3);
-  String tactiles = "\nTactiles: " + bools.substring(3);
-
+  int log_running = Integer.parseInt(bools.substring(0, 1));
+  if(log_running == 1) {
+    r_flash_log = true;
+  } else {
+    r_flash_log = false;
+  }
+  
   log_display_rocket.setText("Rocket" + state);
-  tt_label.setText("Tank Top\nT : " + str(tank_top_temp) + "\nP : " + str(tank_top_press));
-  tb_label.setText("Tank Bottom\nT : " + str(tank_bot_temp) + "\nP : " + str(tank_bot_press));
+  tt_label.setText("Tank Top\nT : " + str(tank_top_temp * .1) + "\nP : " + str(tank_top_press * .01));
+  tb_label.setText("Tank Bottom\nT : " + str(tank_bot_temp * .1) + "\nP : " + str(tank_bot_press * .01));
 }
 
 void displayLogFilling() {
@@ -191,16 +194,21 @@ void displayLogFilling() {
   //String ev = "\n" + "eMatch reading: " + str(ematch_v);
   //String w1 = "\n" + "Weight 1: " + str(f_weight1); // filling graph
 
-  //String bools = String.format("%8s", Integer.toBinaryString(f_bools & 0xFF)).replace(' ', '0');
-  //String log_running = "\nLog Running: " + bools.substring(0, 1);
+  String bools = String.format("%8s", Integer.toBinaryString(f_bools & 0xFF)).replace(' ', '0');
+  int log_running = Integer.parseInt(bools.substring(0, 1));
+  if(log_running == 1) {
+    r_flash_log = true;
+  } else {
+    r_flash_log = false;
+  }
   //String he_valve = "\nHelium Valve: " + bools.substring(1, 2);
   //String n2o_valve = "\nN2O Valve: " + bools.substring(2, 3);
   //String line_valve = "\nLine Valve: " + bools.substring(3, 4);
 
   log_display_filling.setText("Filling Station" + state);
-  he_label.setText("He\nT : " + str(he_temp) + "\nP : " + str(he_press));
-  n2o_label.setText("N2O\nT : " + str(n2o_temp) + "\nP : " + str(n2o_press));
-  line_label.setText("Line\nT : " + str(line_temp) + "\nP : " + str(line_press));
+  he_label.setText("He\nT : " + str(he_temp * .1) + "\nP : " + str(he_press * .01));
+  n2o_label.setText("N2O\nT : " + str(n2o_temp * .1) + "\nP : " + str(n2o_press * .01));
+  line_label.setText("Line\nT : " + str(line_temp * .1) + "\nP : " + str(line_press * .01));
 }
 
 void displayAck(int ackValue) {
@@ -272,7 +280,7 @@ void send(byte command, byte[] payload) {
     byte[] packet = tx_packet.getPacket();
     println(packet);
     tx_queue.add(packet);
-    if (last_cmd_sent != 0) {
+    if (last_cmd_sent != (byte)0xff) {
       ack_packet_loss++;
     }
     last_cmd_sent = command;

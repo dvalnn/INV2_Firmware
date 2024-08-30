@@ -124,7 +124,7 @@ void setupControllers() {
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
-  rocketChart = cp5.addChart("Rocket Chart")
+  fillingChart = cp5.addChart("Filling Chart")
     .setPosition(displayWidth*.23, displayHeight*.16)
     .setSize((int)(displayWidth*.39), (int)(displayHeight*.15))
     .setRange(0, 1000) // TODO change min and max (maybe dynamic)
@@ -135,6 +135,17 @@ void setupControllers() {
     .moveTo("filling")
     .setFont(font);
 
+  launchChart = cp5.addChart("Launch Chart")
+    .setPosition(displayWidth*.23, displayHeight*.16)
+    .setSize((int)(displayWidth*.39), (int)(displayHeight*.15))
+    .setRange(0, 1000) // TODO change min and max (maybe dynamic)
+    .setView(Chart.LINE) // use Chart.LINE, Chart.PIE, Chart.AREA, Chart.BAR_CENTERED
+    .setStrokeWeight(1.5)
+    .setColor(colors2)
+    .setColorCaptionLabel(color(255))
+    .moveTo("launch")
+    .setFont(font);
+
   cp5.addButton("Reset Chart")
     .setPosition(displayWidth*.49, displayHeight*.32)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
@@ -143,46 +154,13 @@ void setupControllers() {
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
-  pressureLabel = cp5.addLabel("Pressure: ")
-    .setColor(color(0, 255, 0))
-    .setFont(font)
-    .moveTo("filling")
-    .setPosition(displayWidth*.63, displayHeight*.16)
-    .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
-    ;
-  liquidLabel = cp5.addLabel("Liquid: ")
-    .setColor(color(255, 255, 0))
-    .setFont(font)
-    .moveTo("filling")
-    .setPosition(displayWidth*.63, displayHeight*.20)
-    .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
-    ;
-  temperatureLabel = cp5.addLabel("Temperature: ")
-    .setColor(color(255, 150, 255))
-    .setFont(font)
-    .moveTo("filling")
-    .setPosition(displayWidth*.63, displayHeight*.24)
-    .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
-    ;
-  weightLabel = cp5.addLabel("Weight: ")
-    .setColor(color(0, 255, 255))
-    .setFont(font)
-    .moveTo("filling")
-    .setPosition(displayWidth*.63, displayHeight*.28)
-    .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
-    ;
-
-
-
-  //fillingChart = cp5.addChart("Filling P+L")
-  //.setPosition(displayWidth*.23, displayHeight*.35)
-  //.setSize((int)(displayWidth*.39), (int)(displayHeight*.15))
-  //.setRange(0, 1000) // TODO change min and max (maybe dynamic)
-  //.setView(Chart.LINE) // use Chart.LINE, Chart.PIE, Chart.AREA, Chart.BAR_CENTERED
-  //.setStrokeWeight(1.5)
-  //.setColorCaptionLabel(color(255))
-  //.setFont(font);
-
+  cp5.addButton("Reset")
+    .setPosition(displayWidth*.49, displayHeight*.32)
+    .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
+    .moveTo("launch")
+    .setColor(colors2)
+    .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
+    .setFont(font);
 
   List<String> portNames = Arrays.asList(Serial.list());   // List available serial ports and add them to a new ScrollableList
 
@@ -209,28 +187,28 @@ void setupControllers() {
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
 
   log_display_rocket = cp5.addTextlabel("Rocket Log")
-    .setText("Logging Packet goes here")
-    .setPosition(displayWidth*.66, displayHeight*.7)
+    .setText("Rocket logs go here")
+    .setPosition(displayWidth*button_x1, displayHeight*.71)
     .moveTo("global")
     .setFont(font);
 
   log_display_filling = cp5.addTextlabel("Filling Log")
-    .setText("Logging Packet goes here")
-    .setPosition(displayWidth*.66, displayHeight*.8)
+    .setText("Filling logs go here")
+    .setPosition(displayWidth*button_x1, displayHeight*.8)
     .moveTo("global")
     .setFont(font);
 
   ack_display = cp5.addTextlabel("Ack Display")
     .setText("Acks go here")
     .setColor(color(180, 180, 180))
-    .setPosition(displayWidth*.66, displayHeight*.54)
+    .setPosition(displayWidth*button_x1, displayHeight*.54)
     .moveTo("global")
     .setFont(font);
 
   log_stats = cp5.addTextlabel("Log Stats")
     .setText("Log stats go here")
     .setColor(color(180, 180, 180))
-    .setPosition(displayWidth*.66, displayHeight*.6)
+    .setPosition(displayWidth*button_x1, displayHeight*.6)
     .moveTo("global")
     .setFont(font);
 
@@ -295,6 +273,9 @@ void setupControllers() {
       .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
       .setFont(font);
   }
+
+  //valve_ms = cp5.addTextfield("Valve open time")
+  //;
 }
 
 void launch_setup() {

@@ -24,7 +24,7 @@ float f_log_rate = 0;
 int last_received_log_id = 0;
 int log_packet_loss = 0;
 int ack_packet_loss = 0;
-byte last_cmd_sent = (byte) 0x00;
+byte last_cmd_sent = (byte) 0xff;
 int last_cmd_sent_time = 0;
 int last_chart_time = 0;
 int last_status_time = 0;
@@ -50,23 +50,24 @@ Textlabel log_display_rocket;
 Textlabel log_display_filling;
 Textlabel ack_display;
 Textlabel log_stats;
-Chart rocketChart;
-Chart fillingChart;
+Chart fillingChart, launchChart;
 
 Toggle status_toggle;
 int status_toggle_state = 0;
 int last_status_request = 0;
 
-short tank_top_temp, tank_bot_temp, chamber_temp1, chamber_temp2, chamber_temp3, tank_top_press, tank_bot_press, r_tank_press, r_tank_liquid, r_weight1, r_weight2, r_weight3;
+short tank_top_temp, tank_bot_temp, chamber_temp1, chamber_temp2, chamber_temp3, tank_top_press, tank_bot_press, r_tank_press, r_tank_liquid, r_weight1, r_weight2, r_weight3, r_chamber_press;
 byte r_bools;
 short f_tank_press, f_tank_liquid, he_temp, n2o_temp, line_temp, he_press, n2o_press, line_press, ematch_v, f_bools;
 int f_weight1;
-float max_r = 1, max_f = 1;
+float max_f = 1, max_l = 1;
 int max_size = 100000;
 int[] prog_inputs = new int[3];
 int selected_index = -1;
 
 float mock_value1, mock_value2, mock_value3, mock_value4;
+
+boolean r_flash_log, f_flash_log;
 
 Tab fillTab;
 Tab launchTab;
@@ -78,7 +79,10 @@ int last_open_valve = -1;
 
 Textlabel man_log_display_rocket, man_log_display_filling;
 Textlabel pressureLabel, liquidLabel, temperatureLabel, weightLabel;
+Textlabel weight1Label, weight2Label, weight3Label, tankPressureLabel, chamberPressureLabel;
 Textlabel he_label, n2o_label, line_label, tt_label, tb_label;
+
+//Textfield
 
 List<Textlabel> diagram_labels;
 List<String> man_commands = Arrays.asList("Flash Log Start", "Flash Log Stop", "Flash IDs", "Loadcell Calibrate", "Loadcell Tare");
@@ -142,8 +146,8 @@ void setup() {
   man_commands_map.put("Flash Log Start", (byte) 0);
   man_commands_map.put("Flash Log Stop", (byte) 1);
   man_commands_map.put("Flash IDs", (byte) 2);
-  man_commands_map.put("Loadcell Calibrate", (byte) 6);
-  man_commands_map.put("Loadcell Tare", (byte) 7);
+  man_commands_map.put("Loadcell Calibrate", (byte) 7);
+  man_commands_map.put("Loadcell Tare", (byte) 8);
 
   setupControllers(); // in setup controllers tab
   setupCharts(); // in chart functions tab
@@ -154,7 +158,7 @@ void setup() {
 void draw() {
   updateDiagrams();
   if (millis() - last_chart_time > chart_interval) {
-    updateCharts((int)r_tank_press, (int)r_tank_liquid, (int) tank_top_temp, f_weight1);
+    updateCharts(r_tank_press, r_tank_liquid, tank_top_temp, f_weight1, r_weight1, r_weight2, r_weight3, r_tank_press, r_chamber_press);
     last_chart_time = millis();
   }
   if (millis() - last_status_request > status_interval && status_toggle_state == 1) {
@@ -169,6 +173,20 @@ void draw() {
       ack_display.setText("Last Ack Received:\nFAIL");
     }
   }
+  
+  if (r_flash_log == true) {
+      fill(0, 255, 0);
+    } else {
+      fill(255, 0, 0);
+    }
+    circle(width*.79, height*.72, height*.018);
+    
+    if (f_flash_log == true) {
+      fill(0, 255, 0);
+    } else {
+      fill(255, 0, 0);
+    }
+    circle(width*.79, height*.81, height*.018);
 }
 
 public void controlEvent(ControlEvent event) {
@@ -278,14 +296,18 @@ public void controlEvent(ControlEvent event) {
   } else if (event.isFrom("Select Valve")) {
     valve_selected = (int)event.getValue();
   } else if (event.isFrom("Reset Chart")) {
-    rocketChart.setData("Pressure", new float[0]);
-    rocketChart.setData("Liquid", new float[0]);
-    rocketChart.setData("Temperature", new float[0]);
-    rocketChart.setData("Weight", new float[0]);
+    fillingChart.setData("Pressure", new float[0]);
+    fillingChart.setData("Liquid", new float[0]);
+    fillingChart.setData("Temperature", new float[0]);
+    fillingChart.setData("Weight", new float[0]);
   } else if (event.isTab()) {
-    print("event from tab");
     multi_tab_controllers(event.getTab().getName());
-    print(event.getTab().getName());
+  } else if (event.isFrom("Reset")) {
+    launchChart.setData("Weight 1", new float[0]);
+    launchChart.setData("Weight 2", new float[0]);
+    launchChart.setData("Weight 3", new float[0]);
+    launchChart.setData("Tank Pressure", new float[0]);
+    launchChart.setData("Chamber Pressure", new float[0]);
   }
 }
 
