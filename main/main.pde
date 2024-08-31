@@ -80,7 +80,7 @@ Toggle valve_toggle;
 int valve_toggle_state = 0;
 int last_open_valve = -1;
 
-Textlabel man_log_display_rocket, man_log_display_filling;
+Textfield valve_ms;
 Textlabel pressureLabel, liquidLabel, temperatureLabel, weightLabel;
 Textlabel weight1Label, weight2Label, weight3Label, tankPressureLabel, chamberPressureLabel;
 Textlabel ematch_label;
@@ -312,6 +312,15 @@ public void controlEvent(ControlEvent event) {
     launchChart.setData("Weight 3", new float[0]);
     launchChart.setData("Tank Pressure", new float[0]);
     launchChart.setData("Chamber Pressure", new float[0]);
+  } else if (event.isFrom("Open valve")) {
+    try {
+    float valve_time = Float.parseFloat(valve_ms.getText());
+    print(valve_time);
+    byte[] payload = {(byte) 0x05, (byte) valve_time};
+    send((byte)0x07, payload);
+    } catch (Exception e) {
+      print("Valve open time empty\n");
+    }
   }
 }
 

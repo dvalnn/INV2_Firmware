@@ -167,7 +167,7 @@ void setupControllers() {
     .setPosition(displayWidth*.4, displayHeight*.05)
     .moveTo("launch")
     .setFont(font);
-    
+
   List<String> portNames = Arrays.asList(Serial.list());   // List available serial ports and add them to a new ScrollableList
 
   cp5.addScrollableList("serialPort")
@@ -272,7 +272,7 @@ void setupControllers() {
 
   for (int i = 0; i < man_commands.size(); i++) {
     cp5.addButton(man_commands.get(i))
-      .setPosition(width*.5, height*.05 + height*.06*i)
+      .setPosition(width*.6, height*.05 + height*.06*i)
       .setSize((int)(width*.17), (int)(height*.05))
       .moveTo("default")
       .setColor(colors2)
@@ -280,8 +280,23 @@ void setupControllers() {
       .setFont(font);
   }
 
-  //valve_ms = cp5.addTextfield("Valve open time")
-  //;
+  valve_ms = cp5.addTextfield("Valve open time")
+    .setAutoClear(false)
+    .setColor(colors2)
+    .setPosition(displayWidth*.25, displayHeight*.05)
+    .setSize((int)(displayWidth*.13), (int)(displayHeight*.05))
+    .setFont(font)
+    .setInputFilter(ControlP5.FLOAT)
+    .moveTo("default");
+  ;
+  
+  cp5.addButton("Open valve")
+    .setPosition(width*.4, height*.05)
+    .setSize((int)(width*.1), (int)(height*.05))
+    .moveTo("default")
+    .setColor(colors2)
+    .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
+    .setFont(font);
 }
 
 void launch_setup() {
