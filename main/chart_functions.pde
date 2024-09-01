@@ -124,5 +124,5 @@ void updateCharts(int p, int l, int t, int w0, int w1, int w2, int w3, int tp, i
   tankPressureLabel.setText("Tank Pressure: " + df.format(float(tp) * .01));
   chamberPressureLabel.setText("Chamber Pressure: " + df.format(float(cp) * .01));
 
-  fillingChart.setRange(0, max_l*1.3);
+  launchChart.setRange(0, max_l*1.3);
 }

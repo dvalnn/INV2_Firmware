@@ -197,9 +197,9 @@ void displayLogFilling() {
   String bools = String.format("%8s", Integer.toBinaryString(f_bools & 0xFF)).replace(' ', '0');
   int log_running = Integer.parseInt(bools.substring(0, 1));
   if(log_running == 1) {
-    r_flash_log = true;
+    f_flash_log = true;
   } else {
-    r_flash_log = false;
+    f_flash_log = false;
   }
   //String he_valve = "\nHelium Valve: " + bools.substring(1, 2);
   //String n2o_valve = "\nN2O Valve: " + bools.substring(2, 3);
@@ -244,6 +244,15 @@ void displayAck(int ackValue) {
     break;
   case 21: // Manual Exec Ack
     ackName = "Manual Exec";
+    if(rx_packet.payload[0] == (byte) 0x0c) { // flash ids cmd (2) + man command size (9) + 1
+      int file_count = (int) rx_packet.payload[1];
+      String ids = "";
+      for(int i = 2; i < file_count + 2; i++) {
+        byte id = rx_packet.payload[i];
+        ids += str(id) + "\n";
+      }
+      ackName = "Flash IDs:\n" + ids;
+    }
     break;
   case 22: // Ready Ack
     ackName = "Ready";
