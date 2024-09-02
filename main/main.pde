@@ -33,7 +33,7 @@ byte targetID;
 
 LinkedBlockingQueue<byte[]> tx_queue = new LinkedBlockingQueue<byte[]>();
 
-DecimalFormat df = new DecimalFormat("#.00");
+DecimalFormat df = new DecimalFormat("0.00");
 
 // packet structure : "SYNC", "CMD", "ID", "PLEN", "PAYLOAD", "CRC1", "CRC2"
 byte CMD=0, PLEN=0, ID=0; /* CRC1, CRC2 */
@@ -60,7 +60,7 @@ int last_status_request = 0;
 short tank_top_temp, tank_bot_temp, chamber_temp1, chamber_temp2, chamber_temp3, tank_top_press, tank_bot_press, r_tank_press, r_tank_liquid, r_weight1, r_weight2, r_weight3, r_chamber_press;
 byte r_bools;
 short f_tank_press, f_tank_liquid, he_temp, n2o_temp, line_temp, he_press, n2o_press, line_press, ematch_v, f_bools;
-int f_weight1 = 4;
+int f_weight1;
 float max_f = 1, max_l = 1;
 int max_size = 100000;
 int[] prog_inputs = new int[3];

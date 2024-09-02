@@ -245,13 +245,9 @@ void displayAck(int ackValue) {
   case 21: // Manual Exec Ack
     ackName = "Manual Exec";
     if(rx_packet.payload[0] == (byte) 0x0c) { // flash ids cmd (2) + man command size (9) + 1
-      int file_count = (int) rx_packet.payload[1];
-      String ids = "";
-      for(int i = 2; i < file_count + 2; i++) {
-        byte id = rx_packet.payload[i];
-        ids += str(id) + "\n";
-      }
-      ackName = "Flash IDs:\n" + ids;
+      int file_count = (int) rx_packet.payloadLength - 1;
+      String id = str(rx_packet.payload[file_count]);
+      ackName = "Flash Log ID: " + id;
     }
     break;
   case 22: // Ready Ack
