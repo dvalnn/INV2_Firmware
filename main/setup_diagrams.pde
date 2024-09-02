@@ -38,8 +38,12 @@ void setupDiagrams() {
     .setPosition(displayWidth*.35, displayHeight*.91)
     .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
     ;
-
-  diagram_labels = Arrays.asList(he_label, n2o_label, line_label, tt_label, tb_label);
+  tl_label = cp5.addTextlabel("Tank Liquid")
+    .setText("Liquid: XX.xx%")
+    .setPosition(displayWidth*.26, displayHeight*.71)
+    .moveTo("global")
+    .setFont(font);
+  diagram_labels = Arrays.asList(he_label, n2o_label, line_label, tt_label, tb_label, tl_label);
 }
 
 void updateDiagrams() {

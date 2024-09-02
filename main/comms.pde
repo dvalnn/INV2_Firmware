@@ -167,6 +167,7 @@ void displayLogRocket() {
   log_display_rocket.setText("Rocket" + state);
   tt_label.setText("Tank Top\nT : " + String.format("%.2f", tank_top_temp * .1) + "\nP : " + String.format("%.2f", tank_top_press * .01));
   tb_label.setText("Tank Bottom\nT : " + String.format("%.2f", tank_bot_temp * .1) + "\nP : " + String.format("%.2f", tank_bot_press * .01));
+  tl_label.setText("Liquid: " + String.format("%.2f", r_tank_liquid *.01) + "%");
 }
 
 void displayLogFilling() {
@@ -209,7 +210,7 @@ void displayLogFilling() {
   he_label.setText("He\nT : " + String.format("%.2f", he_temp * .1) + "\nP : " + String.format("%.2f", he_press * .01));
   n2o_label.setText("N2O\nT : " + String.format("%.2f", n2o_temp * .1) + "\nP : " + String.format("%.2f", n2o_press * .01));
   line_label.setText("Line\nT : " + String.format("%.2f", line_temp * .1) + "\nP : " + String.format("%.2f", line_press * .01));
-  
+  tl_label.setText("Liquid: " + String.format("%.2f", f_tank_liquid *.01) + "%");
   ematch_label.setText("E-Match value : " + ematch_v);
 }
 

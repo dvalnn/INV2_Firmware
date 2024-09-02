@@ -90,7 +90,7 @@ void setupCharts() {
 void updateCharts(int p, int l, int t, int w0, int w1, int w2, int w3, int tp, int cp) {
   // filling chart
   fillingChart.addData("Pressure", float(p) * .01);
-  fillingChart.addData("Liquid", l);
+  fillingChart.addData("Liquid", float(l) * .01);
   fillingChart.addData("Temperature", float(t) * .1);
   fillingChart.addData("Weight", w0);
   max_f = max(max_f, float(p) * .01);
@@ -101,7 +101,7 @@ void updateCharts(int p, int l, int t, int w0, int w1, int w2, int w3, int tp, i
   fillingChart.setRange(0, max_f*1.3);
 
   pressureLabel.setText("Pressure: " + df.format(float(p) * .01));
-  liquidLabel.setText("Liquid: " + l);
+  liquidLabel.setText("Liquid: " + df.format(float(l) * .01));
   temperatureLabel.setText("Temperature: " + df.format(float(t) * .1));
   weightLabel.setText("Weight: " + w0);
   

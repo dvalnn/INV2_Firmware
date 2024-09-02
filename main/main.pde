@@ -82,7 +82,7 @@ Textfield valve_ms;
 Textlabel pressureLabel, liquidLabel, temperatureLabel, weightLabel;
 Textlabel weight1Label, weight2Label, weight3Label, tankPressureLabel, chamberPressureLabel;
 Textlabel ematch_label;
-Textlabel he_label, n2o_label, line_label, tt_label, tb_label;
+Textlabel he_label, n2o_label, line_label, tt_label, tb_label, tl_label;
 
 //Textfield
 

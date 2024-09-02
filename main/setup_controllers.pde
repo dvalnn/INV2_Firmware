@@ -289,7 +289,7 @@ void setupControllers() {
     .setInputFilter(ControlP5.FLOAT)
     .moveTo("default");
   ;
-  
+
   cp5.addButton("Open valve")
     .setPosition(width*.4, height*.05)
     .setSize((int)(width*.1), (int)(height*.05))
@@ -297,6 +297,8 @@ void setupControllers() {
     .setColor(colors2)
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
+
+  
 }
 
 void launch_setup() {
