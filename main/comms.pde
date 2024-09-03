@@ -187,10 +187,6 @@ void displayLogFilling() {
   he_label.setText("He\nT : " + String.format("%.2f", he_temp * .1) + "\nP : " + String.format("%.2f", he_press * .01));
   n2o_label.setText("N2O\nT : " + String.format("%.2f", n2o_temp * .1) + "\nP : " + String.format("%.2f", n2o_press * .01));
   line_label.setText("Line\nT : " + String.format("%.2f", line_temp * .1) + "\nP : " + String.format("%.2f", line_press * .01));
-  
-  String l_percentage = String.format("%.2f", f_tank_liquid * .01) + "%";
-
-  tl_label.setText("Liquid: " + l_percentage);
   ematch_label.setText("E-Match value : " + ematch_v);
 }
 
