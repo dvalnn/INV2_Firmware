@@ -99,6 +99,18 @@ void setup() {
   background(bgColor);
 
   logDir = sketchPath() + "/logs/";
+  String logFolder = "logs";
+  String currentDirectory = sketchPath();
+  String directoryPath = currentDirectory + File.separator + logFolder;
+  File directory = new File(directoryPath);
+  boolean directoryCreated = directory.mkdir();
+
+  if (directoryCreated) {
+    println("Directory created successfully at: " + directoryPath);
+  } else {
+    println("Failed to create directory. It may already exist at: " + directoryPath);
+  }
+  logDir = directoryPath + File.separator;
   file = new File(logDir+"log_"+day()+"_"+month()+"_"+year()+"_"+hour()+minute()+second()+".bin");
 
   font = createFont("arial", displayWidth*.013);
@@ -176,20 +188,20 @@ void draw() {
       ack_display.setText("Last Ack Received:\nFAIL");
     }
   }
-  
+
   if (r_flash_log == true) {
-      fill(0, 255, 0);
-    } else {
-      fill(255, 0, 0);
-    }
-    circle(width*.79, height*.72, height*.018);
-    
-    if (f_flash_log == true) {
-      fill(0, 255, 0);
-    } else {
-      fill(255, 0, 0);
-    }
-    circle(width*.79, height*.81, height*.018);
+    fill(0, 255, 0);
+  } else {
+    fill(255, 0, 0);
+  }
+  circle(width*.79, height*.72, height*.018);
+
+  if (f_flash_log == true) {
+    fill(0, 255, 0);
+  } else {
+    fill(255, 0, 0);
+  }
+  circle(width*.79, height*.81, height*.018);
 }
 
 public void controlEvent(ControlEvent event) {
@@ -313,11 +325,12 @@ public void controlEvent(ControlEvent event) {
     launchChart.setData("Chamber Pressure", new float[0]);
   } else if (event.isFrom("Open valve")) {
     try {
-    float valve_time = Float.parseFloat(valve_ms.getText());
-    print(valve_time);
-    byte[] payload = {(byte) 0x05, (byte) valve_time};
-    send((byte)0x07, payload);
-    } catch (Exception e) {
+      float valve_time = Float.parseFloat(valve_ms.getText());
+      print(valve_time);
+      byte[] payload = {(byte) 0x05, (byte) valve_time};
+      send((byte)0x07, payload);
+    }
+    catch (Exception e) {
       print("Valve open time empty\n");
     }
   }
