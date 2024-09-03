@@ -142,20 +142,11 @@ void displayLogRocket() {
   r_weight2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 22, 24))).getShort(); // launch
   r_weight3 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 24, 26))).getShort(); // launch
   r_chamber_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 26, 28))).getShort();
-
-  //String ttt = "\n" + "Tank Top Temperature: " + str(tank_top_temp); // fill diagram
-  //String tbt = "\n" + "Tank Bottom Temperature: " + str(tank_bot_temp); // fill diagram
-  //String ct1 = "\n" + "Chamber Temperature 1: " + str(chamber_temp1);
-  //String ct2 = "\n" + "Chamber Temperature 2: " + str(chamber_temp2);
-  //String ct3 = "\n" + "Chamber Temperature 3: " + str(chamber_temp3);
-  //String ttp = "\n" + "Tank Top Pressure: " + str(tank_top_press); // fill diagram
-  //String tbp = "\n" + "Tank Bottom Pressure: " + str(tank_bot_press); // fill diagram
-  //String rtp = "\n" + "Tank Pressure: " + str(r_tank_press);
-  //String rtl = "\n" + "Tank Liquid: " + str(r_tank_liquid);
-  //String w1 = "\n" + "Weight 1: " + str(r_weight1);
-  //String w2 = "\n" + "Weight 2: " + str(r_weight2);
-  //String w3 = "\n" + "Weight 3: " + str(r_weight3);
-
+  
+  liquid_height = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 28, 30))).getShort();
+  liquid_volume = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 30, 32))).getShort();
+  liquid_mass = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 32, 34))).getShort();
+  
   String bools = String.format("%8s", Integer.toBinaryString(r_bools & 0xFF)).replace(' ', '0');
   int log_running = Integer.parseInt(bools.substring(0, 1));
   if(log_running == 1) {
@@ -167,7 +158,7 @@ void displayLogRocket() {
   log_display_rocket.setText("Rocket" + state);
   tt_label.setText("Tank Top\nT : " + String.format("%.2f", tank_top_temp * .1) + "\nP : " + String.format("%.2f", tank_top_press * .01));
   tb_label.setText("Tank Bottom\nT : " + String.format("%.2f", tank_bot_temp * .1) + "\nP : " + String.format("%.2f", tank_bot_press * .01));
-  tl_label.setText("Liquid: " + String.format("%.2f", r_tank_liquid *.01) + "%");
+  tl_label.setText("Liquid: " + String.format("%.2f", r_tank_liquid *.01) + "%\n\n\n" + String.format("%.2f", liquid_height * .01) + "m\n\n\n" + String.format("%.2f", liquid_volume * .001) + "m3\n\n\n" + String.format("%.2f", liquid_mass * .01) + "kg");
 }
 
 void displayLogFilling() {
@@ -184,17 +175,6 @@ void displayLogFilling() {
   f_weight1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 19, 21))).getShort();
   f_bools = rx_packet.payload[21];
 
-  //String ftp = "\n" + "Tank Temperature: " + str(f_tank_press);
-  //String ftl = "\n" + "Tank Liquid: " + str(f_tank_liquid);
-  //String ht = "\n" + "He Temperature: " + str(he_temp); // fill diagram
-  //String nt = "\n" + "N2O Temperature: " + str(n2o_temp); // fill diagram
-  //String lt = "\n" + "Line Temperature: " + str(line_temp); // fill diagram
-  //String hp = "\n" + "He Pressure: " + str(he_press); // fill diagram
-  //String np = "\n" + "N2O Pressure: " + str(n2o_press); // fill diagram
-  //String lp = "\n" + "Line Pressure: " + str(line_press); // fill diagram
-  //String ev = "\n" + "eMatch reading: " + str(ematch_v);
-  //String w1 = "\n" + "Weight 1: " + str(f_weight1); // filling graph
-
   String bools = String.format("%8s", Integer.toBinaryString(f_bools & 0xFF)).replace(' ', '0');
   int log_running = Integer.parseInt(bools.substring(0, 1));
   if(log_running == 1) {
@@ -202,15 +182,15 @@ void displayLogFilling() {
   } else {
     f_flash_log = false;
   }
-  //String he_valve = "\nHelium Valve: " + bools.substring(1, 2);
-  //String n2o_valve = "\nN2O Valve: " + bools.substring(2, 3);
-  //String line_valve = "\nLine Valve: " + bools.substring(3, 4);
 
   log_display_filling.setText("Filling Station" + state);
   he_label.setText("He\nT : " + String.format("%.2f", he_temp * .1) + "\nP : " + String.format("%.2f", he_press * .01));
   n2o_label.setText("N2O\nT : " + String.format("%.2f", n2o_temp * .1) + "\nP : " + String.format("%.2f", n2o_press * .01));
   line_label.setText("Line\nT : " + String.format("%.2f", line_temp * .1) + "\nP : " + String.format("%.2f", line_press * .01));
-  tl_label.setText("Liquid: " + String.format("%.2f", f_tank_liquid *.01) + "%");
+  
+  String l_percentage = String.format("%.2f", f_tank_liquid * .01) + "%";
+
+  tl_label.setText("Liquid: " + l_percentage);
   ematch_label.setText("E-Match value : " + ematch_v);
 }
 
