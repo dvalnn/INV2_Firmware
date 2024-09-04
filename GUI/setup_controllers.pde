@@ -298,7 +298,12 @@ void setupControllers() {
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
-  
+  chamber_temps_label = cp5.addTextlabel("Chamber Temps")
+    .setText("Chamber temperatures go here")
+    .setColor(colors2)
+    .setPosition(displayWidth*.02, displayHeight*.06)
+    .moveTo("launch")
+    .setFont(font);
 }
 
 void launch_setup() {

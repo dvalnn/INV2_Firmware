@@ -83,7 +83,7 @@ void processPacket() {
   rx_packet = new_packet;
   rx_packet.logPacket(LogEvent.MSG_RECEIVED);
   println(rx_packet.getPacket());
-  if (CMD == (byte) 0x00) { // LOG COMANDO PLACEHOLDER 0x01 se tudo correr bem
+  if (CMD == (byte) 0x00) {
     if (ID == (byte) 0x02) {
       displayLogRocket();
       updateLogStats(1);
@@ -142,19 +142,21 @@ void displayLogRocket() {
   r_weight2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 22, 24))).getShort(); // launch
   r_weight3 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 24, 26))).getShort(); // launch
   r_chamber_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 26, 28))).getShort();
-  
+
   liquid_height = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 28, 30))).getShort();
   liquid_volume = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 30, 32))).getShort();
   liquid_mass = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 32, 34))).getShort();
+
+  //chamber_temps_label =
   
   String bools = String.format("%8s", Integer.toBinaryString(r_bools & 0xFF)).replace(' ', '0');
   int log_running = Integer.parseInt(bools.substring(0, 1));
-  if(log_running == 1) {
+  if (log_running == 1) {
     r_flash_log = true;
   } else {
     r_flash_log = false;
   }
-  
+
   log_display_rocket.setText("Rocket" + state);
   tt_label.setText("Tank Top\nT : " + String.format("%.2f", tank_top_temp * .1) + "\nP : " + String.format("%.2f", tank_top_press * .01));
   tb_label.setText("Tank Bottom\nT : " + String.format("%.2f", tank_bot_temp * .1) + "\nP : " + String.format("%.2f", tank_bot_press * .01));
@@ -177,7 +179,7 @@ void displayLogFilling() {
 
   String bools = String.format("%8s", Integer.toBinaryString(f_bools & 0xFF)).replace(' ', '0');
   int log_running = Integer.parseInt(bools.substring(0, 1));
-  if(log_running == 1) {
+  if (log_running == 1) {
     f_flash_log = true;
   } else {
     f_flash_log = false;
@@ -221,7 +223,7 @@ void displayAck(int ackValue) {
     break;
   case 21: // Manual Exec Ack
     ackName = "Manual Exec";
-    if(rx_packet.payload[0] == (byte) 0x0c) { // flash ids cmd (2) + man command size (9) + 1
+    if (rx_packet.payload[0] == (byte) 0x0c) { // flash ids cmd (2) + man command size (9) + 1
       int file_count = (int) rx_packet.payloadLength - 1;
       String id = str(rx_packet.payload[file_count]);
       ackName = "Flash Log ID: " + id;
@@ -250,8 +252,8 @@ void displayAck(int ackValue) {
 }
 
 void send(byte command, byte[] payload) {
-  if(targetID == 0) {
-    print("No ID selected");
+  if (targetID == 0) {
+    print("No ID selected\n");
     return;
   }
   println(command, payload);

@@ -12,14 +12,14 @@ class dataPacket {
     this.command = command;
     this.payload = payload;
     this.payloadLength = (byte)payload.length;
-    this.id = id; 
+    this.id = id;
     this.crc = (byte) 0x00;
   }
 
   void logPacket(LogEvent event) {
     flash_log(this, event);
   }
-  
+
   byte[] getPacket() {
     byte[] finalPacket = {START_BYTE, command, id, payloadLength};
     for (int i = 0; i < payloadLength; i++) {

@@ -17,10 +17,10 @@ void setupCharts() {
 
   launchChart.setColors("Weight 1", color(0, 255, 0));
   launchChart.setColors("Weight 2", color(255, 255, 0));
-  launchChart.setColors("Weight 3", color(255, 150, 255));
+  launchChart.setColors("Weight 3", color(255, 150, 150));
   launchChart.setColors("Tank Pressure", color(0, 255, 255));
   launchChart.setColors("Chamber Pressure", color(255, 0, 255));
-  
+
   pressureLabel = cp5.addLabel("Pressure: ")
     .setColor(color(0, 255, 0))
     .setFont(font)
@@ -92,35 +92,35 @@ void updateCharts(int p, int l, int t, int w0, int w1, int w2, int w3, int tp, i
   fillingChart.addData("Pressure", float(p) * .01);
   fillingChart.addData("Liquid", float(l) * .01);
   fillingChart.addData("Temperature", float(t) * .1);
-  fillingChart.addData("Weight", w0);
+  fillingChart.addData("Weight", float(w0) * .1);
   max_f = max(max_f, float(p) * .01);
-  max_f = max(max_f, l);
-  max_f = max(max_f, t);
-  max_f = max(max_f, w0);
+  max_f = max(max_f, float(l) * .01);
+  max_f = max(max_f, float(t) * .1);
+  max_f = max(max_f, float(w0) * -.1);
 
   fillingChart.setRange(0, max_f*1.3);
 
   pressureLabel.setText("Pressure: " + df.format(float(p) * .01));
   liquidLabel.setText("Liquid: " + df.format(float(l) * .01));
   temperatureLabel.setText("Temperature: " + df.format(float(t) * .1));
-  weightLabel.setText("Weight: " + w0);
-  
+  weightLabel.setText("Weight: " + df.format(float(w0) * .1));
+
   // launch chart
-  launchChart.addData("Weight 1", w1);
-  launchChart.addData("Weight 2", w2);
-  launchChart.addData("Weight 3", w3);
+  launchChart.addData("Weight 1", float(w1) * .1);
+  launchChart.addData("Weight 2", float(w2) * .1);
+  launchChart.addData("Weight 3", float(w3) * .1);
   launchChart.addData("Tank Pressure", float(tp) * .01);
   launchChart.addData("Chamber Pressure", float(cp) * .01);
 
-  max_l = max(max_l, w1);
-  max_l = max(max_l, w2);
-  max_l = max(max_l, w3);
+  max_l = max(max_l, float(w1) * .1);
+  max_l = max(max_l, float(w2) * .1);
+  max_l = max(max_l, float(w3) * .1);
   max_l = max(max_l, float(tp) * .01);
   max_l = max(max_l, float(cp) * .01);
-  
-  weight1Label.setText("Weight 1: " + w1);
-  weight2Label.setText("Weight 2: " + w2);
-  weight3Label.setText("Weight 3: " + w3);
+
+  weight1Label.setText("Weight 1: " + df.format(float(w1) * .1));
+  weight2Label.setText("Weight 2: " + df.format(float(w2) * .1));
+  weight3Label.setText("Weight 3: " + df.format(float(w3) * .1));
   tankPressureLabel.setText("Tank Pressure: " + df.format(float(tp) * .01));
   chamberPressureLabel.setText("Chamber Pressure: " + df.format(float(cp) * .01));
 

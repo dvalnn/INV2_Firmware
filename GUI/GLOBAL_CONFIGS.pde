@@ -51,6 +51,6 @@ void setupColors() {
     .setBackground(dark_red)
     .setActive(red);
   stopColor.setForeground(light_orange)
-  .setBackground(orange)
-  .setActive(blue);
+    .setBackground(orange)
+    .setActive(blue);
 }

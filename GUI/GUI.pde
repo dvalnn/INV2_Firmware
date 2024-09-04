@@ -62,7 +62,7 @@ short liquid_height, liquid_volume, liquid_mass;
 byte r_bools;
 short f_tank_press, f_tank_liquid, he_temp, n2o_temp, line_temp, he_press, n2o_press, line_press, ematch_v, f_bools;
 int f_weight1;
-float max_f = 1, max_l = 1;
+float max_f = .01, max_l = .01;
 int max_size = 100000;
 int[] prog_inputs = new int[3];
 int selected_index = -1;
@@ -82,10 +82,12 @@ int last_open_valve = -1;
 Textfield valve_ms;
 Textlabel pressureLabel, liquidLabel, temperatureLabel, weightLabel;
 Textlabel weight1Label, weight2Label, weight3Label, tankPressureLabel, chamberPressureLabel;
-Textlabel ematch_label;
+Textlabel ematch_label, chamber_temps_label;
 Textlabel he_label, n2o_label, line_label, tt_label, tb_label, tl_label;
 
-//Textfield
+List<Toggle> valve_toggles;
+Toggle he_toggle, n2o_toggle, line_toggle, tt_toggle, tb_toggle;
+HashMap<Toggle, Byte> valve_toggle_map = new HashMap<Toggle, Byte>();
 
 List<Textlabel> diagram_labels;
 List<String> man_commands = Arrays.asList("Flash Log Start", "Flash Log Stop", "Flash IDs", "Loadcell Calibrate", "Loadcell Tare");
@@ -117,7 +119,10 @@ void setup() {
   cp5 = new ControlP5(this);
 
   setupColors();
-
+  setupControllers(); // in setup controllers tab
+  setupCharts(); // in chart functions tab
+  init_log(); // log initialization
+  setupDiagrams();
 
   boolean[] _bl1 = {true, true, false};
   prog_args.put("Safety Pressure", _bl1);
@@ -164,10 +169,11 @@ void setup() {
   man_commands_map.put("Loadcell Calibrate", (byte) 7);
   man_commands_map.put("Loadcell Tare", (byte) 8);
 
-  setupControllers(); // in setup controllers tab
-  setupCharts(); // in chart functions tab
-  init_log(); // log initialization
-  setupDiagrams();
+  valve_toggle_map.put(tt_toggle, (byte) 0x00);
+  valve_toggle_map.put(tb_toggle, (byte) 0x01);
+  valve_toggle_map.put(he_toggle, (byte) 0x02);
+  valve_toggle_map.put(n2o_toggle, (byte) 0x03);
+  valve_toggle_map.put(line_toggle, (byte) 0x04);
 }
 
 void draw() {
@@ -294,22 +300,44 @@ public void controlEvent(ControlEvent event) {
         .setColorActive(color(255, 0, 0))    // Red when off
         .setColorBackground(color(100, 0, 0));
     }
+  } else if (event.isFrom("Start Manual")) {
+    byte[] payload = {};
+    send((byte)0x06, payload);
+  } else if (event.isFrom("Change Valve State")) {
+    if (valve_selected > -1) {
+      byte[] man_payload = {(byte) 0x04, (byte) valve_selected, (byte) valve_toggle_state};
+      send((byte)0x07, man_payload);
+    }
   }
+
   for (int i = 0; i < man_commands.size(); i++) {
     if (event.isFrom(man_commands.get(i))) {
       byte[] man_payload = {man_commands_map.get(man_commands.get(i))};
       send((byte)0x07, man_payload);
     }
   }
-  if (event.isFrom("Start Manual")) {
-    send((byte)0x06, empty_payload);
-  } else if (event.isFrom("Change Valve State")) {
-    if (valve_selected > -1) {
-      byte[] man_payload = {(byte) 0x04, (byte) valve_selected, (byte) valve_toggle_state};
-      send((byte)0x07, man_payload);
+  // if (valve_toggles != null) {
+  for (Toggle toggle : valve_toggles) {
+    if (event.isFrom(toggle.getName())) {
+      int state = (int) event.getController().getValue();
+      if (state == 1) {
+        toggle.setColorForeground(color(0, 255, 0))
+          .setColorBackground(color(0, 100, 0))
+          .setColorActive(color(0, 255, 0));     // Green when on
+      } else if (state == 0) {
+        toggle.setColorForeground(color(255, 0, 0)) // Red when off
+          .setColorActive(color(255, 0, 0))    // Red when off
+          .setColorBackground(color(100, 0, 0));
+      }
+      print(valve_toggle_map.get(toggle));
+      byte[] payload = {(byte) 0x04, valve_toggle_map.get(toggle), (byte) state};
+      send((byte)0x07, payload);
     }
-  } else if (event.isFrom("Select Valve")) {
+  }
+  //}
+  if (event.isFrom("Select Valve")) {
     valve_selected = (int)event.getValue();
+    print(valve_selected);
   } else if (event.isFrom("Reset Chart")) {
     fillingChart.setData("Pressure", new float[0]);
     fillingChart.setData("Liquid", new float[0]);
@@ -325,7 +353,7 @@ public void controlEvent(ControlEvent event) {
     launchChart.setData("Chamber Pressure", new float[0]);
   } else if (event.isFrom("Open valve")) {
     try {
-      float valve_time = Float.parseFloat(valve_ms.getText());
+      int valve_time = (int) Float.parseFloat(valve_ms.getText());
       print(valve_time);
       byte[] payload = {(byte) 0x05, (byte) valve_time};
       send((byte)0x07, payload);
