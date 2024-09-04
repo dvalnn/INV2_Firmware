@@ -106,7 +106,7 @@ void setupDiagrams() {
     .moveTo("default");
 
   tl_label = cp5.addTextlabel("Tank Liquid")
-    .setText("Liquid:XX.xx%\n\n\nXX.xxm\n\n\nXX.xxm3\n\n\nXX.xxkg")
+    .setText("Liquid:XX.xx%\n\n\nXX.xxm\n\n\nXX.xxm3\n\n\nXX.xxkg\n\n\nXX.xxkg")
     .setPosition(displayWidth*.26, displayHeight*.565)
     .moveTo("global")
     .setFont(font);

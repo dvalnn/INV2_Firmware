@@ -146,8 +146,10 @@ void displayLogRocket() {
   liquid_height = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 28, 30))).getShort();
   liquid_volume = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 30, 32))).getShort();
   liquid_mass = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 32, 34))).getShort();
+  liquid_mass2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 34, 36))).getShort();
+  
 
-  chamber_temps_label.setText("Chamber Temperatures\n1: " + chamber_temp1 + "\n2: " + chamber_temp2 + "\n3: " + chamber_temp3);
+  chamber_temps_label.setText("Chamber Temperatures\n1: " + df.format(chamber_temp1) + "\n2: " + df.format(chamber_temp2) + "\n3: " + df.format(chamber_temp3));
   
   String bools = String.format("%8s", Integer.toBinaryString(r_bools & 0xFF)).replace(' ', '0');
   int log_running = Integer.parseInt(bools.substring(0, 1));
@@ -160,7 +162,7 @@ void displayLogRocket() {
   log_display_rocket.setText("Rocket" + state);
   tt_label.setText("Tank Top\nT : " + String.format("%.2f", tank_top_temp * .1) + "\nP : " + String.format("%.2f", tank_top_press * .01));
   tb_label.setText("Tank Bottom\nT : " + String.format("%.2f", tank_bot_temp * .1) + "\nP : " + String.format("%.2f", tank_bot_press * .01));
-  tl_label.setText("Liquid: " + String.format("%.2f", (100 - r_tank_liquid *.01)) + "%\n\n\n" + String.format("%.2f", liquid_height * .01) + "m\n\n\n" + String.format("%.2f", liquid_volume * .001) + "m3\n\n\n" + String.format("%.2f", liquid_mass * .01) + "kg");
+  tl_label.setText("Liquid: " + String.format("%.2f", (100 - r_tank_liquid * .01)) + "%\n\n\n" + String.format("%.2f", liquid_height * .01) + "m\n\n\n" + String.format("%.2f", liquid_volume * .001) + "m3\n\n\n" + String.format("%.2f", liquid_mass * .01) + "kg\n\n\n" + String.format("%.2f", liquid_mass * .01));
 }
 
 void displayLogFilling() {

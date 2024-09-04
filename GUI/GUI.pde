@@ -58,7 +58,7 @@ int status_toggle_state = 0;
 int last_status_request = 0;
 
 short tank_top_temp, tank_bot_temp, chamber_temp1, chamber_temp2, chamber_temp3, tank_top_press, tank_bot_press, r_tank_press, r_tank_liquid, r_weight1, r_weight2, r_weight3, r_chamber_press;
-short liquid_height, liquid_volume, liquid_mass;
+short liquid_height, liquid_volume, liquid_mass, liquid_mass2;
 byte r_bools;
 short f_tank_press, f_tank_liquid, he_temp, n2o_temp, line_temp, he_press, n2o_press, line_press, ematch_v, f_bools;
 int f_weight1;
@@ -269,6 +269,7 @@ public void controlEvent(ControlEvent event) {
   } else if (event.isFrom("Select ID")) {
     targetID = (byte) (event.getValue() + 1);
   } else if (event.isFrom("Abort")) {
+    targetID = (byte) 0x03;
     send((byte)0x02, empty_payload);
   } else if (event.isFrom("Arm")) {
     send((byte)0x09, empty_payload);
@@ -316,7 +317,7 @@ public void controlEvent(ControlEvent event) {
       send((byte)0x07, man_payload);
     }
   }
-  // if (valve_toggles != null) {
+  if (valve_toggles != null) {
   for (Toggle toggle : valve_toggles) {
     if (event.isFrom(toggle.getName())) {
       int state = (int) event.getController().getValue();
@@ -329,12 +330,11 @@ public void controlEvent(ControlEvent event) {
           .setColorActive(color(255, 0, 0))    // Red when off
           .setColorBackground(color(100, 0, 0));
       }
-      print(valve_toggle_map.get(toggle));
       byte[] payload = {(byte) 0x04, valve_toggle_map.get(toggle), (byte) state};
       send((byte)0x07, payload);
     }
   }
-  //}
+  }
   if (event.isFrom("Select Valve")) {
     valve_selected = (int)event.getValue();
     print(valve_selected);
