@@ -355,7 +355,7 @@ public void controlEvent(ControlEvent event) {
     try {
       int valve_time = (int) Float.parseFloat(valve_ms.getText());
       print(valve_time);
-      byte[] payload = {(byte) 0x05, (byte) valve_time};
+      byte[] payload = {(byte) 0x05, (byte) valve_selected, (byte) valve_time};
       send((byte)0x07, payload);
     }
     catch (Exception e) {
