@@ -11,7 +11,14 @@
 //rocket_state_t event_handler(rocket_state_t state);
 bool IdleCond(void);
 bool TrueCond(void);
-bool IgniteCond(void);
-void IgniteReaction();
 
+
+bool prog1_safety_cond(void);
+bool safety_stop_cond(void);
+bool prog2_finish_cond(void);
+bool prog3_finish_cond(void);
+
+bool IgniteCond(void);
+
+bool arm_timer_event(void);
 #endif

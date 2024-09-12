@@ -3,22 +3,53 @@ import time
 import serial
 
 #mac
-#ser = serial.Serial('/dev/cu.usbserial-0001', 115200, timeout=0.015) #set read timeout of 1s
+ser = serial.Serial('/dev/cu.usbserial-0001', 115200, timeout=0.015) #set read timeout of 1s
 #windows
-ser = serial.Serial('COM3', 115200, timeout=0.01) #set read timeout of 1s
+#ser = serial.Serial('COM3', 115200, timeout=0.01) #set read timeout of 1s
 
 message_timeout = 0.3
+missed_packets = 0
 
 command_map = {
     "STATUS" : 0,
-    "READY" : 1,
-    "ARM" : 2,
-    "ABORT" : 3,
-    "LED_ON" : 4,
-    "LED_OFF" : 5,
-    "IMU_CALIB" : 6, 
-    "STATUS_ACK" : 8,
-    "ARM_ACK" : 10
+    "ABORT" : 1,
+    "EXEC_PROG" : 2, 
+    "STOP_PROG" : 3,
+    "FUELING" : 4,
+
+#FLIGHT computer commands
+    "READY" : 5,
+    "ARM" : 6,
+
+    "LED_ON" : 7,
+    "LED_OFF" : 8,
+
+    "IMU_CALIB" : 9,
+
+#FILLING station commands
+    "RESUME_PROG" : 10,
+
+#State machine commands
+    "ADD_WORK" : 11,
+    "REMOVE_WORK" : 12,
+
+#used to get the number of commands 
+    "cmd_size" : 13,
+
+#ACKs
+    "STATUS_ACK" : 14,
+    "FUELING_ACK" : 15,
+    "READY_ACK" : 16,
+    "ARM_ACK" : 17,
+    "ABORT_ACK" : 18, 
+    "LED_ON_ACK" : 19,
+    "LED_OFF_ACK" : 20,
+    "IMU_CALIB_ACK" : 21,
+    "EXEC_PROG_ACK" : 22,
+    "STOP_PROG_ACK" : 23,
+    "RESUME_PROG_ACK" : 24,
+    "ADD_WORK_ACK" : 25,
+    "REMOVE_WORK_ACK" : 26 
 }
 
 sync_state = 1

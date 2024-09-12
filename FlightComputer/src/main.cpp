@@ -18,21 +18,31 @@
 #include <time.h>
 #include <string.h>
 
-#include "Target.h"
 #include "HardwareCfg.h"
-#include "StateMachine.h"
 #include "GlobalVars.h"
-#include "StMWork.h"
+
 #include "Comms.h"
+
+#include "StateMachine.h"
+#include "StMComms.h"
+#include "StMWork.h"
+#include "FlashLog.h"
 
 // I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
 // for both classes must be in the include path of your project
 #include <I2Cdev.h>
 #include <MPU6050.h>
+#include <HX711.h>
+#include <Max6675.h>
+#include <ADS1X15.h>
+#include <MCP9600.h>
 
 #include <LoRa.h>
 
 #include <Crc.h>
+
+#include <SerialFlash.h>
+
 
 // Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
 // is used in I2Cdev.h
@@ -44,231 +54,86 @@
 // specific I2C addresses may be passed as a parameter here
 // AD0 low = 0x68 (default for InvenSense evaluation board)
 // AD0 high = 0x69
-MPU6050 accelgyro;
 //MPU6050 accelgyro(0x69); // <-- use for AD0 high
 
 
-
-int led_state = 0;
-
-void echo_reply(command_t* cmd)
+void pressure_Setup(void)
 {
-/*
-    Used during testing. See Target.h
-*/
-#ifdef DIGITAL_TARGET
+    Serial.println("Pressure amp starting");
 
-    Serial.printf("Cmd: %x\n", cmd->cmd);
-    Serial.printf("Sz: %x\n", cmd->size);
-    if(cmd->size > 0)
-    {
-        for(int i = 0; i < cmd->size; i++) Serial.printf("%x ", cmd->data[i]);
-        Serial.printf("\n");
+    if(!ADS1.init()){
+        Serial.println("ADS1115 not connected!");
     }
-    Serial.printf("CRC: %x\n", cmd->crc);
-#endif
+    
+    ADS1.setVoltageRange_mV(ADS1115_RANGE_6144); //comment line/change parameter to change range
+    ADS1.setCompareChannels(ADS1115_COMP_0_GND); //comment line/change parameter to change range
+    ADS1.setAlertPinMode(ADS1115_ASSERT_AFTER_2); // alternative: ...AFTER_2 or 4. If you disable this sketch does not work
+    ADS1.setConvRate(ADS1115_860_SPS); //uncomment if you want to change the default
+    ADS1.setMeasureMode(ADS1115_SINGLE); //comment or change you want to change to single shot
+    ADS1.setAlertPinToConversionReady(); //needed for this sketch
+
+    //ADS1.begin();
+    //ADS1.setGain(1); //6v
+    ////ADS1.setDataRate(4); //16 hz
+    //ADS1.setDataRate(5); //16 hz
+    //ADS1.setMode(1); //single mode
+    
+    //ADS2.begin();
+    //ADS2.setGain(0); //6v
+    //ADS2.setDataRate(7); //fastest
+    //ADS2.setMode(1); //single mode
 }
 
-int run_command(command_t* cmd, rocket_state_t state)
+void temp_i2c_Setup(void)
 {
-    command_t command_rep;
-    rocket_state_t return_state = state;
-    switch(cmd->cmd)
-    {
-        case CMD_LED_ON:
-        {
-            /* Cmd execution */
-            digitalWrite(LED_PIN, HIGH);
+    Serial.println("Temp 1 i2c amp starting");
+    Tank_Top_Module.thermocouple.begin(TEMP_AMP1_ADDR);
+    Tank_Top_Module.thermocouple.setThermocoupleType(TYPE_K);
+    //check if the sensor is connected
+    if(Tank_Top_Module.thermocouple.isConnected()){
+        Serial.println("Device will acknowledge!");
+        Tank_Top_Module.thermocouple.getThermocoupleTemp();
+    }
+    else {
+        Serial.println("Device did not acknowledge! Freezing.");
+        //while(1); //hang forever
+    }
 
-            /*
-             * Prepare ACK response
-             * Send response
-             */
-            command_rep.cmd = CMD_LED_ON_ACK;
-            command_rep.size = 0;
-            command_rep.crc = 0x3131;
+    Serial.println("Temp 2 i2c amp starting");
+    Tank_Bot_Module.thermocouple.begin(TEMP_AMP2_ADDR);
+    Tank_Bot_Module.thermocouple.setThermocoupleType(TYPE_K);
+    //check if the sensor is connected
+    if(Tank_Bot_Module.thermocouple.isConnected()){
+        Serial.println("Device will acknowledge!");
+        Tank_Bot_Module.thermocouple.getThermocoupleTemp();
+    }
+    else {
+        Serial.println("Device did not acknowledge! Freezing.");
+        while(1); //hang forever
+    }
+}
 
-            write_command(&command_rep);
+void loadCell_Setup(void)
+{
+    Serial.println("Loadcells starting\n");
 
-            return CMD_RUN_OK;
-        }
-        break;
+    Scale_Module.scale1.begin(LOADCELL1_OUT_PIN, LOADCELL1_SCK_PIN);
+    //loadcell.tare(100); // average 20 measurements.
+    //Scale_Module.scale1.set_offset(Scale_Module.scale1_offset);
+    //Scale_Module.scale1.set_scale(Scale_Module.scale1_scale);
 
-        case CMD_LED_OFF:
-        {
-            /* Cmd execution */
-            digitalWrite(LED_PIN, LOW);
+    Scale_Module.scale2.begin(LOADCELL2_OUT_PIN, LOADCELL2_SCK_PIN);
+    Scale_Module.scale2.set_offset(Scale_Module.scale2_offset);
+    Scale_Module.scale2.set_scale(Scale_Module.scale2_scale);
 
-            /*
-             * Prepare ACK response
-             * Send response
-             */
-            command_rep.cmd = CMD_LED_OFF_ACK;
-            command_rep.size = 0;
-            command_rep.crc = 0x2121;
-
-            write_command(&command_rep);
-
-            return CMD_RUN_OK;
-        }
-        break;
-
-        case CMD_STATUS:
-        {
-            /*
-             * Prepare ACK response
-             * Send response
-             */
-            command_rep.cmd = CMD_STATUS_ACK;
-            //command_rep.size = 2*6 + 1;
-            command_rep.size = 100; //test
-            command_rep.data[0] = state;
-            command_rep.data[1] = (imu_ax >> 8) & 0xff;
-            command_rep.data[2] = (imu_ax) & 0xff ;
-            command_rep.data[3] = (imu_ay >> 8) & 0xff;
-            command_rep.data[4] = (imu_ay) & 0xff;
-            command_rep.data[5] = (imu_az >> 8) & 0xff;
-            command_rep.data[6] = (imu_az) & 0xff;
-            command_rep.data[7] = (imu_gx >> 8) & 0xff;
-            command_rep.data[8] = (imu_gx) & 0xff;
-            command_rep.data[9] = (imu_gy >> 8) & 0xff;
-            command_rep.data[10] = (imu_gy) & 0xff;
-            command_rep.data[11] = (imu_gz >> 8) & 0xff;
-            command_rep.data[12] = (imu_gz) & 0xff;
-            command_rep.crc = 0x5151;
-
-            write_command(&command_rep);
-
-            return CMD_RUN_OK;
-        }
-        break; 
-
-        case CMD_ARM:
-        {
-            //stage 1
-            if(cmd->data[0] != ARN_TRIGGER_1)
-            {
-                //error
-                return CMD_RUN_ARM_ERROR;
-            }
-
-            command_rep.cmd = CMD_ARM_ACK;
-            command_rep.size = 1;
-
-            command_rep.data[0] = ARN_TRIGGER_1;
-            command_rep.crc = 0x5151;
-
-            write_command(&command_rep);
-
-            //stage 2
-            int error = 0;
-            command_t* arm_cmd;
-            while((arm_cmd = read_command(&error)) == NULL && error == CMD_READ_NO_CMD) {}
-
-            if(error != OK || arm_cmd->cmd != CMD_ARM || arm_cmd->data[0] != ARN_TRIGGER_2)
-            {
-                //error
-                return CMD_RUN_ARM_ERROR;
-            }
-
-            command_rep.data[0] = ARN_TRIGGER_2;
-            write_command(&command_rep);
-
-            //stage 3
-            while((arm_cmd = read_command(&error)) == NULL && error == CMD_READ_NO_CMD) {}
-
-            if(error != OK || arm_cmd->cmd != CMD_ARM || arm_cmd->data[0] != ARN_TRIGGER_3)
-            {
-                //error
-                return CMD_RUN_ARM_ERROR;
-            }
-
-            command_rep.data[0] = ARN_TRIGGER_3;
-            write_command(&command_rep);
-
-            return CMD_RUN_OK;
-        }
-        break;
-
-        case CMD_ADD_WORK:
-        case CMD_REMOVE_WORK:
-        {
-            static int8_t working_index[work_enum_size] = {-1}; //Still not sure if this works 
-            static void(*work[work_enum_size])(void) = {logger, pressure_safety};
-            
-            if(cmd->size < 3) return CMD_RUN_OUT_OF_BOUND;
-            uint8_t work_id = cmd->data[0];
-            uint16_t work_delay = (cmd->data[1] << 8) & cmd->data[2];
-
-            if(cmd->cmd == CMD_ADD_WORK &&
-                working_index[work_id] == -1)
-            {
-                int i;
-                for(i = 0; i < MAX_WORK_SIZE; i++)
-                    // find work empty slot
-                    if(state_machine[state].work[i].chanel == NULL) break;
-
-                if(i == MAX_WORK_SIZE) return CMD_RUN_OUT_OF_BOUND; 
-
-                state_machine[state].work[i].chanel = work[work_id]; 
-                state_machine[state].work[i].delay = work_delay;
-                state_machine[state].work[i].begin = 0;
-                working_index[work_id] = i;
-
-            }
-            else if(cmd-> cmd == CMD_REMOVE_WORK &&
-                    working_index[work_id] != -1)
-            {
-                uint8_t index = working_index[work_id];
-
-                state_machine[state].work[index].chanel = NULL;
-                state_machine[state].work[index].delay = 0;
-                state_machine[state].work[index].begin = 0;
-                working_index[work_id] = -1;
-            }
-        }
-        break;
-
-        case CMD_READY:
-        {
-            command_rep.cmd = CMD_READY_ACK;
-            command_rep.size = 0;
-            command_rep.crc = 0x2121;
-
-            write_command(&command_rep);
-
-            return CMD_RUN_OK;
-        }
-        break;
-
-        case CMD_ABORT:
-        {
-            command_rep.cmd = CMD_ABORT_ACK;
-            command_rep.size = 0;
-            command_rep.crc = 0x2121;
-
-            write_command(&command_rep);
-
-            return CMD_RUN_OK;
-        }
-        break;
-
-        default:
-            // if the command has no action it still needs to return ok to change state
-            if(cmd->cmd < cmd_size)
-                return CMD_RUN_OK;
-            else //cmd code out of bounds, return error
-                return CMD_RUN_OUT_OF_BOUND;
-        break;
-    };
-
-    
-    //Serial.printf("cmd: %x state: %d return state %d table: %d\n", cmd->cmd, state, return_state,
-    //(rocket_state_t)comm_transition[state][cmd->cmd]);
+    Scale_Module.scale3.begin(LOADCELL3_OUT_PIN, LOADCELL3_SCK_PIN);
+    Scale_Module.scale3.set_offset(Scale_Module.scale3_offset);
+    Scale_Module.scale3.set_scale(Scale_Module.scale3_scale);
 }
 
 void gyroSetup(void)
 {
+    Serial.println("Gyro starting");
     accelgyro.initialize();
     Wire.setBufferSize(256);
  // verify connection
@@ -277,60 +142,126 @@ void gyroSetup(void)
     
 }
 
+void Valves_Setup(void)
+{
+    Serial.println("Valves starting");
+    pinMode(V1_PIN, OUTPUT);
+    pinMode(V2_PIN, OUTPUT);
+
+    //pinMode(Pressure_PIN, INPUT);
+}
+
+void Flash_Setup()
+{
+    if (!SD.begin(Flash_SS_PIN)) {
+        printf("Unable to access SPI Flash chip\n");
+        //return;
+    }
+
+    current_id = get_last_id() + 1;
+    Serial.print("current id");
+    Serial.print(current_id);
+    Serial.printf("\n");
+
+    Serial.print("Card type ");
+    Serial.println(SD.cardType());
+
+    Serial.print("Used bytes ");
+    Serial.println(SD.usedBytes());
+
+    Serial.print("Capacity ");
+    Serial.println(SD.cardSize());
+
+}
+
+void Spi_Thermo_Setup(void)
+{
+    Chamber_Module.thermocouple1.begin();
+    Chamber_Module.thermocouple2.begin();
+    Chamber_Module.thermocouple3.begin();
+    Chamber_Module.thermocouple1.setSPIspeed(100000);
+    Chamber_Module.thermocouple2.setSPIspeed(100000);
+    Chamber_Module.thermocouple3.setSPIspeed(100000);
+}
+
 void LoRa_Setup(void)
 {
-  LoRa.setPins(5,4,36);
-  LoRa.setSignalBandwidth(500E3);
-  LoRa.setCodingRate4(5);
-  LoRa.setSpreadingFactor(7);
-  LoRa.setGain(1);
+  LoRa.setPins(LORA_SS_PIN, LORA_RESET_PIN, LORA_DIO0_PIN);
+  LoRa.setSignalBandwidth(300E3);
+  //LoRa.setSignalBandwidth(500E3);
+  //LoRa.setCodingRate4(5);
+  //LoRa.setSpreadingFactor(7);
+  //LoRa.setGain(1);
 
   Serial.println("Lora starting");
   if (!LoRa.begin(868E6)) {
     Serial.println("Starting LoRa failed!");
-    while (1);
+    //while (1);
   }
 }
 
 void setup() {
 
-    Serial.begin(115200); //USBC serial
+    Serial.begin(SERIAL_BAUD); //USBC serial
+    Serial2.begin(SERIAL2_BAUD);
 
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
         Wire.begin();
+        //Wire.setClock(400000);
     #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
         Fastwire::setup(400, true);
     #endif
     
-    gyroSetup();
+    SPI.begin();
+
+    pinMode(TEMP_AMP3_SS_PIN, OUTPUT);
+    pinMode(TEMP_AMP4_SS_PIN, OUTPUT);
+    pinMode(TEMP_AMP5_SS_PIN, OUTPUT);
+    pinMode(LORA_SS_PIN, OUTPUT);
+    pinMode(Flash_SS_PIN, OUTPUT);
+
+    digitalWrite(TEMP_AMP3_SS_PIN, HIGH);
+    digitalWrite(TEMP_AMP4_SS_PIN, HIGH);
+    digitalWrite(TEMP_AMP5_SS_PIN, HIGH);
+    digitalWrite(LORA_SS_PIN, HIGH);
+    digitalWrite(Flash_SS_PIN, HIGH);
+
+    //gyroSetup();
+
+    Valves_Setup();
+
+    loadCell_Setup();
+
+    pressure_Setup();
+
+    temp_i2c_Setup();
+    Spi_Thermo_Setup();
+
     LoRa_Setup();
-
-    //setup trigger switch
-    pinMode(TRIGGER, INPUT_PULLUP);
-
-    //Set board LED 
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, LOW);
+    Flash_Setup();
 
     char arr[] = {'a','b','c','d'};
     //unsigned long crc_1 = crc((unsigned char*)arr, 4); 
 
-/*
- Removed during testing. See Target.h
- */
-#ifndef DIGITAL_TARGET
-
-    Serial2.begin(115200);
-#endif
-
     printf("Setup done\n");
+
+    delay(2000);
+    //while(1){}
 }
 
 void loop() {
-    static rocket_state_t state = IDLE; 
-    rocket_state_t work_state    = state, \
-                   command_state = state, \
+    static bool init_flag = false;
+    if(!init_flag)
+    {
+        state_machine[state].entry_time = millis();
+        for(int i = 0; i < MAX_WORK_SIZE; i++)
+            state_machine[state].work[i].begin = 
+                state_machine[state].work[i].delay;
+        init_flag = true;
+    }
+
+    rocket_state_t command_state = state, \
                    event_state   = state; 
 
     /*
@@ -341,7 +272,8 @@ void loop() {
     /*
      Event handling
      */
-    if (work_performed) event_state = EVENT_HANDLER();
+    //if (work_performed) event_state = EVENT_HANDLER();
+    event_state = EVENT_HANDLER();
     if(event_state == -1) event_state = state;
 
     /*
@@ -350,33 +282,68 @@ void loop() {
     int error;
 
     //check if we have new data
-    command_t* cmd = read_command(&error);
+    //if we get a valid message, execute the command associated to it
+    command_t* cmd = read_command(&error, DEFAULT_CMD_INTERFACE);
     if( cmd != NULL && 
-        error == CMD_READ_OK && 
-        run_command(cmd, state) == CMD_RUN_OK) 
+        error == CMD_READ_OK
+      ) 
     {
+        int error = run_command(cmd, state, DEFAULT_CMD_INTERFACE); 
+
         //make transition to new state on the state machine
-        if(state_machine[state].comms[cmd->cmd] != -1)
+        if(error == CMD_RUN_OK && 
+           state_machine[state].comms[cmd->cmd] != -1)
+        {
             //we have new state, use lookup table
             command_state = (rocket_state_t)comm_transition[state][cmd->cmd];
+            //Serial2.printf("change state to %d\n", state_machine[state].comms[cmd->cmd]);
+        }
+        else if (error != CMD_RUN_OK)
+        {
+            //log cmd execution error
+            //Serial2.printf("EXECUTING MESSAGE ERROR %d\n", error);
+        }
+    }
+    else if(error != CMD_READ_OK && 
+            error != CMD_READ_NO_CMD)
+    {
+        //log cmd read error
+        //Serial.printf("READING MESSAGE ERROR %d\n", error);
     }
 
     /*
      * Do state transition
      */
     if(command_state != state) 
+    {
         //command change of state as priority over
         //internal events changes of state
         state = command_state;
+        state_machine[state].entry_time = millis();
+        
+        //reset sensor timer
+        for(int i = 0; i < MAX_WORK_SIZE; i++)
+            state_machine[state].work[i].begin = 
+                state_machine[state].work[i].delay;
+        
+        log(&state, 0, STATE_CHANGE);
+    }
+
+    //used as the time base when dealing with sensor sampling rate and delays
     else if(event_state != state)
+    {
         //only if comms haven't changed the state we can
         //acept a new state from internal events
         state = event_state;
-    else if(work_state != state)
-        //this is the lowest priority for state change
-        //this can be used as a mechanisn to execute a work function only one time
-        state = work_state;
+        state_machine[state].entry_time = millis();
+        
+        //reset sensor timer
+        for(int i = 0; i < MAX_WORK_SIZE; i++)
+            state_machine[state].work[i].begin = 
+                state_machine[state].work[i].delay;
+            
+        log(&state, 0, STATE_CHANGE);
+    }
 
-
-    delay(1);
+    //delay(1);
 }

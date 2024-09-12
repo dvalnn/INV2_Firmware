@@ -98,6 +98,8 @@ public:
 
   void dumpRegisters(Stream& out);
 
+  uint8_t readRegister(uint8_t address);
+  void writeRegister(uint8_t address, uint8_t value);
 private:
   void explicitHeaderMode();
   void implicitHeaderMode();
@@ -111,8 +113,6 @@ private:
   void setLdoFlag();
   void setLdoFlagForced(const boolean);
 
-  uint8_t readRegister(uint8_t address);
-  void writeRegister(uint8_t address, uint8_t value);
   uint8_t singleTransfer(uint8_t address, uint8_t value);
 
   static void onDio0Rise();
