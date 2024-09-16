@@ -19,24 +19,36 @@ void serialThread() {
     }
 
     // Send packets in queue
-    byte[] head = tx_queue.peek();
+    dataPacket head = tx_queue.peek();
     if (millis() - last_cmd_sent_time > packet_loss_timeout) {
-      if(millis() - last_r_ping > heartbeat_timeout || millis() - last_f_ping > heartbeat_timeout) {
+      if (millis() - last_r_ping > heartbeat_timeout || millis() - last_f_ping > heartbeat_timeout) {
         byte[] ping = {(byte)0x55, (byte)0xFF, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00};
         myPort.write(ping);
         last_r_ping = millis();
         last_f_ping = millis();
       }
       if (head != null) {
-        if(head[1] == (byte) 0x01) {
+        if (head.id == (byte) 0x01) {
           last_r_ping = millis();
-        } else if(head[1] == (byte) 0x02) {
+        } else if (head.id == (byte) 0x02) {
           last_f_ping = millis();
         }
-        myPort.write(head);
-        tx_queue.remove();
-        head = tx_queue.peek();
+        myPort.write(head.getPacket());
         last_cmd_sent_time = millis();
+        if (last_cmd_sent != (byte)0xff) {
+          ack_packet_loss++;
+        }
+        last_cmd_sent = head.command;
+        if (history_deque.size() == history_capacity) {
+          history_deque.removeFirst();
+        }
+        history_deque.addLast("CMD -> " + command_names.get(last_cmd_sent));
+        String history_string = "";
+        for (String element : history_deque) {
+          history_string += element + "\n";
+        }
+        history.setText("History: \n" + history_string);
+        tx_queue.remove();
       }
     }
   }
@@ -176,7 +188,7 @@ void displayLogRocket() {
   log_display_rocket.setText("Rocket" + state);
   tt_label.setText("Tank Top\nT : " + String.format("%.2f", tank_top_temp * .1) + "\nP : " + String.format("%.2f", tank_top_press * .01));
   tb_label.setText("Tank Bottom\nT : " + String.format("%.2f", tank_bot_temp * .1) + "\nP : " + String.format("%.2f", tank_bot_press * .01));
-  tl_label.setText("Liquid: " + String.format("%.2f", (100 - r_tank_liquid * .01)) + "%\n\n\n" + String.format("%.2f", liquid_height * .01) + "m\n\n\n" + String.format("%.2f", liquid_volume * .001) + "m3\n\n\n" + String.format("%.2f", liquid_mass * .01) + "kg\n\n\n" + String.format("%.2f", liquid_mass * .01) + "kg");
+  tl_label.setText("Liquid: " + String.format("%.2f", (100 - r_tank_liquid * .01)) + "%\n\n\n" + String.format("%.2f", liquid_height * .01) + "m\n\n\n" + String.format("%.2f", liquid_volume * .001) + "m3\n\n\n" + String.format("%.2f", liquid_mass * .01) + "kg\n\n\n" + String.format("%.2f", liquid_mass2 * .01) + "kg");
 }
 
 void displayLogFilling() {
@@ -259,6 +271,8 @@ void displayAck(int ackValue) {
     break;
   case 26: // Fire Pyro Ack
     ackName = "Fire Pyro";
+    status_toggle.setState(true);
+    cp5.getController("Select ID").setValue(1);
     break;
   default:
     ackName = "Undefined";
@@ -290,20 +304,7 @@ void send(byte command, byte[] payload) {
   if (myPort != null) {
     byte[] packet = tx_packet.getPacket();
     println(packet);
-    tx_queue.add(packet);
-    if (last_cmd_sent != (byte)0xff) {
-      ack_packet_loss++;
-    }
-    last_cmd_sent = command;
-    if (history_deque.size() == history_capacity) {
-      history_deque.removeFirst();
-    }
-    history_deque.addLast("CMD -> " + command_names.get(last_cmd_sent));
-    String history_string = "";
-    for (String element : history_deque) {
-      history_string += element + "\n";
-    }
-    history.setText("History: \n" + history_string);
+    tx_queue.add(tx_packet);
   } else {
     println("No serial port selected!");
   }

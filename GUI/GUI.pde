@@ -33,7 +33,7 @@ int last_r_ping = 0, last_f_ping = 0;
 
 byte targetID;
 
-LinkedBlockingQueue<byte[]> tx_queue = new LinkedBlockingQueue<byte[]>();
+LinkedBlockingQueue<dataPacket> tx_queue = new LinkedBlockingQueue<dataPacket>();
 
 DecimalFormat df = new DecimalFormat("0.00");
 
@@ -298,7 +298,7 @@ public void controlEvent(ControlEvent event) {
     send((byte)0x09, empty_payload);
   } else if (event.isFrom("Ready")) {
     send((byte)0x08, empty_payload);
-    status_toggle.setState(true);
+    //status_toggle.setState(true);
   } else if (event.isFrom("Fire")) {
     send((byte)0x0c, empty_payload);
   } else if (event.isFrom("Allow Launch")) {
