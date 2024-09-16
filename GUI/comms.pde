@@ -272,7 +272,7 @@ void displayAck(int ackValue) {
   case 26: // Fire Pyro Ack
     ackName = "Fire Pyro";
     status_toggle.setState(true);
-    cp5.getController("Select ID").setValue(1);
+    cp5.getController("Select ID").setValue(0);
     break;
   default:
     ackName = "Undefined";
