@@ -3,21 +3,22 @@
 #include "HardwareCfg.h"
 #include "GlobalVars.h"
 
+
 bool log_running = false;
 File file;
 
-uint16_t current_id;
+uint8_t current_id;
 uint32_t data_used;
 
 void start_log()
-{
-    log_running = true;
-
+{ 
+    log_running = true; 
+    
     /*
      * TODO
-     *   before opening verify that the file does not exist,
-     *   256 diferent reboots before we are out of files
-     */
+     *   before opening verify that the file does not exist, 
+     *   256 diferent reboots before we are out of files 
+    */
     char filename[100] = "";
     int count = sprintf(filename, LOG_NAME_PATTERN, current_id);
     current_id++;
@@ -27,31 +28,31 @@ void start_log()
 
     file = SD.open(filename, FILE_WRITE, true);
 
-    if (!file)
+    if(!file)
     {
         log_running = 0;
     }
 }
-void stop_log()
-{
-    log_running = false;
+void stop_log() 
+{ 
+    log_running = false; 
     file.close();
 }
 
-uint16_t get_last_id()
+uint8_t get_last_id()
 {
     File root = SD.open("/");
-    uint16_t last_log_id = 0;
-    while (1)
+    uint8_t last_log_id = 0;
+    while(1)
     {
         File entry = root.openNextFile();
 
-        if (!entry)
-            break; // no more files
+        if(!entry)
+            break; //no more files
 
-        if (!entry.isDirectory())
+        if(!entry.isDirectory()) 
         {
-            uint16_t temp;
+            uint8_t temp;
             sscanf(entry.name(), "%u", &temp);
             Serial.print(temp);
             last_log_id = max(last_log_id, temp);
@@ -70,10 +71,9 @@ uint16_t get_last_id()
     return last_log_id;
 }
 
-void log(void *data, uint16_t size, log_event_t event)
+void log(void* data, uint16_t size, log_event_t event)
 {
-    if (log_running == false)
-        return;
+    if(log_running == false) return;
 
     static uint8_t buff[256];
     uint16_t index = 0;
@@ -84,8 +84,8 @@ void log(void *data, uint16_t size, log_event_t event)
 
     buff[index++] = (time >> 24) & 0xff;
     buff[index++] = (time >> 16) & 0xff;
-    buff[index++] = (time >> 8) & 0xff;
-    buff[index++] = (time) & 0xff;
+    buff[index++] = (time >> 8)  & 0xff;
+    buff[index++] = (time)       & 0xff;
 
     switch (event)
     {
@@ -112,52 +112,52 @@ void log(void *data, uint16_t size, log_event_t event)
 
         buff[index++] = (ematch_v_reading >> 8) & 0xff;
         buff[index++] = (ematch_v_reading) & 0xff;
-
+        
         buff[index++] = (weight1 >> 8) & 0xff;
         buff[index++] = (weight1) & 0xff;
 
         buff[index++] = (uint8_t)((log_running << 7) |
-                                  (He_Module.valve_state << 6) |
-                                  (N2O_Module.valve_state << 5) |
-                                  (Line_Module.valve_state << 4));
+                                        (He_Module.valve_state << 6) | 
+                                        (N2O_Module.valve_state << 5) |
+                                        (Line_Module.valve_state << 4) );
     }
     break;
-
+    
     case MSG_RECEIVED:
     {
-        command_t *cmd = (command_t *)data;
-        buff[index++] = cmd->cmd;
-        buff[index++] = cmd->id;
-        buff[index++] = cmd->size;
+        command_t* cmd = (command_t*) data;
+        buff[index++] = cmd->cmd; 
+        buff[index++] = cmd->id; 
+        buff[index++] = cmd->size; 
 
-        for (int i = 0; i < cmd->size; i++)
+        for(int i = 0; i < cmd->size; i++)
             buff[index++] = cmd->data[i];
     }
     break;
-
+    
     case MSG_SENT:
-        break;
-
+    break;
+    
     case SYSTEM_ERROR:
-        break;
-
+    break;
+    
     case STATE_CHANGE:
-        buff[index++] = *(uint8_t *)(data);
-        break;
-
+        buff[index++] = *(uint8_t*)(data);
+    break;
+    
     case EVENT_REACTION:
-        break;
+    break;
 
     default:
-        break;
+    break;
     }
 
     file.write(buff, index);
 }
 
-void dump_log(uint16_t id)
+void dump_log(uint8_t id)
 {
-    if (log_running)
+    if(log_running)
     {
         Serial.write(0);
         Serial.write(0);
@@ -171,7 +171,7 @@ void dump_log(uint16_t id)
     sprintf(filename, LOG_NAME_PATTERN, id);
 
     File flashDump = SD.open(filename);
-    if (!flashDump)
+    if(!flashDump)
     {
         Serial.write(0);
         Serial.write(0);
@@ -182,15 +182,16 @@ void dump_log(uint16_t id)
     }
 
     delay(50);
-    // first send the size of the file
+    //first send the size of the file
     Serial.write((flashDump.size() >> 24) & 0xff);
     Serial.write((flashDump.size() >> 16) & 0xff);
     Serial.write((flashDump.size() >> 8) & 0xff);
     Serial.write((flashDump.size() & 0xff));
+    
 
-    // Serial.print(flashDump.size());
+    //Serial.print(flashDump.size());
 
-    while (flashDump.available())
+    while(flashDump.available())
     {
         Serial.write(flashDump.read());
     }
@@ -198,18 +199,18 @@ void dump_log(uint16_t id)
     flashDump.close();
 }
 
-void get_log_ids(uint8_t *files, uint8_t *files_index)
+void get_log_ids(uint8_t* files, uint8_t* files_index)
 {
     *files_index = 0;
 
     File root = SD.open("/");
-    while (1)
+    while(1)
     {
         File entry = root.openNextFile();
-        if (!entry)
-            break; // no more files
+        if(!entry)
+            break; //no more files
 
-        if (!entry.isDirectory())
+        if(!entry.isDirectory()) 
         {
             uint8_t temp;
             sscanf(entry.name(), "%u", &temp);
@@ -218,16 +219,17 @@ void get_log_ids(uint8_t *files, uint8_t *files_index)
             (*files_index)++;
         }
 
-        // Serial.print(" Name in sd: ");
-        // Serial.print(entry.name());
-        // Serial.print(" ");
-        // Serial.print(*files_index);
-        // Serial.print(" size: ");
-        // Serial.print(entry.size());
-        // Serial.print(" \n");
+        //Serial.print(" Name in sd: ");
+        //Serial.print(entry.name());
+        //Serial.print(" ");
+        //Serial.print(*files_index);
+        //Serial.print(" size: ");
+        //Serial.print(entry.size());
+        //Serial.print(" \n");
 
         entry.close();
     }
 
     root.close();
+
 }

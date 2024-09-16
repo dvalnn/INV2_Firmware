@@ -246,7 +246,7 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 
         case CMD_MANUAL_FLASH_DUMP:
         {
-            uint16_t id = cmd->data[1];
+            uint16_t id = (cmd->data[1] << 8) + (cmd->data[2]);
             dump_log(id);
         }
         break;

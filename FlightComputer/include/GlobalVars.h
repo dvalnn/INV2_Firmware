@@ -12,7 +12,6 @@
 #include <ADS1115_WE.h>
 #include <MCP9600.h>
 
-
 //----------- IMU vars ------------
 extern MPU6050 accelgyro;
 
@@ -23,7 +22,6 @@ extern int16_t imu_az;
 extern int16_t imu_gx;
 extern int16_t imu_gy;
 extern int16_t imu_gz;
-
 
 //-----------LOADCELL--------------
 extern LoadCell_Module Scale_Module;
@@ -36,7 +34,6 @@ extern ADS1115_WE ADS2;
 extern Control_Module Tank_Top_Module;
 extern Control_Module Tank_Bot_Module;
 extern Engine_Module Chamber_Module;
-
 
 //----------- Ultra sonic liquid sensors ------------
 extern uint8_t tank_tactile_bits;
@@ -51,21 +48,25 @@ extern int16_t tank_t5;
 extern float tank_liquid;
 extern float tank_liquid2;
 
-extern int16_t tank_pressure; 
+extern int16_t tank_pressure;
 
 //----------------Tank intermidiate vars --------------
 extern double mVL, mVG; // massa volumica Liquido(bot) e Gas(Top)
 
-extern double hL; //altura liquido
-extern double Vl, Vg; //volume liquido / gas
-extern double x; //answer
+extern double hL;     // altura liquido
+extern double Vl, Vg; // volume liquido / gas
+extern double x;      // answer
 extern double ml, mg;
 
-extern double hL2; //altura liquido
-extern double Vl2, Vg2; //volume liquido / gas
-extern double x2; //answer
+extern double hL2;      // altura liquido
+extern double Vl2, Vg2; // volume liquido / gas
+extern double x2;       // answer
 extern double ml2, mg2;
 
+// pressure avgs
+const int press_values_size = 10;
+extern float ttp_values[press_values_size], tbp_values[press_values_size], chp_values[press_values_size];
+extern int ttp_index = 0, tbp_index = 0, chp_index = 0;
 
 //---------------Tank CMD vars vars----------------
 extern uint16_t RP1, RP2;
