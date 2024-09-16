@@ -24,6 +24,8 @@ String logFileName = "log.txt";
 
 String fill_img = "diagrams/filling.png";
 
+int history_capacity = 10;
+
 int cmd_size = 14; // 13 comandos + 1
 
 // colors

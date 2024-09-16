@@ -2,6 +2,7 @@ import controlP5.*;
 import processing.serial.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.ArrayDeque;
 import java.nio.*;
 import java.text.DecimalFormat;
 
@@ -51,6 +52,8 @@ Textlabel log_display_rocket;
 Textlabel log_display_filling;
 Textlabel ack_display;
 Textlabel log_stats;
+Textlabel history;
+ArrayDeque<String> history_deque;
 Chart fillingChart, launchChart;
 
 Toggle status_toggle;
@@ -92,6 +95,7 @@ HashMap<Toggle, Byte> valve_toggle_map = new HashMap<Toggle, Byte>();
 List<Textlabel> diagram_labels;
 List<String> man_commands = Arrays.asList("Flash Log Start", "Flash Log Stop", "Flash IDs", "Loadcell Calibrate", "Loadcell Tare");
 HashMap<String, Byte> man_commands_map = new HashMap<String, Byte>();
+HashMap<Byte, String> command_names = new HashMap<Byte, String>();
 List<String> valves = Arrays.asList("VPU Valve", "Engine Valve", "He Valve", "N2O Valve", "Line Valve");
 int valve_selected = -1;
 
@@ -106,6 +110,8 @@ void setup() {
   String directoryPath = currentDirectory + File.separator + logFolder;
   File directory = new File(directoryPath);
   boolean directoryCreated = directory.mkdir();
+
+  history_deque = new ArrayDeque<>(history_capacity);
 
   if (directoryCreated) {
     println("Directory created successfully at: " + directoryPath);
@@ -174,6 +180,20 @@ void setup() {
   valve_toggle_map.put(he_toggle, (byte) 0x02);
   valve_toggle_map.put(n2o_toggle, (byte) 0x03);
   valve_toggle_map.put(line_toggle, (byte) 0x04);
+  
+  command_names.put((byte) 0x00, "Status");
+  command_names.put((byte) 0x02, "Abort");
+  command_names.put((byte) 0x03, "Exec Prog");
+  command_names.put((byte) 0x04, "Stop");
+  command_names.put((byte) 0x05, "Start Filling");
+  command_names.put((byte) 0x06, "Manual");
+  command_names.put((byte) 0x07, "Manual Exec");
+  command_names.put((byte) 0x08, "Ready");
+  command_names.put((byte) 0x09, "Arm");
+  command_names.put((byte) 0x0a, "Allow Launch");
+  command_names.put((byte) 0x0b, "Resume");
+  command_names.put((byte) 0x0c, "Fire");
+  
 }
 
 void draw() {
@@ -323,22 +343,22 @@ public void controlEvent(ControlEvent event) {
     }
   }
   if (valve_toggles != null) {
-  for (Toggle toggle : valve_toggles) {
-    if (event.isFrom(toggle.getName())) {
-      int state = (int) event.getController().getValue();
-      if (state == 1) {
-        toggle.setColorForeground(color(0, 255, 0))
-          .setColorBackground(color(0, 100, 0))
-          .setColorActive(color(0, 255, 0));     // Green when on
-      } else if (state == 0) {
-        toggle.setColorForeground(color(255, 0, 0)) // Red when off
-          .setColorActive(color(255, 0, 0))    // Red when off
-          .setColorBackground(color(100, 0, 0));
+    for (Toggle toggle : valve_toggles) {
+      if (event.isFrom(toggle.getName())) {
+        int state = (int) event.getController().getValue();
+        if (state == 1) {
+          toggle.setColorForeground(color(0, 255, 0))
+            .setColorBackground(color(0, 100, 0))
+            .setColorActive(color(0, 255, 0));     // Green when on
+        } else if (state == 0) {
+          toggle.setColorForeground(color(255, 0, 0)) // Red when off
+            .setColorActive(color(255, 0, 0))    // Red when off
+            .setColorBackground(color(100, 0, 0));
+        }
+        byte[] payload = {(byte) 0x04, valve_toggle_map.get(toggle), (byte) state};
+        send((byte)0x07, payload);
       }
-      byte[] payload = {(byte) 0x04, valve_toggle_map.get(toggle), (byte) state};
-      send((byte)0x07, payload);
     }
-  }
   }
   if (event.isFrom("Select Valve")) {
     valve_selected = (int)event.getValue();

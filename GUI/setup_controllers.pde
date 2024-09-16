@@ -218,6 +218,13 @@ void setupControllers() {
     .moveTo("global")
     .setFont(font);
 
+  history = cp5.addTextlabel("Comms history")
+    .setText("comms history goes here")
+    .setColor(color(180, 180, 180))
+    .setPosition(displayWidth*.63, displayHeight*.54)
+    .moveTo("global")
+    .setFont(font);
+
   status_toggle = cp5.addToggle("Status Toggle")
     .setPosition(width*.02, height*.55)
     .setSize((int)(width*.05), (int)(width*.02))

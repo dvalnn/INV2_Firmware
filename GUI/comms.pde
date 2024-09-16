@@ -147,10 +147,10 @@ void displayLogRocket() {
   liquid_volume = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 30, 32))).getShort();
   liquid_mass = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 32, 34))).getShort();
   liquid_mass2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 34, 36))).getShort();
-  
+
 
   chamber_temps_label.setText("Chamber Temperatures\n1: " + df.format(chamber_temp1 * .1) + "\n2: " + df.format(chamber_temp2 * .1) + "\n3: " + df.format(chamber_temp3 * .1));
-  
+
   String bools = String.format("%8s", Integer.toBinaryString(r_bools & 0xFF)).replace(' ', '0');
   int log_running = Integer.parseInt(bools.substring(0, 1));
   if (log_running == 1) {
@@ -251,6 +251,15 @@ void displayAck(int ackValue) {
     break;
   }
   ack_display.setText("Last Ack Received: \n" + ackName);
+  if (history_deque.size() == history_capacity) {
+    history_deque.removeFirst();
+  }
+  history_deque.addLast("Ack <- " + ackName);
+  String history_string = "";
+  for (String element : history_deque) {
+    history_string += element + "\n";
+  }
+  history.setText("History: \n" + history_string);
 }
 
 void send(byte command, byte[] payload) {
@@ -263,7 +272,7 @@ void send(byte command, byte[] payload) {
     targetID = (byte)0xFF;
   }
   tx_packet = new dataPacket(command, targetID, payload);
-  // tx_packet.logPacket(LogEvent.MSG_SENT);
+  tx_packet.logPacket(LogEvent.MSG_SENT);
   if (myPort != null) {
     byte[] packet = tx_packet.getPacket();
     println(packet);
@@ -273,6 +282,15 @@ void send(byte command, byte[] payload) {
     }
     last_cmd_sent = command;
     last_cmd_sent_time = millis();
+    if (history_deque.size() == history_capacity) {
+      history_deque.removeFirst();
+    }
+    history_deque.addLast("CMD -> " + command_names.get(last_cmd_sent));
+    String history_string = "";
+    for (String element : history_deque) {
+      history_string += element + "\n";
+    }
+    history.setText("History: \n" + history_string);
   } else {
     println("No serial port selected!");
   }
