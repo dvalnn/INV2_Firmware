@@ -29,6 +29,7 @@ byte last_cmd_sent = (byte) 0xff;
 int last_cmd_sent_time = 0;
 int last_chart_time = 0;
 int last_status_time = 0;
+int last_r_ping = 0, last_f_ping = 0;
 
 byte targetID;
 
@@ -290,7 +291,7 @@ public void controlEvent(ControlEvent event) {
     targetID = (byte) (event.getValue() + 1);
   } else if (event.isFrom("Abort")) {
     byte lastID = targetID;
-    targetID = (byte) 0x03;
+    targetID = 3;
     send((byte)0x02, empty_payload);
     targetID = lastID;
   } else if (event.isFrom("Arm")) {
@@ -330,6 +331,7 @@ public void controlEvent(ControlEvent event) {
   } else if (event.isFrom("Change Valve State")) {
     if (valve_selected > -1) {
       byte lastID = targetID;
+      targetID = 3;
       byte[] man_payload = {(byte) 0x04, (byte) valve_selected, (byte) valve_toggle_state};
       send((byte)0x07, man_payload);
       targetID = lastID;
@@ -356,7 +358,10 @@ public void controlEvent(ControlEvent event) {
             .setColorBackground(color(100, 0, 0));
         }
         byte[] payload = {(byte) 0x04, valve_toggle_map.get(toggle), (byte) state};
+        byte lastID = targetID;
+        targetID = 3;
         send((byte)0x07, payload);
+        targetID = lastID;
       }
     }
   }

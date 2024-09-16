@@ -20,10 +20,24 @@ void serialThread() {
 
     // Send packets in queue
     byte[] head = tx_queue.peek();
-    while (head != null) {
-      myPort.write(head);
-      tx_queue.remove();
-      head = tx_queue.peek();
+    if (millis() - last_cmd_sent_time > packet_loss_timeout) {
+      if(millis() - last_r_ping > heartbeat_timeout || millis() - last_f_ping > heartbeat_timeout) {
+        byte[] ping = {(byte)0x55, (byte)0xFF, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00};
+        myPort.write(ping);
+        last_r_ping = millis();
+        last_f_ping = millis();
+      }
+      if (head != null) {
+        if(head[1] == (byte) 0x01) {
+          last_r_ping = millis();
+        } else if(head[1] == (byte) 0x02) {
+          last_f_ping = millis();
+        }
+        myPort.write(head);
+        tx_queue.remove();
+        head = tx_queue.peek();
+        last_cmd_sent_time = millis();
+      }
     }
   }
 }
@@ -149,7 +163,7 @@ void displayLogRocket() {
   liquid_mass2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 34, 36))).getShort();
 
 
-  chamber_temps_label.setText("Chamber Temperatures\n1: " + df.format(chamber_temp1 * .1) + "\n2: " + df.format(chamber_temp2 * .1) + "\n3: " + df.format(chamber_temp3 * .1));
+  chamber_temps_label.setText("Chamber Temperatures\n1: " + df.format(chamber_temp1 * .1) + "\n2: " + df.format(chamber_temp2 * .1) + "\n3: " + df.format(chamber_temp3 * .1) + "\nChamber Pressure: " + df.format(r_chamber_press * .01));
 
   String bools = String.format("%8s", Integer.toBinaryString(r_bools & 0xFF)).replace(' ', '0');
   int log_running = Integer.parseInt(bools.substring(0, 1));
@@ -281,7 +295,6 @@ void send(byte command, byte[] payload) {
       ack_packet_loss++;
     }
     last_cmd_sent = command;
-    last_cmd_sent_time = millis();
     if (history_deque.size() == history_capacity) {
       history_deque.removeFirst();
     }
