@@ -66,7 +66,7 @@ extern double ml2, mg2;
 // pressure avgs
 const int press_values_size = 10;
 extern float ttp_values[press_values_size], tbp_values[press_values_size], chp_values[press_values_size];
-extern int ttp_index = 0, tbp_index = 0, chp_index = 0;
+extern int ttp_index, tbp_index, chp_index;
 
 //---------------Tank CMD vars vars----------------
 extern uint16_t RP1, RP2;

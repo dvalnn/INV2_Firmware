@@ -39,6 +39,9 @@ uint8_t tank_tactile_bits;
 
 uint16_t arm_reset_timer;
 
+float ttp_values[press_values_size], tbp_values[press_values_size], chp_values[press_values_size];
+int ttp_index = 0, tbp_index = 0, chp_index = 0;
+
 void V_Vpu_close(void)
 {
     digitalWrite(Tank_Top_Module.valve_pin, 0);
