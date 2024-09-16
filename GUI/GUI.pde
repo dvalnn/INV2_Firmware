@@ -269,12 +269,15 @@ public void controlEvent(ControlEvent event) {
   } else if (event.isFrom("Select ID")) {
     targetID = (byte) (event.getValue() + 1);
   } else if (event.isFrom("Abort")) {
+    byte lastID = targetID;
     targetID = (byte) 0x03;
     send((byte)0x02, empty_payload);
+    targetID = lastID;
   } else if (event.isFrom("Arm")) {
     send((byte)0x09, empty_payload);
   } else if (event.isFrom("Ready")) {
     send((byte)0x08, empty_payload);
+    status_toggle.setState(true);
   } else if (event.isFrom("Fire")) {
     send((byte)0x0c, empty_payload);
   } else if (event.isFrom("Allow Launch")) {
@@ -306,8 +309,10 @@ public void controlEvent(ControlEvent event) {
     send((byte)0x06, payload);
   } else if (event.isFrom("Change Valve State")) {
     if (valve_selected > -1) {
+      byte lastID = targetID;
       byte[] man_payload = {(byte) 0x04, (byte) valve_selected, (byte) valve_toggle_state};
       send((byte)0x07, man_payload);
+      targetID = lastID;
     }
   }
 

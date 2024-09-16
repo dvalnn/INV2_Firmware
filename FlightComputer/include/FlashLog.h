@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-//#include <SerialFlash.h>
+// #include <SerialFlash.h>
 #include <SD.h>
 
 #include "Comms.h"
@@ -23,16 +23,16 @@ typedef enum
 extern bool log_running;
 extern File file;
 
-extern uint8_t current_id;
+extern uint16_t current_id;
 
 void start_log();
 void stop_log();
 
-void log(void* data, uint16_t size, log_event_t event);
+void log(void *data, uint16_t size, log_event_t event);
 
-void dump_log(uint8_t log); 
-void get_log_ids(uint8_t* files, uint8_t *file_index);
+void dump_log(uint8_t log);
+void get_log_ids(uint8_t *files, uint8_t *file_index);
 
-uint8_t get_last_id();
+uint16_t get_last_id();
 
 #endif

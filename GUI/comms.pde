@@ -149,7 +149,7 @@ void displayLogRocket() {
   liquid_mass2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 34, 36))).getShort();
   
 
-  chamber_temps_label.setText("Chamber Temperatures\n1: " + df.format(chamber_temp1) + "\n2: " + df.format(chamber_temp2) + "\n3: " + df.format(chamber_temp3));
+  chamber_temps_label.setText("Chamber Temperatures\n1: " + df.format(chamber_temp1 * .1) + "\n2: " + df.format(chamber_temp2 * .1) + "\n3: " + df.format(chamber_temp3 * .1));
   
   String bools = String.format("%8s", Integer.toBinaryString(r_bools & 0xFF)).replace(' ', '0');
   int log_running = Integer.parseInt(bools.substring(0, 1));
@@ -162,7 +162,7 @@ void displayLogRocket() {
   log_display_rocket.setText("Rocket" + state);
   tt_label.setText("Tank Top\nT : " + String.format("%.2f", tank_top_temp * .1) + "\nP : " + String.format("%.2f", tank_top_press * .01));
   tb_label.setText("Tank Bottom\nT : " + String.format("%.2f", tank_bot_temp * .1) + "\nP : " + String.format("%.2f", tank_bot_press * .01));
-  tl_label.setText("Liquid: " + String.format("%.2f", (100 - r_tank_liquid * .01)) + "%\n\n\n" + String.format("%.2f", liquid_height * .01) + "m\n\n\n" + String.format("%.2f", liquid_volume * .001) + "m3\n\n\n" + String.format("%.2f", liquid_mass * .01) + "kg\n\n\n" + String.format("%.2f", liquid_mass * .01));
+  tl_label.setText("Liquid: " + String.format("%.2f", (100 - r_tank_liquid * .01)) + "%\n\n\n" + String.format("%.2f", liquid_height * .01) + "m\n\n\n" + String.format("%.2f", liquid_volume * .001) + "m3\n\n\n" + String.format("%.2f", liquid_mass * .01) + "kg\n\n\n" + String.format("%.2f", liquid_mass * .01) + "kg");
 }
 
 void displayLogFilling() {
@@ -227,7 +227,7 @@ void displayAck(int ackValue) {
     ackName = "Manual Exec";
     if (rx_packet.payload[0] == (byte) 0x0c) { // flash ids cmd (2) + man command size (9) + 1
       int file_count = (int) rx_packet.payloadLength - 1;
-      String id = str(rx_packet.payload[file_count]);
+      String id = str(rx_packet.payload[(ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, file_count - 1, file_count + 1))).getShort()]);
       ackName = "Flash Log ID: " + id;
     }
     break;
