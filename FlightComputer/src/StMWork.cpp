@@ -402,15 +402,19 @@ static void alturafluido(void)
 void calc_liquid(void)
 {
     // calculate amount of liquid in the tank
+    Tank_Top_Module.pressure = 0;
+    Tank_Bot_Module.pressure = 0;
+
     for (float val : ttp_values)
     {
         Tank_Top_Module.pressure += val;
     }
-    Tank_Top_Module.pressure /= press_values_size;
     for (float val : tbp_values)
     {
         Tank_Bot_Module.pressure += val;
     }
+    
+    Tank_Top_Module.pressure /= press_values_size;
     Tank_Bot_Module.pressure /= press_values_size;
 
     MassaVolumica();

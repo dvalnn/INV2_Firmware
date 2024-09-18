@@ -21,7 +21,7 @@ Control_Module Tank_Top_Module =
 
     .ADC = &ADS1,
     .ADC_pressure_id = ADS1115_COMP_0_GND,
-    .pressure_serial = K0P2A,
+    .pressure_serial = K1WIJ,
 
     .thermocouple_addr = TEMP_AMP1_ADDR,
 };
@@ -32,7 +32,7 @@ Control_Module Tank_Bot_Module =
     
     .ADC = &ADS1,
     .ADC_pressure_id = ADS1115_COMP_1_GND,
-    .pressure_serial = K1WIJ,
+    .pressure_serial = K0P2A,
 
     .thermocouple_addr = TEMP_AMP2_ADDR,
 };

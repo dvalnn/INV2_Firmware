@@ -275,7 +275,6 @@ State_t state_machine[rocket_state_size] =
         .events = 
         {
             {.condition = fire_timer_event, .reaction = ematch_low, .next_state = LAUNCH}, //after x seconds laucnh it anyway
-            {.condition = chamber_temp_cond, .reaction = ematch_low, .next_state = LAUNCH}, //read termo resistor to know the chamber temp
         },
 
         .comms = comm_transition[FIRE],

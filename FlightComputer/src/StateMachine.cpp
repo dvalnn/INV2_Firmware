@@ -271,7 +271,7 @@ State_t state_machine[rocket_state_size] =
             .work = {
                 TANK_TEMPERATURE_SENSORS(100),
 
-                {.channel = ADS_handler_slow, .sample = 1},
+                {.channel = ADS_handler_fast, .sample = 1},
 
                 {.channel = calc_liquid, .sample = 1000},
 
@@ -288,7 +288,7 @@ State_t state_machine[rocket_state_size] =
             .work = {
                 TANK_TEMPERATURE_SENSORS(100),
 
-                {.channel = ADS_handler_slow, .sample = 1},
+                {.channel = ADS_handler_fast, .sample = 1},
 
                 {.channel = calc_liquid, .sample = 1000},
                 {.channel = V_Vpu_close, .sample = 500}, // safety
@@ -296,7 +296,10 @@ State_t state_machine[rocket_state_size] =
                 {.channel = flash_log_sensors, .sample = 100},
             },
 
-            .events = {{.condition = prog1_safety_cond, .reaction = V_Vpu_open, .next_state = SAFETY_PRESSURE_ACTIVE}, {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
+            .events = {
+                {.condition = prog1_safety_cond, .reaction = V_Vpu_open, .next_state = SAFETY_PRESSURE_ACTIVE}, 
+                {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
+                },
 
             .comms = comm_transition[SAFETY_PRESSURE],
         },
@@ -305,7 +308,7 @@ State_t state_machine[rocket_state_size] =
             .work = {
                 TANK_TEMPERATURE_SENSORS(100),
 
-                {.channel = ADS_handler_slow, .sample = 1},
+                {.channel = ADS_handler_fast, .sample = 1},
 
                 {.channel = calc_liquid, .sample = 1000},
                 {.channel = V_Vpu_open, .sample = 500},
@@ -313,7 +316,10 @@ State_t state_machine[rocket_state_size] =
                 {.channel = flash_log_sensors, .sample = 100},
             },
 
-            .events = {{.condition = prog2_finish_cond, .reaction = V_Vpu_close, .next_state = FUELING}, {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
+            .events = {
+                {.condition = prog2_finish_cond, .reaction = V_Vpu_close, .next_state = FUELING}, 
+                {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
+            },
 
             .comms = comm_transition[PURGE_PRESSURE],
         },
@@ -322,7 +328,7 @@ State_t state_machine[rocket_state_size] =
             .work = {
                 TANK_TEMPERATURE_SENSORS(100),
 
-                {.channel = ADS_handler_slow, .sample = 1},
+                {.channel = ADS_handler_fast, .sample = 1},
 
                 {.channel = calc_liquid, .sample = 1000},
                 {.channel = V_Vpu_open, .sample = 500},
@@ -330,7 +336,10 @@ State_t state_machine[rocket_state_size] =
                 {.channel = flash_log_sensors, .sample = 100},
             },
 
-            .events = {{.condition = prog3_finish_cond, .reaction = V_Vpu_close, .next_state = FUELING}, {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
+            .events = {
+                {.condition = prog3_finish_cond, .reaction = V_Vpu_close, .next_state = FUELING}, 
+                {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
+            },
 
             .comms = comm_transition[PURGE_LIQUID],
         },
@@ -339,7 +348,7 @@ State_t state_machine[rocket_state_size] =
             .work = {
                 TANK_TEMPERATURE_SENSORS(100),
 
-                {.channel = ADS_handler_slow, .sample = 1},
+                {.channel = ADS_handler_fast, .sample = 1},
 
                 {.channel = calc_liquid, .sample = 1000},
                 {.channel = V_Vpu_open, .sample = 500},
@@ -347,7 +356,10 @@ State_t state_machine[rocket_state_size] =
                 {.channel = flash_log_sensors, .sample = 100},
             },
 
-            .events = {{.condition = safety_stop_cond, .reaction = V_Vpu_close, .next_state = SAFETY_PRESSURE}, {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
+            .events = {
+                {.condition = safety_stop_cond, .reaction = V_Vpu_close, .next_state = SAFETY_PRESSURE}, 
+                {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
+            },
 
             .comms = comm_transition[SAFETY_PRESSURE_ACTIVE],
         },
@@ -367,7 +379,9 @@ State_t state_machine[rocket_state_size] =
                 {.channel = flash_log_sensors, .sample = 100},
             },
 
-            .events = {{.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
+            .events = {
+                {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
+            },
 
             .comms = comm_transition[READY],
 
@@ -379,7 +393,7 @@ State_t state_machine[rocket_state_size] =
                 CHAMBER_TEMPERATURE_SENSORS(100),
                 {.channel = ADS_handler_all_fast, .sample = 1},
                 {.channel = calc_liquid, .sample = 1000},
-                ROCKET_LOAD_CELLS(100),
+                ROCKET_LOAD_CELLS(150),
 
                 {.channel = arm_timer_tick, .sample = 1000},
                 {.channel = logger, .sample = 50},
@@ -404,14 +418,16 @@ State_t state_machine[rocket_state_size] =
                 {.channel = ADS_handler_all_fast, .sample = 1},
                 {.channel = calc_liquid, .sample = 1000},
 
-                ROCKET_LOAD_CELLS(100),
+                ROCKET_LOAD_CELLS(150),
 
                 {.channel = V_Engine_open, .sample = 500},
                 {.channel = logger, .sample = 200},
                 {.channel = flash_log_sensors, .sample = 100},
             },
 
-            .events = {{.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
+            .events = {
+                {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
+            },
 
             .comms = comm_transition[LAUNCH],
 
@@ -432,7 +448,9 @@ State_t state_machine[rocket_state_size] =
                 {.channel = flash_log_sensors, .sample = 500},
             },
 
-            .events = {{.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
+            .events = {
+                {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
+            },
 
             .comms = comm_transition[ABORT],
 
