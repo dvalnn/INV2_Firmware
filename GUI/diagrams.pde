@@ -198,11 +198,9 @@ void updateDiagrams() {
 }
 
 void multi_tab_controllers(String tab) {
-  for (Textlabel label : diagram_labels) {
     if (tab == "launch") {
-      label.show();
+      weightLabel.hide();
     } else {
-      label.show();
+      weightLabel.show();
     }
-  }
 }

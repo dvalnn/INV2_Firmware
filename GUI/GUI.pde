@@ -2,7 +2,7 @@ import controlP5.*;
 import processing.serial.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.ArrayDeque;
+//import java.util.ArrayDeque;
 import java.nio.*;
 import java.text.DecimalFormat;
 
