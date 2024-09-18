@@ -14,186 +14,18 @@ rocket_state_t state = IDLE;
 
 rocket_state_t comm_transition[rocket_state_size][cmd_size] = {
     //                       STATUS LOG ABORT EXEC  STOP   FUELING  MANUAL MAN_EXEC READY  ARM  LAUNCH  RESUME  FIRE
-    /* Idle            */ {
-        -1,
-        -1,
-        ABORT,
-        -1,
-        -1,
-        FUELING,
-        MANUAL,
-        -1,
-        READY,
-        -1,
-        -1,
-        -1,
-        -1,
-    },
-    /* Fueling         */ {
-        -1,
-        -1,
-        IDLE,
-        -1,
-        IDLE,
-        -1,
-        MANUAL,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-    },
-    /* Manual          */ {
-        -1,
-        -1,
-        IDLE,
-        -1,
-        IDLE,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-    },
-    /* Safety_Pressure */ {
-        -1,
-        -1,
-        ABORT,
-        -1,
-        FUELING,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-    },
-    /* Purge_Pressure  */ {
-        -1,
-        -1,
-        ABORT,
-        -1,
-        FUELING,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-    },
-    /* Purge_Liquid    */ {
-        -1,
-        -1,
-        ABORT,
-        -1,
-        FUELING,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-    },
-    /* Safety_Active   */ {
-        -1,
-        -1,
-        ABORT,
-        -1,
-        FUELING,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-    },
-    /* Ready           */ {
-        -1,
-        -1,
-        IDLE,
-        -1,
-        IDLE,
-        -1,
-        -1,
-        -1,
-        -1,
-        ARMED,
-        -1,
-        -1,
-        -1,
-    },
-    /* Armed           */ {
-        -1,
-        -1,
-        IDLE,
-        -1,
-        READY,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        LAUNCH,
-        -1,
-        -1,
-    },
-    /* Launch          */ {
-        -1,
-        -1,
-        ABORT,
-        -1,
-        IDLE,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-    },
-    /* Abort           */ {
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        IDLE,
-        -1,
-        -1,
-        -1,
-        -1,
-    },
-    /* IMU PID         */ {
-        -1,
-        -1,
-        IDLE,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-        -1,
-    }};
+    /* Idle            */ {    -1,  -1, ABORT, -1,   -1,   FUELING, MANUAL,   -1,   READY,  -1,  -1,     -1,     -1,},
+    /* Fueling         */ {    -1,  -1, IDLE,  -1,  IDLE,     -1,   MANUAL,   -1,    -1,    -1,  -1,     -1,     -1,},
+    /* Manual          */ {    -1,  -1, IDLE,  -1,  IDLE,     -1,     -1,     -1,    -1,    -1,  -1,     -1,     -1,},
+    /* Safety_Pressure */ {    -1,  -1, ABORT, -1,  FUELING,  -1,     -1,     -1,    -1,    -1,  -1,     -1,     -1,},
+    /* Purge_Pressure  */ {    -1,  -1, ABORT, -1,  FUELING,  -1,     -1,     -1,    -1,    -1,  -1,     -1,     -1,},
+    /* Purge_Liquid    */ {    -1,  -1, ABORT, -1,  FUELING,  -1,     -1,     -1,    -1,    -1,  -1,     -1,     -1,},
+    /* Safety_Active   */ {    -1,  -1, ABORT, -1,  FUELING,  -1,     -1,     -1,    -1,    -1,  -1,     -1,     -1,},
+    /* Ready           */ {    -1,  -1, IDLE,  -1,  IDLE,     -1,     -1,     -1,    -1,   ARMED,-1,     -1,     -1,},
+    /* Armed           */ {    -1,  -1, IDLE,  -1,  READY,    -1,     -1,     -1,    -1,    -1, LAUNCH,  -1,     -1,},
+    /* Launch          */ {    -1,  -1, ABORT, -1,  IDLE,     -1,     -1,     -1,    -1,    -1,  -1,     -1,     -1,},
+    /* Abort           */ {    -1,  -1,  -1,   -1,   -1,      -1,     -1,     -1,    IDLE,  -1,  -1,     -1,     -1,},
+    /* IMU PID         */ {    -1,  -1, IDLE,  -1,   -1,      -1,     -1,     -1,    -1,    -1,  -1,     -1,     -1,}};
 
 #define TANK_TEMPERATURE_SENSORS(val)                                    \
     {.channel = read_temperature_tank_top, .sample = val},               \
@@ -296,10 +128,7 @@ State_t state_machine[rocket_state_size] =
                 {.channel = flash_log_sensors, .sample = 100},
             },
 
-            .events = {
-                {.condition = prog1_safety_cond, .reaction = V_Vpu_open, .next_state = SAFETY_PRESSURE_ACTIVE}, 
-                {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
-                },
+            .events = {{.condition = prog1_safety_cond, .reaction = V_Vpu_open, .next_state = SAFETY_PRESSURE_ACTIVE}, {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
 
             .comms = comm_transition[SAFETY_PRESSURE],
         },
@@ -316,10 +145,7 @@ State_t state_machine[rocket_state_size] =
                 {.channel = flash_log_sensors, .sample = 100},
             },
 
-            .events = {
-                {.condition = prog2_finish_cond, .reaction = V_Vpu_close, .next_state = FUELING}, 
-                {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
-            },
+            .events = {{.condition = prog2_finish_cond, .reaction = V_Vpu_close, .next_state = FUELING}, {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
 
             .comms = comm_transition[PURGE_PRESSURE],
         },
@@ -336,10 +162,7 @@ State_t state_machine[rocket_state_size] =
                 {.channel = flash_log_sensors, .sample = 100},
             },
 
-            .events = {
-                {.condition = prog3_finish_cond, .reaction = V_Vpu_close, .next_state = FUELING}, 
-                {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
-            },
+            .events = {{.condition = prog3_finish_cond, .reaction = V_Vpu_close, .next_state = FUELING}, {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
 
             .comms = comm_transition[PURGE_LIQUID],
         },
@@ -356,10 +179,7 @@ State_t state_machine[rocket_state_size] =
                 {.channel = flash_log_sensors, .sample = 100},
             },
 
-            .events = {
-                {.condition = safety_stop_cond, .reaction = V_Vpu_close, .next_state = SAFETY_PRESSURE}, 
-                {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
-            },
+            .events = {{.condition = safety_stop_cond, .reaction = V_Vpu_close, .next_state = SAFETY_PRESSURE}, {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
 
             .comms = comm_transition[SAFETY_PRESSURE_ACTIVE],
         },
@@ -379,9 +199,7 @@ State_t state_machine[rocket_state_size] =
                 {.channel = flash_log_sensors, .sample = 100},
             },
 
-            .events = {
-                {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
-            },
+            .events = {{.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
 
             .comms = comm_transition[READY],
 
@@ -425,9 +243,7 @@ State_t state_machine[rocket_state_size] =
                 {.channel = flash_log_sensors, .sample = 100},
             },
 
-            .events = {
-                {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
-            },
+            .events = {{.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
 
             .comms = comm_transition[LAUNCH],
 
@@ -448,9 +264,7 @@ State_t state_machine[rocket_state_size] =
                 {.channel = flash_log_sensors, .sample = 500},
             },
 
-            .events = {
-                {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
-            },
+            .events = {{.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
 
             .comms = comm_transition[ABORT],
 
