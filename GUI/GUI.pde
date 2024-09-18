@@ -181,7 +181,7 @@ void setup() {
   valve_toggle_map.put(he_toggle, (byte) 0x02);
   valve_toggle_map.put(n2o_toggle, (byte) 0x03);
   valve_toggle_map.put(line_toggle, (byte) 0x04);
-  
+
   command_names.put((byte) 0x00, "Status");
   command_names.put((byte) 0x02, "Abort");
   command_names.put((byte) 0x03, "Exec Prog");
@@ -194,7 +194,6 @@ void setup() {
   command_names.put((byte) 0x0a, "Allow Launch");
   command_names.put((byte) 0x0b, "Resume");
   command_names.put((byte) 0x0c, "Fire");
-  
 }
 
 void draw() {
@@ -273,7 +272,7 @@ public void controlEvent(ControlEvent event) {
     for (int i = 0; i < 5; i++) {
       String arg = vars.get(i);
       if (prog_args.get(program)[i]) {
-        cp5.getController(arg).setColor(colors2);
+        cp5.getController(arg).setColor(defaultColor);
       } else {
         cp5.getController(arg).setColor(unactiveColor);
       }
@@ -391,6 +390,29 @@ public void controlEvent(ControlEvent event) {
     catch (Exception e) {
       print("Valve open time empty\n");
     }
+  } else if (event.isFrom("Mode Toggle")) {
+    int mode = (int) event.getValue();
+    mode = 1; // force dark : delete when light is done
+    if (mode == 0) { // light mode
+      abortColor = abortColorLight;
+      stopColor = stopColorLight;
+      unactiveColor = unactiveColorLight;
+      defaultColor = defaultColorLight;
+      bgColor = bgColorLight;
+      fill_img = fill_img_light;
+      labelColor = labelColorLight;
+      labelColor2 = labelColor2Light;
+    } else { // dark mode
+      abortColor = abortColorDark;
+      stopColor = stopColorDark;
+      unactiveColor = unactiveColorDark;
+      defaultColor = defaultColorDark;
+      bgColor = bgColorDark;
+      fill_img = fill_img_dark;
+      labelColor = labelColorDark;
+      labelColor2 = labelColor2Dark;
+    }
+    fill_diagram = loadImage(fill_img);
   }
 }
 
