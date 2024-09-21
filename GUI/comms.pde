@@ -23,7 +23,7 @@ void serialThread() {
     if (millis() - last_cmd_sent_time > packet_loss_timeout) {
       if (millis() - last_r_ping > heartbeat_timeout || millis() - last_f_ping > heartbeat_timeout) {
         byte[] ping = {(byte)0x55, (byte)0xFF, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00};
-        myPort.write(ping);
+         
         last_r_ping = millis();
         last_f_ping = millis();
       }
@@ -170,7 +170,8 @@ void displayLogRocket() {
   r_chamber_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 26, 28))).getShort();
 
   liquid_height = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 28, 30))).getShort();
-  liquid_volume = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 30, 32))).getShort();
+  liquid_volume = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 30, 32))).getShort(); // change to liquid height 2
+  // add gas mass
   liquid_mass = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 32, 34))).getShort();
   liquid_mass2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 34, 36))).getShort();
 
@@ -215,8 +216,8 @@ void displayLogFilling() {
 
   log_display_filling.setText("Filling Station" + state);
   he_label.setText("He\nT : " + String.format("%.2f", he_temp * .1) + "\nP : " + String.format("%.2f", he_press * .01));
-  n2o_label.setText("N2O\nT : " + String.format("%.2f", n2o_temp * .1) + "\nP : " + String.format("%.2f", n2o_press * .01));
-  line_label.setText("Line\nT : " + String.format("%.2f", line_temp * .1) + "\nP : " + String.format("%.2f", line_press * .01));
+  n2o_label.setText("N2O\nT : " + String.format("%.2f", n2o_temp * .1) + "\nP : " + String.format("%.2f", n2o_press * .01) + "\nW : " +String.format("%.2f", f_weight1 * .1));
+  line_label.setText("Line Purge\nT : " + String.format("%.2f", line_temp * .1) + "\nP : " + String.format("%.2f", line_press * .01));
   ematch_label.setText("E-Match value : " + ematch_v);
 }
 

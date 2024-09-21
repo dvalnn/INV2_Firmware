@@ -92,7 +92,7 @@ void updateCharts(int p, int l, int t, int w0, int w1, int w2, int w3, int tp, i
   fillingChart.addData("Pressure", float(p) * .01);
   fillingChart.addData("Liquid", float(l) * .01);
   fillingChart.addData("Temperature", float(t) * .1);
-  fillingChart.addData("Weight", float(w0) * .1);
+  fillingChart.addData("Weight", float(w0) * -.1);
   max_f = max(max_f, float(p) * .01);
   max_f = max(max_f, float(l) * .01);
   max_f = max(max_f, float(t) * .1);

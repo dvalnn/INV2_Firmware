@@ -14,6 +14,7 @@ bool check_crc(command_t* command);
 
 void write_command(command_t* cmd, interface_t interface)
 {
+    //Serial.printf("Writing message");
     int size = 0;
     uint8_t buff[MAX_COMMAND_BUFFER + 5] = {0};
     

@@ -4,7 +4,7 @@ Icon testIcon;
 void setupDiagrams() {
   fill_diagram = loadImage(fill_img);
   he_label = cp5.addLabel("He\nT : ####\nP : ####")
-    .setColor(color(255, 255, 255))
+    .setColor(labelColor)
     .setFont(font)
     .moveTo("global")
     .setPosition(displayWidth*.5, displayHeight*.55)
@@ -25,8 +25,8 @@ void setupDiagrams() {
     .moveTo("default")
     ;
 
-  n2o_label = cp5.addLabel("N2O\nT : ####\nP : ####")
-    .setColor(color(255, 255, 255))
+  n2o_label = cp5.addLabel("N2O\nT : ####\nP : ####\nW : ####")
+    .setColor(labelColor)
     .setFont(font)
     .moveTo("global")
     .setPosition(displayWidth*.5, displayHeight*.75)
@@ -34,7 +34,7 @@ void setupDiagrams() {
     .setLock(true)
     ;
   n2o_toggle = cp5.addToggle("N2O Toggle")
-    .setPosition(width*.5, height*.83)
+    .setPosition(width*.5, height*.85)
     .setSize((int)(width*.02), (int)(width*.01))
     .setValue(false)
     .setMode(ControlP5.SWITCH)
@@ -45,8 +45,8 @@ void setupDiagrams() {
     .setColorActive(color(255, 0, 0))
     .moveTo("default");
 
-  line_label = cp5.addLabel("Line\nT : ####\nP : ####")
-    .setColor(color(255, 255, 255))
+  line_label = cp5.addLabel("Line Purge\nT : ####\nP : ####")
+    .setColor(labelColor)
     .setFont(font)
     .moveTo("global")
     .setPosition(displayWidth*.4, displayHeight*.72)
@@ -54,7 +54,7 @@ void setupDiagrams() {
     .setLock(true)
     ;
   line_toggle = cp5.addToggle("Line Toggle")
-    .setPosition(width*.43, height*.72)
+    .setPosition(width*.4, height*.8)
     .setSize((int)(width*.02), (int)(width*.01))
     .setValue(false)
     .setMode(ControlP5.SWITCH)
@@ -66,7 +66,7 @@ void setupDiagrams() {
     .moveTo("default");
 
   tt_label = cp5.addLabel("Tank Top\nT : ####\nP : ####")
-    .setColor(color(255, 255, 255))
+    .setColor(labelColor)
     .setFont(font)
     .moveTo("global")
     .setPosition(displayWidth*.33, displayHeight*.41)
@@ -86,7 +86,7 @@ void setupDiagrams() {
     .moveTo("default");
 
   tb_label = cp5.addLabel("Tank Bottom\nT : ####\nP : ####")
-    .setColor(color(255, 255, 255))
+    .setColor(labelColor)
     .setFont(font)
     .moveTo("global")
     .setPosition(displayWidth*.35, displayHeight*.91)
@@ -107,6 +107,7 @@ void setupDiagrams() {
 
   tl_label = cp5.addTextlabel("Tank Liquid")
     .setText("Liquid:XX.xx%\n\n\nXX.xxm\n\n\nXX.xxm3\n\n\nXX.xxkg\n\n\nXX.xxkg")
+    .setColor(labelColor)
     .setPosition(displayWidth*.26, displayHeight*.565)
     .moveTo("global")
     .setFont(font);
@@ -198,11 +199,9 @@ void updateDiagrams() {
 }
 
 void multi_tab_controllers(String tab) {
-  for (Textlabel label : diagram_labels) {
     if (tab == "launch") {
-      label.show();
+      weightLabel.show();
     } else {
-      label.show();
+      weightLabel.show();
     }
-  }
 }

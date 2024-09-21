@@ -23,14 +23,18 @@ List<String> IDs = Arrays.asList( "1 : Rocket", "2 : Filling Station", "3 : Broa
 
 String logFileName = "log.txt";
 
-String fill_img = "diagrams/filling.png";
+String fill_img;
+String fill_img_light = "diagrams/fillingBlack.png";
+String fill_img_dark = "diagrams/fillingWhite.png";
 
 int history_capacity = 10;
 
 int cmd_size = 14; // 13 comandos + 1
 
 // colors
-int bgColor = color(0, 0, 0);
+int bgColor;
+int bgColorDark = color(0, 0, 0);
+int bgColorLight = color(250, 250, 250);
 int red = color(150, 55, 35);
 int dark_red = color(150, 39, 23);
 int blue = color(0, 100, 117);
@@ -40,20 +44,61 @@ int light_orange = color(110, 93, 23);
 
 CColor abortColor = new CColor();
 CColor stopColor = new CColor();
-CColor colors2 = new CColor();
+CColor defaultColor = new CColor();
 CColor unactiveColor = new CColor();
+int labelColor;
+int labelColor2;
+
+CColor abortColorDark = new CColor();
+CColor stopColorDark = new CColor();
+CColor defaultColorDark = new CColor();
+CColor unactiveColorDark = new CColor();
+int labelColorDark = color(255, 255, 255);
+int labelColor2Dark = color(180, 180, 180);
+
+CColor abortColorLight = new CColor();
+CColor stopColorLight = new CColor();
+CColor defaultColorLight = new CColor();
+CColor unactiveColorLight = new CColor();
+int labelColorLight = color(0, 0, 0);
+int labelColor2Light = color(70, 70, 70);
 
 void setupColors() {
-  abortColor.setForeground(red)
+  // dark mode
+  abortColorDark.setForeground(red)
     .setBackground(dark_red)
     .setActive(blue);
-  colors2.setForeground(blue)
+  defaultColorDark.setForeground(blue)
     .setBackground(dark_blue)
     .setActive(red);
-  unactiveColor.setForeground(bgColor)
+  unactiveColorDark.setForeground(bgColor)
     .setBackground(dark_red)
     .setActive(red);
-  stopColor.setForeground(light_orange)
+  stopColorDark.setForeground(light_orange)
     .setBackground(orange)
     .setActive(blue);
-}
+
+  // light mode
+  abortColorLight.setForeground(red)
+    .setBackground(dark_red)
+    .setActive(blue);
+  defaultColorLight.setForeground(blue)
+    .setBackground(dark_blue)
+    .setActive(red);
+  unactiveColorLight.setForeground(bgColor)
+    .setBackground(dark_red)
+    .setActive(red);
+  stopColorLight.setForeground(light_orange)
+    .setBackground(orange)
+    .setActive(blue);
+    
+    // choose mode
+    abortColor = abortColorDark;
+    stopColor = stopColorDark;
+    unactiveColor = unactiveColorDark;
+    defaultColor = defaultColorDark;
+    bgColor = bgColorDark;
+    fill_img = fill_img_dark;
+    labelColor = labelColorDark;
+    labelColor2 = labelColor2Dark;
+  }
