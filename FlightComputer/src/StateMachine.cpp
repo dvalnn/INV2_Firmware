@@ -297,7 +297,7 @@ State_t state_machine[rocket_state_size] =
             },
 
             .events = {
-                {.condition = prog1_safety_cond, .reaction = V_Vpu_open, .next_state = SAFETY_PRESSURE_ACTIVE}, 
+                {.condition = prog1_safety_cond, .reaction = enter_safety_purge, .next_state = SAFETY_PRESSURE_ACTIVE}, 
                 {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
                 },
 
@@ -357,7 +357,7 @@ State_t state_machine[rocket_state_size] =
             },
 
             .events = {
-                {.condition = safety_stop_cond, .reaction = V_Vpu_close, .next_state = SAFETY_PRESSURE}, 
+                {.condition = safety_stop_cond, .reaction = exit_safety_purge, .next_state = SAFETY_PRESSURE}, 
                 {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
             },
 
