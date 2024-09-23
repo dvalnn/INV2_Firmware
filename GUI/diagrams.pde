@@ -106,9 +106,9 @@ void setupDiagrams() {
     .moveTo("default");
 
   tl_label = cp5.addTextlabel("Tank Liquid")
-    .setText("Liquid:XX.xx%\n\n\nXX.xxm\n\n\nXX.xxm3\n\n\nXX.xxkg\n\n\nXX.xxkg")
+    .setText("He lost:\nXX.xx mol\n\nTotal Gas loss:\nXX.xx mol\n\nN2O lost:\nXX.xx g")
     .setColor(labelColor)
-    .setPosition(displayWidth*.26, displayHeight*.565)
+    .setPosition(displayWidth*.26, displayHeight*.55)
     .moveTo("global")
     .setFont(font);
 

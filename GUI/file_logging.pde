@@ -54,7 +54,7 @@ void flash_log(dataPacket packet, LogEvent event) {
 
     logStream.write(buff, 0, index);
     logStream.flush();  // Ensure data is written immediately
-    println("Log entry added.");
+    //println("Log entry added.");
   }
   catch (IOException e) {
     println("Error writing to log file: " + e);
