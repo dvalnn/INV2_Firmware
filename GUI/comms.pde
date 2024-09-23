@@ -23,7 +23,7 @@ void serialThread() {
     if (millis() - last_cmd_sent_time > packet_loss_timeout) {
       if (millis() - last_r_ping > heartbeat_timeout || millis() - last_f_ping > heartbeat_timeout) {
         byte[] ping = {(byte)0x55, (byte)0xFF, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00};
-         
+
         last_r_ping = millis();
         last_f_ping = millis();
       }
@@ -108,7 +108,7 @@ void processPacket() {
   dataPacket new_packet = new dataPacket(CMD, ID, rx_payload);
   rx_packet = new_packet;
   rx_packet.logPacket(LogEvent.MSG_RECEIVED);
-  println(rx_packet.getPacket());
+  //println(rx_packet.getPacket());
   if (CMD == (byte) 0x00) {
     if (ID == (byte) 0x02) {
       displayLogRocket();
@@ -169,14 +169,12 @@ void displayLogRocket() {
   r_weight3 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 24, 26))).getShort(); // launch
   r_chamber_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 26, 28))).getShort();
 
-  liquid_height = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 28, 30))).getShort();
-  liquid_volume = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 30, 32))).getShort(); // change to liquid height 2
+  he_mol = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 28, 30))).getShort();
+  tank_mol_loss = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 30, 32))).getShort();
   // add gas mass
-  liquid_mass = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 32, 34))).getShort();
-  liquid_mass2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 34, 36))).getShort();
 
 
-  chamber_temps_label.setText("Chamber Temperatures\n1: " + df.format(chamber_temp1 * .1) + "\n2: " + df.format(chamber_temp2 * .1) + "\n3: " + df.format(chamber_temp3 * .1) + "\nChamber Pressure: " + df.format(r_chamber_press * .01));
+  chamber_temps_label.setText("Chamber Temperatures\n1: " + df.format(chamber_temp1 * .1) + "\n2: " + df.format(chamber_temp2 * .1) + "\n3: " + df.format(chamber_temp3 * .1) + "\nChamber Pressure: " + df.format(r_chamber_press * .01) + "\nThrust: " + df.format((r_weight1 + r_weight2 + r_weight3) * .1) + " kg");
 
   String bools = String.format("%8s", Integer.toBinaryString(r_bools & 0xFF)).replace(' ', '0');
   int log_running = Integer.parseInt(bools.substring(0, 1));
@@ -189,7 +187,7 @@ void displayLogRocket() {
   log_display_rocket.setText("Rocket" + state);
   tt_label.setText("Tank Top\nT : " + String.format("%.2f", tank_top_temp * .1) + "\nP : " + String.format("%.2f", tank_top_press * .01));
   tb_label.setText("Tank Bottom\nT : " + String.format("%.2f", tank_bot_temp * .1) + "\nP : " + String.format("%.2f", tank_bot_press * .01));
-  tl_label.setText("Liquid: " + String.format("%.2f", (100 - r_tank_liquid * .01)) + "%\n\n\n" + String.format("%.2f", liquid_height * .01) + "m\n\n\n" + String.format("%.2f", liquid_volume * .001) + "m3\n\n\n" + String.format("%.2f", liquid_mass * .01) + "kg\n\n\n" + String.format("%.2f", liquid_mass2 * .01) + "kg");
+  tl_label.setText("He:\n" + String.format("%.2f", (he_mol * .1)) + " mol\n\nTotal Gas loss:\n" + String.format("%.2f", tank_mol_loss * .1) + " mol\n\nN2O lost:\n" + String.format("%.2f", calc_n2o_loss()) + " g");
 }
 
 void displayLogFilling() {
@@ -252,9 +250,12 @@ void displayAck(int ackValue) {
     break;
   case 21: // Manual Exec Ack
     ackName = "Manual Exec";
-    if (rx_packet.payload[0] == (byte) 0x0c) { // flash ids cmd (2) + man command size (9) + 1
+    if (rx_packet.payload[0] == (byte) 0x0d) { // flash ids cmd (2) + man command size (10) + 1
       int file_count = (int) rx_packet.payloadLength - 1;
-      String id = str(rx_packet.payload[(ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, file_count - 1, file_count + 1))).getShort()]);
+      //println(file_count);
+      //println(rx_packet.getPacket());
+
+      String id = str((ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, file_count - 1, file_count + 1))).getShort());
       ackName = "Flash Log ID: " + id;
     }
     break;
@@ -308,5 +309,13 @@ void send(byte command, byte[] payload) {
     tx_queue.add(tx_packet);
   } else {
     println("No serial port selected!");
+  }
+}
+
+float calc_n2o_loss() {
+  if (tank_mol_loss > he_mol) {
+    return (((tank_mol_loss - he_mol) * .1) * 44.012);
+  } else {
+    return 0.0;
   }
 }

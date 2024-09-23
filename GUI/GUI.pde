@@ -62,7 +62,7 @@ int status_toggle_state = 0;
 int last_status_request = 0;
 
 short tank_top_temp, tank_bot_temp, chamber_temp1, chamber_temp2, chamber_temp3, tank_top_press, tank_bot_press, r_tank_press, r_tank_liquid, r_weight1, r_weight2, r_weight3, r_chamber_press;
-short liquid_height, liquid_volume, liquid_mass, liquid_mass2;
+short he_mol, tank_mol_loss;
 byte r_bools;
 short f_tank_press, f_tank_liquid, he_temp, n2o_temp, line_temp, he_press, n2o_press, line_press, ematch_v, f_bools;
 int f_weight1;
@@ -94,7 +94,7 @@ Toggle he_toggle, n2o_toggle, line_toggle, tt_toggle, tb_toggle;
 HashMap<Toggle, Byte> valve_toggle_map = new HashMap<Toggle, Byte>();
 
 List<Textlabel> diagram_labels;
-List<String> man_commands = Arrays.asList("Flash Log Start", "Flash Log Stop", "Flash IDs", "Loadcell Calibrate", "Loadcell Tare");
+List<String> man_commands = Arrays.asList("Flash Log Start", "Flash Log Stop", "Flash IDs", "Loadcell Calibrate", "Loadcell Tare", "Tank Tare");
 HashMap<String, Byte> man_commands_map = new HashMap<String, Byte>();
 HashMap<Byte, String> command_names = new HashMap<Byte, String>();
 List<String> valves = Arrays.asList("VPU Valve", "Engine Valve", "He Valve", "N2O Valve", "Line Valve");
@@ -139,7 +139,7 @@ void setup() {
   prog_args.put("Purge Liquid", _bl3);
   boolean[] _bl4 = {true, false, false};
   prog_args.put("Fill He", _bl4);
-  boolean[] _bl5 = {false, true, true};
+  boolean[] _bl5 = {false, true, false};
   prog_args.put("Fill N2O", _bl5);
   boolean[] _bl6 = {true, false, false};
   prog_args.put("Purge Line", _bl6);
@@ -175,6 +175,7 @@ void setup() {
   man_commands_map.put("Flash IDs", (byte) 2);
   man_commands_map.put("Loadcell Calibrate", (byte) 7);
   man_commands_map.put("Loadcell Tare", (byte) 8);
+  man_commands_map.put("Tank Tare", (byte) 9);
 
   valve_toggle_map.put(tt_toggle, (byte) 0x00);
   valve_toggle_map.put(tb_toggle, (byte) 0x01);
