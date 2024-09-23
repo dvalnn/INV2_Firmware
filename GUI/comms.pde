@@ -187,7 +187,7 @@ void displayLogRocket() {
   log_display_rocket.setText("Rocket" + state);
   tt_label.setText("Tank Top\nT : " + String.format("%.2f", tank_top_temp * .1) + "\nP : " + String.format("%.2f", tank_top_press * .01));
   tb_label.setText("Tank Bottom\nT : " + String.format("%.2f", tank_bot_temp * .1) + "\nP : " + String.format("%.2f", tank_bot_press * .01));
-  tl_label.setText("He:\n" + String.format("%.2f", (he_mol * .01)) + " mol\n\nTotal Gas loss:\n" + String.format("%.2f", tank_mol_loss * .01) + " mol\n\nN2O lost:\n" + String.format("%.2f", calc_n2o_loss()) + " g");
+  tl_label.setText("He:\n" + String.format("%.2f", (he_mol * .1)) + " mol\n\nTotal Gas loss:\n" + String.format("%.2f", tank_mol_loss * .1) + " mol\n\nN2O lost:\n" + String.format("%.2f", calc_n2o_loss()) + " g");
 }
 
 void displayLogFilling() {
@@ -314,7 +314,7 @@ void send(byte command, byte[] payload) {
 
 float calc_n2o_loss() {
   if (tank_mol_loss > he_mol) {
-    return (((tank_mol_loss - he_mol) * .01) * 44.012);
+    return (((tank_mol_loss - he_mol) * .1) * 44.012);
   } else {
     return 0.0;
   }
