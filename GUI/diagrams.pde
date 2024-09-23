@@ -199,9 +199,9 @@ void updateDiagrams() {
 }
 
 void multi_tab_controllers(String tab) {
-    if (tab == "launch") {
-      weightLabel.show();
+    if (tab == "default") {
+      chamber_temps_label.hide();
     } else {
-      weightLabel.show();
+      chamber_temps_label.show();
     }
 }

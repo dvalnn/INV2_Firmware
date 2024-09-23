@@ -322,11 +322,12 @@ void setupControllers() {
     .setFont(font);
 
   chamber_temps_label = cp5.addTextlabel("Chamber Temps")
-    .setText("Chamber temperatures go here")
+    .setText("Chamber temps")
     .setColor(labelColor)
-    .setPosition(displayWidth*.02, displayHeight*.06)
-    .moveTo("launch")
-    .setFont(font);
+    .setPosition(displayWidth*.65, displayHeight*.34)
+    .moveTo("global")
+    .setFont(font)
+    .hide();
 }
 
 void launch_setup() {
