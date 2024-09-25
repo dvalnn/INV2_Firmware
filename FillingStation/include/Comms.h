@@ -126,6 +126,8 @@ typedef enum
     
     CMD_MANUAL_LOADCELL_CALIBRATE,
     CMD_MANUAL_LOADCELL_TARE,
+
+    CMD_MANUAL_TANK_TARE,
     
     manual_cmd_size,
 
@@ -138,6 +140,7 @@ typedef enum
     CMD_MANUAL_IMU_CALIBRATE_ACK,
     CMD_MANUAL_LOADCELL_CALIBRATE_ACK,
     CMD_MANUAL_LOADCELL_TARE_ACK,
+    CMD_MANUAL_TANK_TARE_ACK,
 } manual_command_t;
 
 //----------------------------------------
