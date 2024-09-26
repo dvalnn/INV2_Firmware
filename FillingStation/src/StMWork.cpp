@@ -345,11 +345,14 @@ void read_active_ematch(void)
 
 void read_N20_weight(void)
 {
+    static float lpf_val = 0.0f;
+    const float betha = 0.250f;
     if (scale1.is_ready()) {
         long reading = scale1.read();
         float val = (reading * scale_m) + scale_b;
+        lpf_val = lpf_val - (betha * (lpf_val - val));
         //Serial.printf("reading 1: %f\n", val);
-        weight1 = (int16_t)(val * 10);
+        weight1 = (int16_t)(lpf_val * 10);
         //printf("HX711 1 %d\n", weight1);
     } else {
         //Serial.println("HX711 1 not found.");
