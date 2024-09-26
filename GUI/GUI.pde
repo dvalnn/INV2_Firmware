@@ -204,7 +204,12 @@ void draw() {
     last_chart_time = millis();
   }
   if (millis() - last_status_request > status_interval && status_toggle_state == 1) {
+    byte oldID = targetID;
+    targetID = 1;
     send((byte)0x00, empty_payload);
+    targetID = 2;
+    send((byte)0x00, empty_payload);
+    targetID = oldID;
     last_status_request = millis();
   }
   if (last_cmd_sent != (byte)0xff) {
@@ -298,7 +303,7 @@ public void controlEvent(ControlEvent event) {
     send((byte)0x09, empty_payload);
   } else if (event.isFrom("Ready")) {
     send((byte)0x08, empty_payload);
-    //status_toggle.setState(true);
+    status_toggle.setState(true);
   } else if (event.isFrom("Fire")) {
     send((byte)0x0c, empty_payload);
   } else if (event.isFrom("Allow Launch")) {

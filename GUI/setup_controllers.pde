@@ -324,7 +324,7 @@ void setupControllers() {
   chamber_temps_label = cp5.addTextlabel("Chamber Temps")
     .setText("Chamber temps")
     .setColor(labelColor)
-    .setPosition(displayWidth*.65, displayHeight*.34)
+    .setPosition(displayWidth*.63, displayHeight*.34)
     .moveTo("global")
     .setFont(font)
     .hide();
