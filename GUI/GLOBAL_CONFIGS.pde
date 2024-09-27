@@ -1,4 +1,4 @@
-int status_interval = 1000; // ms
+int status_interval = 500; // ms
 int packet_read_timeout = 250; // ms
 int packet_loss_timeout = 250;
 int heartbeat_timeout = 1000;
