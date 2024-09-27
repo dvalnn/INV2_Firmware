@@ -60,9 +60,10 @@ Chart fillingChart, launchChart;
 Toggle status_toggle;
 int status_toggle_state = 0;
 int last_status_request = 0;
+int last_status_id = 1;
 
 short tank_top_temp, tank_bot_temp, chamber_temp1, chamber_temp2, chamber_temp3, tank_top_press, tank_bot_press, r_tank_press, r_tank_liquid, r_weight1, r_weight2, r_weight3, r_chamber_press;
-short he_mol, tank_mol_loss;
+short he_mol, tank_mol_loss, liquid_mass, liquid_height;
 byte r_bools;
 short f_tank_press, f_tank_liquid, he_temp, n2o_temp, line_temp, he_press, n2o_press, line_press, ematch_v, f_bools;
 int f_weight1;
@@ -86,7 +87,7 @@ int last_open_valve = -1;
 Textfield valve_ms;
 Textlabel pressureLabel, liquidLabel, temperatureLabel, weightLabel;
 Textlabel weight1Label, weight2Label, weight3Label, tankPressureLabel, chamberPressureLabel;
-Textlabel ematch_label, chamber_temps_label;
+Textlabel ematch_label, chamber_temps_label, chamber_threshold_temp;
 Textlabel he_label, n2o_label, line_label, tt_label, tb_label, tl_label;
 
 List<Toggle> valve_toggles;
@@ -205,9 +206,14 @@ void draw() {
   }
   if (millis() - last_status_request > status_interval && status_toggle_state == 1) {
     byte oldID = targetID;
-    targetID = 1;
-    send((byte)0x00, empty_payload);
-    targetID = 2;
+    if(last_status_id == 1) {
+      targetID = 2;
+      last_status_id = 2;
+    }
+    else {
+      targetID = 1;
+      last_status_id = 1;
+    }
     send((byte)0x00, empty_payload);
     targetID = oldID;
     last_status_request = millis();

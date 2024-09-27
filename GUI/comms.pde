@@ -22,8 +22,7 @@ void serialThread() {
     dataPacket head = tx_queue.peek();
     if (millis() - last_cmd_sent_time > packet_loss_timeout) {
       if (millis() - last_r_ping > heartbeat_timeout || millis() - last_f_ping > heartbeat_timeout) {
-        byte[] ping = {(byte)0x55, (byte)0xFF, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00};
-
+        //byte[] ping = {(byte)0x55, (byte)0xFF, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00};
         last_r_ping = millis();
         last_f_ping = millis();
       }
@@ -107,21 +106,23 @@ void parseIncomingByte(byte rx_byte) {
 void processPacket() {
   dataPacket new_packet = new dataPacket(CMD, ID, rx_payload);
   rx_packet = new_packet;
+  println();
+  println(rx_packet.getPacket());
   rx_packet.logPacket(LogEvent.MSG_RECEIVED);
   //println(rx_packet.getPacket());
-  if (CMD == (byte) 0x00) {
-    if (ID == (byte) 0x02) {
+  if (rx_packet.command == (byte) 0x00) {
+    if (rx_packet.id == (byte) 0x02) {
       displayLogRocket();
       updateLogStats(1);
-    } else if (ID == (byte) 0x01) {
+    } else if (rx_packet.id == (byte) 0x01) {
       displayLogFilling();
       updateLogStats(2);
     }
-  } else if (CMD == (byte) 0x0e) { // STATUS ACK
+  } else if (rx_packet.command == (byte) 0x0e) { // STATUS ACK
     displayAck((int)0x0e);
-    if (targetID == 1) {
+    if (rx_packet.payloadLength == 36) {
       displayLogRocket();
-    } else if (targetID == 2) {
+    } else if (rx_packet.payloadLength == 22) {
       displayLogFilling();
     }
   } else if (CMD >= (byte)0x0f && CMD <= (byte)0x1a) {
@@ -171,6 +172,9 @@ void displayLogRocket() {
 
   he_mol = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 28, 30))).getShort();
   tank_mol_loss = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 30, 32))).getShort();
+  
+  liquid_height = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 32, 34))).getShort();
+  liquid_mass = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 34, 36))).getShort();
   // add gas mass
 
 
@@ -187,7 +191,7 @@ void displayLogRocket() {
   log_display_rocket.setText("Rocket" + state);
   tt_label.setText("Tank Top\nT : " + String.format("%.2f", tank_top_temp * .1) + "\nP : " + String.format("%.2f", tank_top_press * .01));
   tb_label.setText("Tank Bottom\nT : " + String.format("%.2f", tank_bot_temp * .1) + "\nP : " + String.format("%.2f", tank_bot_press * .01));
-  tl_label.setText("He:\n" + String.format("%.2f", (he_mol * .1)) + " mol\n\nTotal Gas loss:\n" + String.format("%.2f", tank_mol_loss * .1) + " mol\n\nN2O lost:\n" + String.format("%.2f", calc_n2o_loss()) + " g");
+  tl_label.setText("He:\n" + String.format("%.2f", (he_mol * .1)) + " mol\n\nTotal Gas loss:\n" + String.format("%.2f", tank_mol_loss * .1) + " mol\n\nN2O lost:\n" + String.format("%.2f", calc_n2o_loss()) + " g\n\nLiquid mass:\n" + df.format(liquid_mass * .01) + " kg\n\nLiquid height:\n" + df.format(liquid_height * .01) + " m");
 }
 
 void displayLogFilling() {
@@ -252,8 +256,8 @@ void displayAck(int ackValue) {
     ackName = "Manual Exec";
     if (rx_packet.payload[0] == (byte) 0x0d) { // flash ids cmd (2) + man command size (10) + 1
       int file_count = (int) rx_packet.payloadLength - 1;
-      //println(file_count);
-      //println(rx_packet.getPacket());
+      println(file_count);
+      println(rx_packet.getPacket());
 
       String id = str((ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, file_count - 1, file_count + 1))).getShort());
       ackName = "Flash Log ID: " + id;
