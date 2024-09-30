@@ -221,6 +221,8 @@ void displayLogFilling() {
   n2o_label.setText("N2O\nT : " + String.format("%.2f", n2o_temp * .1) + "\nP : " + String.format("%.2f", n2o_press * .01) + "\nW : " +String.format("%.2f", f_weight1 * .1));
   line_label.setText("Line Purge\nT : " + String.format("%.2f", line_temp * .1) + "\nP : " + String.format("%.2f", line_press * .01));
   ematch_label.setText("E-Match value : " + ematch_v);
+  
+  chamber_threshold_temp.setText("Chamber threshold temp: " + df.format(n2o_temp));
 }
 
 void displayAck(int ackValue) {

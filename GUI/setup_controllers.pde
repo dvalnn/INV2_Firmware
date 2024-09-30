@@ -330,9 +330,9 @@ void setupControllers() {
     .hide();
     
   chamber_threshold_temp = cp5.addTextlabel("Chamber Threshold Temp")
-    .setText("Chamber thershold temp")
+    .setText("Chamber threshold temp")
     .setColor(labelColor)
-    .setPosition(displayWidth*.05, displayHeight*.1)
+    .setPosition(displayWidth*.02, displayHeight*.05)
     .moveTo("launch")
     .setFont(font)
     ;
