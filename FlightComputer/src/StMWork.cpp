@@ -165,21 +165,21 @@ void logger(void)
     command_rep.data[26] = (ipressure >> 8) & 0xff;
     command_rep.data[27] = (ipressure) & 0xff;
 
-    int16_t ialtura = (int16_t)(hL * 100);
-    command_rep.data[28] = (ialtura >> 8) & 0xff;
-    command_rep.data[29] = (ialtura) & 0xff;
+    int16_t he_moles_i = (int16_t)(he_mol * 10);
+    command_rep.data[28] = (he_moles_i >> 8) & 0xff;
+    command_rep.data[29] = (he_moles_i) & 0xff;
 
-    int16_t iVl = (int16_t)(Vl * 1000);
-    command_rep.data[30] = (iVl >> 8) & 0xff;
-    command_rep.data[31] = (iVl) & 0xff;
+    int16_t tank_mol_lost_i = (int16_t)(tank_mol_lost * 10);
+    command_rep.data[30] = (tank_mol_lost_i >> 8) & 0xff;
+    command_rep.data[31] = (tank_mol_lost_i) & 0xff;
 
-    int16_t iml = (int16_t)(ml * 100);
-    command_rep.data[32] = (iml >> 8) & 0xff;
-    command_rep.data[33] = (iml) & 0xff;
+    int16_t hL_i = (int16_t)(he_mol * 10);
+    command_rep.data[32] = (hL_i >> 8) & 0xff;
+    command_rep.data[33] = (hL_i) & 0xff;
 
-    iml = (int16_t)(ml2 * 100);
-    command_rep.data[34] = (iml >> 8) & 0xff;
-    command_rep.data[35] = (iml) & 0xff;
+    int16_t ml_i = (int16_t)(tank_mol_lost * 10);
+    command_rep.data[34] = (ml_i >> 8) & 0xff;
+    command_rep.data[35] = (ml_i) & 0xff;
 
     command_rep.crc = crc((unsigned char *)&command_rep, command_rep.size + 3);
 
@@ -246,6 +246,8 @@ void read_weight3(void)
 
 void read_temperature_chamber_1(void)
 {
+    if(fast_reboot) return;
+
     Chamber_Module.thermocouple1.read();
 
     float temp = Chamber_Module.thermocouple1.getTemperature();
@@ -254,6 +256,8 @@ void read_temperature_chamber_1(void)
 
 void read_temperature_chamber_2(void)
 {
+    if(fast_reboot) return;
+
     Chamber_Module.thermocouple2.read();
 
     float temp = Chamber_Module.thermocouple2.getTemperature();
@@ -262,6 +266,8 @@ void read_temperature_chamber_2(void)
 
 void read_temperature_chamber_3(void)
 {
+    if(fast_reboot) return;
+
     Chamber_Module.thermocouple3.read();
 
     float temp = Chamber_Module.thermocouple3.getTemperature();
@@ -270,6 +276,8 @@ void read_temperature_chamber_3(void)
 
 void read_temperature_tank_top(void)
 {
+    if(fast_reboot) return;
+
     // digitalWrite(TEMP_AMP3_SS_PIN, HIGH);
 
     float temp = Tank_Top_Module.thermocouple.getThermocoupleTemp();
@@ -280,6 +288,8 @@ void read_temperature_tank_top(void)
 
 void read_temperature_tank_bot(void)
 {
+    if(fast_reboot) return;
+
     // digitalWrite(TEMP_AMP3_SS_PIN, HIGH);
     float temp = Tank_Bot_Module.thermocouple.getThermocoupleTemp();
     Tank_Bot_Module.temperature = (int16_t)(temp * 10.0);
@@ -380,22 +390,6 @@ static void alturafluido(void)
         tank_liquid = mg / (mg + ml);
     }
 
-    if (hL2 < h1)
-    {                                         // h1 valor conhecido distancia do transdutor de pressao ao fundo do tanque em metros
-        Vl2 = ((3.1416 * Do * Do) / 4) * hL2; // Dt- Diametro do tubo
-        Vg2 = V_total - Vl2;                  // V_total = constante a determinar
-        ml2 = mVL * Vl2;
-        mg2 = mVG * Vg2;
-        tank_liquid2 = mg2 / (mg2 + ml2);
-    }
-    if (hL2 > h1)
-    {
-        Vl2 = ((3.1416 * Do * Do) / 4) * h1 + ((3.1416 * Dt * Dt) / 4) * (hL2 - h1); // Do - diametro do tanque oxidante Dt- Diâmetro do tubo                                         //h1 - diferença de altura entre transdutor e fundo do tanque
-        Vg2 = V_total - Vl2;
-        ml2 = mVL * Vl2;
-        mg2 = mVG * Vg2;
-        tank_liquid2 = mg2 / (mg2 + ml2);
-    }
     // tank_pressure = P1;
 }
 

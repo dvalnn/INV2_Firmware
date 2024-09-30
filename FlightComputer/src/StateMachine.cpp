@@ -48,10 +48,8 @@ rocket_state_t comm_transition[rocket_state_size][cmd_size] = {
 
 #define ROCKET_LOAD_CELLS(val)                                 \
     {.channel = read_weight1, .sample = val},                  \
-        {.channel = read_weight2, .sample = val, .delay = 25}, \
-    {                                                          \
-        .channel = read_weight3, .sample = val, .delay = 50    \
-    }
+    {.channel = read_weight2, .sample = val}, \
+    {.channel = read_weight3, .sample = val}
 
 #define CLOSE_VALVES                             \
     {.channel = V_Vpu_close, .sample = 100},     \
@@ -60,231 +58,261 @@ rocket_state_t comm_transition[rocket_state_size][cmd_size] = {
     }
 
 State_t state_machine[rocket_state_size] =
+{
+    // IDLE
     {
-        // IDLE
-        {
-            .work = {
-                TANK_TEMPERATURE_SENSORS(1000),
-                ROCKET_LOAD_CELLS(1000),
-                CLOSE_VALVES,
-                {.channel = ADS_handler_slow, .sample = 1},
-                //{.channel = ADS_handler_all_fast, .sample = 0},
-                {.channel = logger, .sample = 1000},
-                {.channel = flash_log_sensors, .sample = 1000, .delay = 200},
-            },
-
-            .events = {{.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
-
-            .comms = comm_transition[IDLE],
+        .work = {
+            TANK_TEMPERATURE_SENSORS(1000),
+            
+            ROCKET_LOAD_CELLS(1000),
+            
+            CLOSE_VALVES,
+            
+            {.channel = calc_liquid, .sample = 1000},
+            
+            {.channel = ADS_handler_slow, .sample = 1},
+            {.channel = logger, .sample = 1000},
+            {.channel = flash_log_sensors, .sample = 1000, .delay = 200},
         },
-        // FUELING
-        {
-            .work = {
-                TANK_TEMPERATURE_SENSORS(100),
 
-                {.channel = calc_liquid, .sample = 1000},
-
-                {.channel = ADS_handler_fast, .sample = 1},
-
-                {.channel = V_Vpu_close, .sample = 500}, // safety
-
-                CLOSE_VALVES,
-
-                {.channel = logger, .sample = 50},
-                {.channel = flash_log_sensors, .sample = 100},
-            },
-
-            .events = {{.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
-
-            .comms = comm_transition[FUELING],
+        .events = {
+            {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
         },
-        // MANUAL
-        {
-            .work = {
-                TANK_TEMPERATURE_SENSORS(100),
 
-                {.channel = ADS_handler_fast, .sample = 1},
+        .comms = comm_transition[IDLE],
+    },
+    // FUELING
+    {
+        .work = {
+            TANK_TEMPERATURE_SENSORS(100),
+            CHAMBER_TEMPERATURE_SENSORS(1000),
 
-                {.channel = calc_liquid, .sample = 1000},
+            {.channel = calc_liquid, .sample = 1000},
 
-                {.channel = logger, .sample = 50},
-                {.channel = flash_log_sensors, .sample = 100},
-            },
+            {.channel = ADS_handler_fast, .sample = 1},
 
-            .events = {{.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
+            {.channel = V_Vpu_close, .sample = 500}, // safety
 
-            .comms = comm_transition[MANUAL],
+            CLOSE_VALVES,
+
+            {.channel = logger, .sample = 50},
+            {.channel = flash_log_sensors, .sample = 100},
         },
-        // SAFETY_PRESSURE
-        {
-            .work = {
-                TANK_TEMPERATURE_SENSORS(100),
 
-                {.channel = ADS_handler_fast, .sample = 1},
-
-                {.channel = calc_liquid, .sample = 1000},
-                {.channel = V_Vpu_close, .sample = 500}, // safety
-                {.channel = logger, .sample = 50},
-                {.channel = flash_log_sensors, .sample = 100},
-            },
-
-            .events = {
-                {.condition = prog1_safety_cond, .reaction = enter_safety_purge, .next_state = SAFETY_PRESSURE_ACTIVE}, 
-                {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
-                },
-
-            .comms = comm_transition[SAFETY_PRESSURE],
+        .events = {
+            {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
         },
-        // PURGE_PRESSURE
-        {
-            .work = {
-                TANK_TEMPERATURE_SENSORS(100),
 
-                {.channel = ADS_handler_fast, .sample = 1},
+        .comms = comm_transition[FUELING],
+    },
+    // MANUAL
+    {
+        .work = {
+            TANK_TEMPERATURE_SENSORS(100),
+            CHAMBER_TEMPERATURE_SENSORS(1000),
 
-                {.channel = calc_liquid, .sample = 1000},
-                {.channel = V_Vpu_open, .sample = 500},
-                {.channel = logger, .sample = 50},
-                {.channel = flash_log_sensors, .sample = 100},
-            },
+            {.channel = ADS_handler_fast, .sample = 1},
 
-            .events = {{.condition = prog2_finish_cond, .reaction = V_Vpu_close, .next_state = FUELING}, {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
+            {.channel = calc_liquid, .sample = 1000},
 
-            .comms = comm_transition[PURGE_PRESSURE],
+            {.channel = logger, .sample = 50},
+            {.channel = flash_log_sensors, .sample = 100},
         },
-        // PURGE_LIQUID
-        {
-            .work = {
-                TANK_TEMPERATURE_SENSORS(100),
 
-                {.channel = ADS_handler_fast, .sample = 1},
-
-                {.channel = calc_liquid, .sample = 1000},
-                {.channel = V_Vpu_open, .sample = 500},
-                {.channel = logger, .sample = 50},
-                {.channel = flash_log_sensors, .sample = 100},
-            },
-
-            .events = {{.condition = prog3_finish_cond, .reaction = V_Vpu_close, .next_state = FUELING}, {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
-
-            .comms = comm_transition[PURGE_LIQUID],
+        .events = {
+            {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
         },
-        // SAFETY_PRESSURE_ACTIVE
-        {
-            .work = {
-                TANK_TEMPERATURE_SENSORS(100),
 
-                {.channel = ADS_handler_fast, .sample = 1},
+        .comms = comm_transition[MANUAL],
+    },
+    // SAFETY_PRESSURE
+    {
+        .work = {
+            TANK_TEMPERATURE_SENSORS(100),
+            CHAMBER_TEMPERATURE_SENSORS(1000),
 
-                {.channel = calc_liquid, .sample = 1000},
-                {.channel = V_Vpu_open, .sample = 500},
-                {.channel = logger, .sample = 50},
-                {.channel = flash_log_sensors, .sample = 100},
-            },
+            {.channel = ADS_handler_fast, .sample = 1},
 
-            .events = {
-                {.condition = safety_stop_cond, .reaction = exit_safety_purge, .next_state = SAFETY_PRESSURE}, 
-                {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}
-            },
-
-            .comms = comm_transition[SAFETY_PRESSURE_ACTIVE],
+            {.channel = calc_liquid, .sample = 1000},
+            {.channel = V_Vpu_close, .sample = 500}, // safety
+            {.channel = logger, .sample = 50},
+            {.channel = flash_log_sensors, .sample = 100},
         },
-        // READY
-        {
-            .work = {
-                TANK_TEMPERATURE_SENSORS(1000),
-                CHAMBER_TEMPERATURE_SENSORS(500),
-                {.channel = ADS_handler_all_slow, .sample = 1},
-                {.channel = calc_liquid, .sample = 1000},
 
-                ROCKET_LOAD_CELLS(500),
-
-                {.channel = reset_timers, .sample = 200}, // used to reset the timers used in armed, fire, launch
-
-                {.channel = logger, .sample = 50},
-                {.channel = flash_log_sensors, .sample = 100},
-            },
-
-            .events = {{.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
-
-            .comms = comm_transition[READY],
-
+        .events = {
+            {.condition = prog1_safety_cond, .reaction = enter_safety_purge, .next_state = SAFETY_PRESSURE_ACTIVE}, 
+            {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
         },
-        // ARMED
-        {
-            .work = {
-                TANK_TEMPERATURE_SENSORS(1000),
-                CHAMBER_TEMPERATURE_SENSORS(100),
-                {.channel = ADS_handler_all_fast, .sample = 1},
-                {.channel = calc_liquid, .sample = 1000},
-                ROCKET_LOAD_CELLS(150),
 
-                {.channel = arm_timer_tick, .sample = 1000},
-                {.channel = logger, .sample = 50},
-                {.channel = flash_log_sensors, .sample = 100},
-            },
+        .comms = comm_transition[SAFETY_PRESSURE],
+    },
+    // PURGE_PRESSURE
+    {
+        .work = {
+            TANK_TEMPERATURE_SENSORS(100),
+            CHAMBER_TEMPERATURE_SENSORS(1000),
 
-            .events = {
-                {.condition = IgniteCond, .reaction = V_Engine_open, .next_state = LAUNCH},
-                {.condition = arm_timer_event, .reaction = NULL, .next_state = READY},
-                {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
-            },
+            {.channel = ADS_handler_fast, .sample = 1},
 
-            .comms = comm_transition[ARMED],
-
+            {.channel = calc_liquid, .sample = 1000},
+            {.channel = V_Vpu_open, .sample = 500},
+            {.channel = logger, .sample = 50},
+            {.channel = flash_log_sensors, .sample = 100},
         },
-        // LAUNCH
-        {
-            .work = {
-                TANK_TEMPERATURE_SENSORS(1000),
 
-                CHAMBER_TEMPERATURE_SENSORS(250),
-                {.channel = ADS_handler_all_fast, .sample = 1},
-                {.channel = calc_liquid, .sample = 1000},
-
-                ROCKET_LOAD_CELLS(150),
-
-                {.channel = V_Engine_open, .sample = 500},
-                {.channel = logger, .sample = 200},
-                {.channel = flash_log_sensors, .sample = 100},
-            },
-
-            .events = {{.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
-
-            .comms = comm_transition[LAUNCH],
-
+        .events = {
+            {.condition = prog2_finish_cond, .reaction = V_Vpu_close, .next_state = FUELING}, 
+            {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
         },
-        // ABORT
-        {
-            .work = {
-                TANK_TEMPERATURE_SENSORS(250),
-                CHAMBER_TEMPERATURE_SENSORS(250),
 
-                {.channel = ADS_handler_all_fast, .sample = 1},
-                {.channel = calc_liquid, .sample = 1000},
+        .comms = comm_transition[PURGE_PRESSURE],
+    },
+    // PURGE_LIQUID
+    {
+        .work = {
+            TANK_TEMPERATURE_SENSORS(100),
+            CHAMBER_TEMPERATURE_SENSORS(1000),
 
-                {.channel = V_Engine_close, .sample = 500},
-                {.channel = V_Vpu_open, .sample = 500},
+            {.channel = ADS_handler_fast, .sample = 1},
 
-                {.channel = logger, .sample = 500},
-                {.channel = flash_log_sensors, .sample = 500},
-            },
-
-            .events = {{.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}},
-
-            .comms = comm_transition[ABORT],
-
+            {.channel = calc_liquid, .sample = 1000},
+            {.channel = V_Vpu_open, .sample = 500},
+            {.channel = logger, .sample = 50},
+            {.channel = flash_log_sensors, .sample = 100},
         },
-        // IMU_TUNE
-        {
-            .work = {
-                {.channel = imu_pid_calibration, .sample = 1000},
-            },
 
-            .events = {{TrueCond, NULL, IDLE}}, // this will always evaluate true, imu calib is run one time and is automaticly sent to idle
+        .events = {
+            {.condition = prog3_finish_cond, .reaction = V_Vpu_close, .next_state = FUELING}, 
+            {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
+        },
 
-            .comms = comm_transition[IMU_TUNE],
-        }};
+        .comms = comm_transition[PURGE_LIQUID],
+    },
+    // SAFETY_PRESSURE_ACTIVE
+    {
+        .work = {
+            TANK_TEMPERATURE_SENSORS(100),
+            CHAMBER_TEMPERATURE_SENSORS(1000),
+
+            {.channel = ADS_handler_fast, .sample = 1},
+
+            {.channel = calc_liquid, .sample = 1000},
+            {.channel = V_Vpu_open, .sample = 500},
+            {.channel = logger, .sample = 50},
+            {.channel = flash_log_sensors, .sample = 100},
+        },
+
+        .events = {
+            {.condition = safety_stop_cond, .reaction = exit_safety_purge, .next_state = SAFETY_PRESSURE}, 
+            {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
+        },
+
+        .comms = comm_transition[SAFETY_PRESSURE_ACTIVE],
+    },
+    // READY
+    {
+        .work = {
+            TANK_TEMPERATURE_SENSORS(1000),
+            CHAMBER_TEMPERATURE_SENSORS(500),
+
+            {.channel = ADS_handler_all_slow, .sample = 1},
+
+            ROCKET_LOAD_CELLS(500),
+
+            {.channel = reset_timers, .sample = 200}, // used to reset the timers used in armed, fire, launch
+
+            {.channel = logger, .sample = 50},
+            {.channel = flash_log_sensors, .sample = 100},
+        },
+
+        .events = {
+            {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
+        },
+
+        .comms = comm_transition[READY],
+
+    },
+    // ARMED
+    {
+        .work = {
+            TANK_TEMPERATURE_SENSORS(1000),
+            CHAMBER_TEMPERATURE_SENSORS(250),
+            
+            {.channel = ADS_handler_all_fast, .sample = 1},
+
+            ROCKET_LOAD_CELLS(150),
+
+            {.channel = arm_timer_tick, .sample = 1000},
+            {.channel = logger, .sample = 50},
+            {.channel = flash_log_sensors, .sample = 100},
+        },
+
+        .events = {
+            //{.condition = IgniteCond, .reaction = V_Engine_open, .next_state = LAUNCH},
+            {.condition = arm_timer_event, .reaction = NULL, .next_state = READY},
+            {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
+        },
+
+        .comms = comm_transition[ARMED],
+
+    },
+    // LAUNCH
+    {
+        .work = {
+            {.channel = V_Engine_open, .sample = 5},
+
+            //TANK_TEMPERATURE_SENSORS(1000),
+
+            //CHAMBER_TEMPERATURE_SENSORS(1000),
+            {.channel = ADS_handler_all_fast, .sample = 1},
+
+            ROCKET_LOAD_CELLS(150),
+
+            {.channel = logger, .sample = 100},
+            {.channel = flash_log_sensors, .sample = 100},
+        },
+
+        .events = {
+            {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
+        },
+
+        .comms = comm_transition[LAUNCH],
+
+    },
+    // ABORT
+    {
+        .work = {
+            {.channel = V_Engine_close, .sample = 5},
+            {.channel = V_Vpu_open, .sample = 5},
+
+            //TANK_TEMPERATURE_SENSORS(250),
+            //CHAMBER_TEMPERATURE_SENSORS(250),
+
+            {.channel = ADS_handler_all_fast, .sample = 1},
+            //{.channel = calc_liquid, .sample = 1000},
+
+            {.channel = logger, .sample = 500},
+            {.channel = flash_log_sensors, .sample = 500},
+        },
+
+        .events = {
+            {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
+        },
+
+        .comms = comm_transition[ABORT],
+
+    },
+    // IMU_TUNE
+    {
+        .work = {
+            {.channel = imu_pid_calibration, .sample = 1000},
+        },
+
+        .events = {{TrueCond, NULL, IDLE}}, // this will always evaluate true, imu calib is run one time and is automaticly sent to idle
+
+        .comms = comm_transition[IMU_TUNE],
+    }
+};
 
 rocket_state_t event_handler()
 {
@@ -324,13 +352,7 @@ bool work_handler()
             continue;
 
         unsigned long msec = (end - state_machine[state].work[i].begin);
-        // if(i < 2)
-        //{
-        // Serial2.printf("work %d msec %d begin %d end %d sample %d ",
-        // i, msec, state_machine[state].work[i].begin,
-        // end, state_machine[state].work[i].sample);
-        // Serial2.flush();
-        //}
+
         // avoid overflows when it produce negative msec
         if (end < state_machine[state].work[i].begin)
             continue;

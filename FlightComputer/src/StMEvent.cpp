@@ -3,6 +3,8 @@
 #include "HardwareCfg.h"
 #include "GlobalVars.h"
 #include "StMEvent.h"
+#include "StMWork.h"
+#include "Utils.h"
 
 uint16_t RP1 = 0, RP2 = 0; //target and trigger
 uint16_t RL1 = 0; //target liquid
@@ -45,6 +47,27 @@ bool IgniteCond(void)
     if(Chamber_Module.temperature3 > CHAMBER_TEMP_THREASHOLD)
         return true;
     return false;
+}
+
+float he_mol = 0;
+float tank_mol_lost = 0;
+float last_tank_moles = 0;
+void enter_safety_purge(void)
+{
+    //calc moles insite tank
+    float m = calc_moles(Tank_Top_Module.pressure, Tank_Top_Module.temperature);
+    last_tank_moles = m;
+
+    V_Vpu_open();
+}
+
+void exit_safety_purge(void)
+{
+    V_Vpu_close();   
+
+    //calc moles insite tank
+    float m = calc_moles(Tank_Top_Module.pressure, Tank_Top_Module.temperature);
+    tank_mol_lost += last_tank_moles - m;
 }
 
 //---------TIMERS---------------

@@ -6,9 +6,11 @@
 #define MAX_WORK_SIZE 15
 #define MAX_EVENT_SIZE 10
 
-#define ARM_TIMER_TRIGGER 45
+#define ARM_TIMER_TRIGGER 60
 
 #define CHAMBER_TEMP_THREASHOLD 6000 // 0.1c units
+
+#define MAX_RESTART_ALLOWED 6
 
 //use the enum below as the values of rocket_state_t
 //use -1 for default behavior

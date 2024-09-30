@@ -9,6 +9,8 @@
 
 #include "FlashLog.h"
 
+#include "Utils.h"
+
 int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 {
     // Serial.printf("run command %d\n", cmd->cmd);
@@ -72,24 +74,26 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
         command_rep.data[26] = (ipressure >> 8) & 0xff;
         command_rep.data[27] = (ipressure) & 0xff;
 
-        int16_t ialtura = (int16_t)(hL * 100);
-        command_rep.data[28] = (ialtura >> 8) & 0xff;
-        command_rep.data[29] = (ialtura) & 0xff;
+        int16_t he_moles_i = (int16_t)(he_mol * 10);
+        command_rep.data[28] = (he_moles_i >> 8) & 0xff;
+        command_rep.data[29] = (he_moles_i) & 0xff;
 
-        int16_t iVl = (int16_t)(Vl * 1000);
-        command_rep.data[30] = (iVl >> 8) & 0xff;
-        command_rep.data[31] = (iVl) & 0xff;
+        int16_t tank_mol_lost_i = (int16_t)(tank_mol_lost * 10);
+        command_rep.data[30] = (tank_mol_lost_i >> 8) & 0xff;
+        command_rep.data[31] = (tank_mol_lost_i) & 0xff;
 
-        int16_t iml = (int16_t)(ml * 100);
-        command_rep.data[32] = (iml >> 8) & 0xff;
-        command_rep.data[33] = (iml) & 0xff;
+        int16_t hL_i = (int16_t)(he_mol * 100);
+        command_rep.data[32] = (hL_i >> 8) & 0xff;
+        command_rep.data[33] = (hL_i) & 0xff;
 
-        iml = (int16_t)(ml2 * 100);
-        command_rep.data[34] = (iml >> 8) & 0xff;
-        command_rep.data[35] = (iml) & 0xff;
+        int16_t ml_i = (int16_t)(tank_mol_lost * 100);
+        command_rep.data[34] = (ml_i >> 8) & 0xff;
+        command_rep.data[35] = (ml_i) & 0xff;
 
         command_rep.crc = crc((unsigned char *)&command_rep, command_rep.size + 3);
         write_command(&command_rep, interface);
+
+        //Serial.printf("he moles %f %d\ntank_moles %f %d\n", he_mol, he_moles_i, tank_mol_lost, tank_mol_lost_i);
 
         return CMD_RUN_OK;
     }
@@ -232,15 +236,20 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 
         case CMD_MANUAL_FLASH_IDS:
         {
-            uint8_t files[256];
-            uint8_t index;
+            uint16_t files[256] = {0};
+            uint16_t index;
             get_log_ids(files, &index);
 
             // fill data buff with all file indexs
             for (int i = 0; i < index; i++)
-                command_rep.data[i + 1] = files[i];
+            {
+                command_rep.data[i*2 + 1] = ((files[i] >> 8) & 0xff);
+                command_rep.data[i*2 + 2] = (files[i] & 0xff);
+            }
+            command_rep.size += index * 2;
 
-            command_rep.size += index;
+            //for(int i = 0; i < index; i++)
+                //printf("%x %x\n", command_rep.data[i*2 + 1], command_rep.data[i*2 + 2]);
         }
         break;
 
@@ -335,6 +344,13 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
             // Scale_Module.scale1.tare();
             // Scale_Module.scale2.tare();
             // Scale_Module.scale3.tare();
+        }
+        break;
+
+        case CMD_MANUAL_TANK_TARE:
+        {
+            tank_mol_lost = 0;
+            he_mol = calc_moles(Tank_Top_Module.pressure, Tank_Top_Module.temperature);
         }
         break;
 

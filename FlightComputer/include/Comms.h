@@ -126,6 +126,8 @@ typedef enum
     CMD_MANUAL_LOADCELL_CALIBRATE,
     CMD_MANUAL_LOADCELL_TARE,
 
+    CMD_MANUAL_TANK_TARE,
+
     manual_cmd_size,
 
     CMD_MANUAL_FLASH_LOG_START_ACK,
@@ -137,6 +139,7 @@ typedef enum
     CMD_MANUAL_IMU_CALIBRATE_ACK,
     CMD_MANUAL_LOADCELL_CALIBRATE_ACK,
     CMD_MANUAL_LOADCELL_TARE_ACK,
+    CMD_MANUAL_TANK_TARE_ACK,
 } manual_command_t;
 
 //----------------------------------------
@@ -174,7 +177,7 @@ typedef enum
     interface_t_size
 } interface_t;
 
-// #define DEFAULT_CMD_INTERFACE Uart_INTERFACE
+//#define DEFAULT_CMD_INTERFACE Uart_INTERFACE
 #define DEFAULT_CMD_INTERFACE LoRa_INTERFACE
 // #define DEFAULT_CMD_INTERFACE RS485_INTERFACE
 

@@ -20,5 +20,8 @@ bool prog3_finish_cond(void);
 
 bool IgniteCond(void);
 
+void enter_safety_purge(void);
+void exit_safety_purge(void);
+
 bool arm_timer_event(void);
 #endif

@@ -12,6 +12,14 @@
 #include <ADS1115_WE.h>
 #include <MCP9600.h>
 
+#include <Preferences.h>
+
+//-----------Internal flash------------
+
+extern Preferences preferences;
+extern bool fast_reboot;
+
+
 //----------- IMU vars ------------
 extern MPU6050 accelgyro;
 
@@ -49,6 +57,21 @@ extern float tank_liquid;
 extern float tank_liquid2;
 
 extern int16_t tank_pressure;
+
+//moles of he initialy in the tank
+extern float he_mol;
+//total amount of moles lost 
+extern float tank_mol_lost;
+//last reading of moles in the tank
+extern float last_tank_moles;
+
+//----------------Tank constansts --------------
+extern float g;
+extern float Dt;
+extern float Do;
+extern float h1;
+extern float h_tanque;
+extern float V_total;
 
 //----------------Tank intermidiate vars --------------
 extern double mVL, mVG; // massa volumica Liquido(bot) e Gas(Top)

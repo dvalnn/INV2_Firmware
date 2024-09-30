@@ -23,6 +23,7 @@ void read_pressure_tank_top(void)
     ADS1.setCompareChannels(Tank_Top_Module.ADC_pressure_id);
     ADS1.startSingleMeasurement();
 
+    
     ads_measure_time = millis();
     ads_target = ads_tank_top;
 }
@@ -79,6 +80,7 @@ void ADS_reader(void)
         ttp_values[ttp_index] = lpf_val;
         ttp_index = (ttp_index + 1) % press_values_size;
         Tank_Top_Module.pressure = lpf_val;
+        tank_pressure = (int16_t)(Tank_Top_Module.pressure * 100);
     }
     break;
     case ads_tank_bot:

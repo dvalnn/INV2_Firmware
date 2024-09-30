@@ -8,7 +8,8 @@
 
 #include "Comms.h"
 
-#define LOG_NAME_PATTERN "/%u_log.bin"
+#define LOG_NAME_PATTERN_WRITE "/%u_log.bin"
+#define LOG_NAME_PATTERN_READ "%u_log.bin"
 
 typedef enum
 {
@@ -31,7 +32,7 @@ void stop_log();
 void log(void *data, uint16_t size, log_event_t event);
 
 void dump_log(uint16_t log);
-void get_log_ids(uint8_t *files, uint8_t *file_index);
+void get_log_ids(uint16_t *files, uint16_t *file_index);
 
 uint16_t get_last_id();
 

@@ -19,7 +19,7 @@ void start_log()
      *   256 diferent reboots before we are out of files
      */
     char filename[100] = "";
-    int count = sprintf(filename, LOG_NAME_PATTERN, current_id);
+    int count = sprintf(filename, LOG_NAME_PATTERN_WRITE, current_id);
     current_id++;
     Serial.print("new file \n");
     Serial.print(filename);
@@ -41,8 +41,11 @@ void stop_log()
 
 uint16_t get_last_id()
 {
-    File root = SD.open("/");
+
+    //uint16_t last_log_id = preferences.getUInt("last_log_id", 0);
     uint16_t last_log_id = 0;
+    
+    File root = SD.open("/");
     while (1)
     {
         File entry = root.openNextFile();
@@ -54,19 +57,21 @@ uint16_t get_last_id()
         {
             uint16_t temp;
             sscanf(entry.name(), "%u", &temp);
-            Serial.print(temp);
+            //Serial.print(temp);
             last_log_id = max(last_log_id, temp);
         }
-        Serial.print(" Name in sd: ");
-        Serial.print(entry.name());
-        Serial.print(" ");
-        Serial.print(entry.isDirectory());
-        Serial.print(" \n");
+        //Serial.print(" Name in sd: ");
+        //Serial.print(entry.name());
+        //Serial.print(" ");
+        //Serial.print(entry.size());
+        //Serial.print(" \n");
 
         entry.close();
     }
 
     root.close();
+
+    preferences.putUInt("last_log_id", last_log_id);
 
     return last_log_id;
 }
@@ -153,6 +158,22 @@ void log(void *data, uint16_t size, log_event_t event)
         iml = (int16_t)(ml2 * 100);
         buff[index++] = (iml >> 8) & 0xff;
         buff[index++] = (iml) & 0xff;
+
+        int16_t he_moles_i = (int16_t)(he_mol * 10);
+        buff[index++] = (he_moles_i >> 8) & 0xff;
+        buff[index++] = (he_moles_i) & 0xff;
+
+        int16_t tank_mol_lost_i = (int16_t)(tank_mol_lost * 10);
+        buff[index++] = (tank_mol_lost_i >> 8) & 0xff;
+        buff[index++] = (tank_mol_lost_i) & 0xff;
+        
+        int16_t hL_i = (int16_t)(he_mol * 10);
+        buff[index++] = (hL_i >> 8) & 0xff;
+        buff[index++] = (hL_i) & 0xff;
+
+        int16_t ml_i = (int16_t)(tank_mol_lost * 10);
+        buff[index++] = (ml_i >> 8) & 0xff;
+        buff[index++] = (ml_i) & 0xff;
     }
     break;
 
@@ -192,16 +213,20 @@ void dump_log(uint16_t id)
 {
     if (log_running)
     {
+        char arr[] = {0,0,0,0};
+        Serial.write(arr, 4);
         printf("error, cannot dump flash while logging\n");
         return;
     }
 
     char filename[100];
-    sprintf(filename, LOG_NAME_PATTERN, id);
+    sprintf(filename, LOG_NAME_PATTERN_READ, id);
 
     File flashDump = SD.open(filename);
     if (!flashDump)
     {
+        char arr[] = {0,0,0,0};
+        Serial.write(arr, 4);
         printf("error openening log file\n");
         return;
     }
@@ -222,12 +247,12 @@ void dump_log(uint16_t id)
     flashDump.close();
 }
 
-void get_log_ids(uint8_t *files, uint8_t *files_index)
+void get_log_ids(uint16_t *files, uint16_t *files_index)
 {
     *files_index = 0;
 
     File root = SD.open("/");
-    Serial.printf("Get files from fs %x\n", root);
+    //Serial.printf("Get files from fs %x\n", root);
     while (1)
     {
         File entry = root.openNextFile();
@@ -236,11 +261,11 @@ void get_log_ids(uint8_t *files, uint8_t *files_index)
 
         if (!entry.isDirectory())
         {
-            uint8_t temp;
-            sscanf(entry.name(), "%u", &temp);
-            *(files + (*files_index)) = temp;
-            Serial.printf("file: %u\n", *(files + (*files_index)));
-            (*files_index)++;
+            uint16_t temp = 0;
+            sscanf(entry.name(), LOG_NAME_PATTERN_READ, &temp);
+            files[*files_index] = temp;
+            Serial.printf("file: %u %u\n", files[*files_index], temp);
+            (*files_index)+=1;
         }
 
         Serial.print("Name in sd: ");

@@ -23,7 +23,7 @@ Control_Module Tank_Top_Module =
     .ADC_pressure_id = ADS1115_COMP_0_GND,
     .pressure_serial = K1WIJ,
 
-    .thermocouple_addr = TEMP_AMP1_ADDR,
+    .thermocouple_addr = TEMP_AMP2_ADDR,
 };
 
 Control_Module Tank_Bot_Module = 
@@ -32,16 +32,16 @@ Control_Module Tank_Bot_Module =
     
     .ADC = &ADS1,
     .ADC_pressure_id = ADS1115_COMP_1_GND,
-    .pressure_serial = K0P2A,
+    .pressure_serial = K2LI9,
 
-    .thermocouple_addr = TEMP_AMP2_ADDR,
+    .thermocouple_addr = TEMP_AMP1_ADDR,
 };
 
 Engine_Module Chamber_Module =
 {
     .ADC = &ADS1,
     .ADC_pressure_id = ADS1115_COMP_2_GND,
-    .pressure_serial = K2LI9,
+    .pressure_serial = K0P2A,
 
     .thermocouple1 = MAX6675(TEMP_AMP3_SS_PIN, &SPI),
     .thermocouple2 = MAX6675(TEMP_AMP4_SS_PIN, &SPI),
