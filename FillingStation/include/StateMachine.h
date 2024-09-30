@@ -10,8 +10,6 @@
 #define FIRE_TIMER_TRIGGER 5
 #define LAUNCH_TIMER_TRIGGER 5
 
-#define CHAMBER_TEMP_THREASHOLD 5000 //0.1c units
-
 //use the enum below as the values of rocket_state_t
 //use -1 for default behavior
 typedef int8_t rocket_state_t;

@@ -169,7 +169,7 @@ void setup() {
     Spi_Thermo_Setup();
 
     LoRa_Setup();
-    Flash_Setup();
+    //Flash_Setup();
 
 
     printf("Setup done\n");

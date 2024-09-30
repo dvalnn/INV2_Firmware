@@ -215,16 +215,6 @@ State_t state_machine[rocket_state_size] =
     {
         .work = 
         { 
-            HYDROLIC_TEMPERATURE_SENSORS(250), 
-            {.channel = read_ematch, .sample = 200, .delay = 200},
-
-            {.channel = read_chamber_temp, .sample = 250, .delay = 0},
-            {.channel = module_pressure_reader_fast, .sample = 1},
-
-            {.channel = reset_timers, .sample = 200, .delay = 200}, //used to reset the timers used in armed, fire, launch 
-            
-            {.channel = echo_reply, .sample = 5}, 
-            {.channel = flash_log_sensors, .sample = 100}, 
         },
                 
 
@@ -237,20 +227,10 @@ State_t state_machine[rocket_state_size] =
     {
         .work = 
         { 
-            HYDROLIC_TEMPERATURE_SENSORS(250), 
-            {.channel = read_ematch, .sample = 100}, 
-            {.channel = arm_timer_tick, .sample = 1000}, 
-            
-            {.channel = read_chamber_temp, .sample = 250},
-            {.channel = module_pressure_reader_fast, .sample = 1},
-            
-            {.channel = echo_reply, .sample = 5}, 
-            {.channel = flash_log_sensors, .sample = 100}, 
         },
 
         .events = 
         { 
-            {.condition = arm_timer_event, .reaction = NULL, .next_state = READY}
         },
 
         .comms = comm_transition[ARMED],
@@ -260,21 +240,10 @@ State_t state_machine[rocket_state_size] =
     {
         .work = 
         { 
-            HYDROLIC_TEMPERATURE_SENSORS(250), 
-            {.channel = ematch_high, .sample = 1000},
-            {.channel = read_active_ematch, .sample = 200, .delay = 200}, 
-            {.channel = fire_timer_tick, .sample = 1000},
-            
-            {.channel = read_chamber_temp, .sample = 250},
-            {.channel = module_pressure_reader_fast, .sample = 1},
-
-            {.channel = echo_reply, .sample = 5}, 
-            {.channel = flash_log_sensors, .sample = 100}, 
         },
 
         .events = 
         {
-            {.condition = fire_timer_event, .reaction = ematch_low, .next_state = LAUNCH}, //after x seconds laucnh it anyway
         },
 
         .comms = comm_transition[FIRE],
@@ -284,14 +253,10 @@ State_t state_machine[rocket_state_size] =
     {
         .work = 
         {
-            {.channel = send_alow_launch, .sample = 500, .delay = 0}, 
-            {.channel = launch_timer_tick, .sample = 1000, .delay = 0}, 
-            {.channel = echo_reply, .sample = 5}, 
         },
 
         .events = 
         {
-            {.condition = launch_timer_event, .reaction = NULL, .next_state = IDLE},
         },
 
         .comms = comm_transition[LAUNCH],

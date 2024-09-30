@@ -48,11 +48,6 @@ void close_valves(void)
     return;
 }
 
-bool chamber_temp_cond(void)
-{
-    return chamber_temp > CHAMBER_TEMP_THREASHOLD;
-}
-
 
 //---------TIMERS---------------
 bool arm_timer_event(void)
@@ -60,12 +55,8 @@ bool arm_timer_event(void)
     return (arm_reset_timer > ARM_TIMER_TRIGGER);
 }
 
-bool fire_timer_event(void)
-{
-    return (fire_reset_timer > FIRE_TIMER_TRIGGER);
-}
 
 bool launch_timer_event(void)
 {
-    return (launch_reset_timer > LAUNCH_TIMER_TRIGGER);
+    return launch_reset_timer > LAUNCH_TIMER_TRIGGER;
 }
