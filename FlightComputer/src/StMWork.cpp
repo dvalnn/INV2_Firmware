@@ -36,10 +36,15 @@ void V_Vpu_close(void)
     digitalWrite(Tank_Top_Module.valve_pin, 0);
     Tank_Top_Module.valve_state = 0;
 }
-void V_Engine_close(void)
+void V_Purge_close(void)
 {
     digitalWrite(Tank_Bot_Module.valve_pin, 0);
     Tank_Bot_Module.valve_state = 0;
+}
+void V_Engine_close(void)
+{
+    digitalWrite(Chamber_Module.valve_pin, 0);
+    Chamber_Module.valve_state = 0;
 }
 
 void V_Vpu_open(void)
@@ -47,10 +52,15 @@ void V_Vpu_open(void)
     digitalWrite(Tank_Top_Module.valve_pin, 1);
     Tank_Top_Module.valve_state = 1;
 }
-void V_Engine_open(void)
+void V_Purge_open(void)
 {
     digitalWrite(Tank_Bot_Module.valve_pin, 1);
     Tank_Bot_Module.valve_state = 1;
+}
+void V_Engine_open(void)
+{
+    digitalWrite(Chamber_Module.valve_pin, 1);
+    Chamber_Module.valve_state = 1;
 }
 
 void imu_pid_calibration(void)
@@ -114,13 +124,6 @@ void logger(void)
     command_rep.data[3] = (Tank_Bot_Module.temperature >> 8) & 0xff;
     command_rep.data[4] = (Tank_Bot_Module.temperature) & 0xff;
 
-    command_rep.data[5] = (Chamber_Module.temperature1 >> 8) & 0xff;
-    command_rep.data[6] = (Chamber_Module.temperature1) & 0xff;
-    command_rep.data[7] = (Chamber_Module.temperature2 >> 8) & 0xff;
-    command_rep.data[8] = (Chamber_Module.temperature2) & 0xff;
-    command_rep.data[9] = (Chamber_Module.temperature3 >> 8) & 0xff;
-    command_rep.data[10] = (Chamber_Module.temperature3) & 0xff;
-
     int16_t ipressure = (int16_t)(Tank_Top_Module.pressure * 100);
     command_rep.data[11] = (ipressure >> 8) & 0xff;
     command_rep.data[12] = (ipressure) & 0xff;
@@ -138,17 +141,8 @@ void logger(void)
 
     command_rep.data[19] = (uint8_t)((log_running << 7) |
                                      (Tank_Top_Module.valve_state << 6) |
-                                     (Tank_Bot_Module.valve_state << 5) |
-                                     tank_tactile_bits);
+                                     (Tank_Bot_Module.valve_state << 5));
 
-    command_rep.data[20] = (Scale_Module.weight1 >> 8) & 0xff;
-    command_rep.data[21] = (Scale_Module.weight1) & 0xff;
-
-    command_rep.data[22] = (Scale_Module.weight2 >> 8) & 0xff;
-    command_rep.data[23] = (Scale_Module.weight2) & 0xff;
-
-    command_rep.data[24] = (Scale_Module.weight3 >> 8) & 0xff;
-    command_rep.data[25] = (Scale_Module.weight3) & 0xff;
 
     ipressure = (int16_t)(Chamber_Module.pressure * 100);
     command_rep.data[26] = (ipressure >> 8) & 0xff;

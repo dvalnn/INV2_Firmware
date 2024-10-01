@@ -102,13 +102,6 @@ void log(void *data, uint16_t size, log_event_t event)
         buff[index++] = (Tank_Bot_Module.temperature >> 8) & 0xff;
         buff[index++] = (Tank_Bot_Module.temperature) & 0xff;
 
-        buff[index++] = (Chamber_Module.temperature1 >> 8) & 0xff;
-        buff[index++] = (Chamber_Module.temperature1) & 0xff;
-        buff[index++] = (Chamber_Module.temperature2 >> 8) & 0xff;
-        buff[index++] = (Chamber_Module.temperature2) & 0xff;
-        buff[index++] = (Chamber_Module.temperature3 >> 8) & 0xff;
-        buff[index++] = (Chamber_Module.temperature3) & 0xff;
-
         int16_t ipressure = (int16_t)(Tank_Top_Module.pressure * 100);
         buff[index++] = (ipressure >> 8) & 0xff;
         buff[index++] = (ipressure) & 0xff;
@@ -127,17 +120,7 @@ void log(void *data, uint16_t size, log_event_t event)
 
         buff[index++] = (uint8_t)((log_running << 7) |
                                   (Tank_Top_Module.valve_state << 6) |
-                                  (Tank_Bot_Module.valve_state << 5) |
-                                  tank_tactile_bits);
-
-        buff[index++] = (Scale_Module.weight1 >> 8) & 0xff;
-        buff[index++] = (Scale_Module.weight1) & 0xff;
-
-        buff[index++] = (Scale_Module.weight2 >> 8) & 0xff;
-        buff[index++] = (Scale_Module.weight2) & 0xff;
-
-        buff[index++] = (Scale_Module.weight3 >> 8) & 0xff;
-        buff[index++] = (Scale_Module.weight3) & 0xff;
+                                  (Tank_Bot_Module.valve_state << 5));
 
         ipressure = (int16_t)(Chamber_Module.pressure * 100);
         buff[index++] = (ipressure >> 8) & 0xff;
@@ -152,10 +135,6 @@ void log(void *data, uint16_t size, log_event_t event)
         buff[index++] = (iVl) & 0xff;
 
         int16_t iml = (int16_t)(ml * 100);
-        buff[index++] = (iml >> 8) & 0xff;
-        buff[index++] = (iml) & 0xff;
-
-        iml = (int16_t)(ml2 * 100);
         buff[index++] = (iml >> 8) & 0xff;
         buff[index++] = (iml) & 0xff;
 

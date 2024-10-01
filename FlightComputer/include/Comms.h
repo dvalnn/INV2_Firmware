@@ -105,6 +105,7 @@ typedef enum
 typedef enum
 {
     VPU_valve,
+    Purge_valve,
     Engine_valve,
     He_valve,
     N2O_valve,

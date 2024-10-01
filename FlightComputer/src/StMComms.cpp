@@ -34,13 +34,6 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
         command_rep.data[3] = (Tank_Bot_Module.temperature >> 8) & 0xff;
         command_rep.data[4] = (Tank_Bot_Module.temperature) & 0xff;
 
-        command_rep.data[5] = (Chamber_Module.temperature1 >> 8) & 0xff;
-        command_rep.data[6] = (Chamber_Module.temperature1) & 0xff;
-        command_rep.data[7] = (Chamber_Module.temperature2 >> 8) & 0xff;
-        command_rep.data[8] = (Chamber_Module.temperature2) & 0xff;
-        command_rep.data[9] = (Chamber_Module.temperature3 >> 8) & 0xff;
-        command_rep.data[10] = (Chamber_Module.temperature3) & 0xff;
-
         int16_t ipressure = (int16_t)(Tank_Top_Module.pressure * 100);
         command_rep.data[11] = (ipressure >> 8) & 0xff;
         command_rep.data[12] = (ipressure) & 0xff;
@@ -58,17 +51,7 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 
         command_rep.data[19] = (uint8_t)((log_running << 7) |
                                          (Tank_Top_Module.valve_state << 6) |
-                                         (Tank_Bot_Module.valve_state << 5) |
-                                         tank_tactile_bits);
-
-        command_rep.data[20] = (Scale_Module.weight1 >> 8) & 0xff;
-        command_rep.data[21] = (Scale_Module.weight1) & 0xff;
-
-        command_rep.data[22] = (Scale_Module.weight2 >> 8) & 0xff;
-        command_rep.data[23] = (Scale_Module.weight2) & 0xff;
-
-        command_rep.data[24] = (Scale_Module.weight3 >> 8) & 0xff;
-        command_rep.data[25] = (Scale_Module.weight3) & 0xff;
+                                         (Tank_Bot_Module.valve_state << 5));
 
         ipressure = (int16_t)(Chamber_Module.pressure * 100);
         command_rep.data[26] = (ipressure >> 8) & 0xff;
@@ -273,10 +256,15 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
                 Tank_Top_Module.valve_state = valve_state;
             }
             break;
-            case Engine_valve:
+            case Purge_valve:
             {
                 digitalWrite(Tank_Bot_Module.valve_pin, valve_state);
                 Tank_Bot_Module.valve_state = valve_state;
+            }
+            case Engine_valve:
+            {
+                digitalWrite(Chamber_Module.valve_pin, valve_state);
+                Chamber_Module.valve_state = valve_state;
             }
             break;
             default:
@@ -305,7 +293,7 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
                 }
             }
             break;
-            case Engine_valve:
+            case Purge_valve:
             {
                 if (!Tank_Top_Module.valve_state)
                 {
@@ -315,35 +303,21 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
                 }
             }
             break;
+            case Engine_valve:
+            {
+                if (!Chamber_Module.valve_state)
+                {
+                    digitalWrite(Chamber_Module.valve_pin, 1);
+                    delay(valve_time);
+                    digitalWrite(Chamber_Module.valve_pin, 0);
+                }
+            }
             default:
             {
                 // bad valve
                 return CMD_RUN_OUT_OF_BOUND;
             }
             };
-        }
-        break;
-
-        case CMD_MANUAL_LOADCELL_TARE:
-        {
-            double read = Scale_Module.scale1.read_average(10);
-            float read_scaled = read * Scale_Module.scale1_scale + Scale_Module.scale1_offset;
-
-            Scale_Module.scale1_offset -= read_scaled;
-
-            read = Scale_Module.scale2.read_average(10);
-            read_scaled = read * Scale_Module.scale2_scale + Scale_Module.scale2_offset;
-
-            Scale_Module.scale2_offset -= read_scaled;
-
-            read = Scale_Module.scale3.read_average(10);
-            read_scaled = read * Scale_Module.scale3_scale + Scale_Module.scale3_offset;
-
-            Scale_Module.scale3_offset -= read_scaled;
-
-            // Scale_Module.scale1.tare();
-            // Scale_Module.scale2.tare();
-            // Scale_Module.scale3.tare();
         }
         break;
 
