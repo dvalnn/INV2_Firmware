@@ -23,19 +23,8 @@ int16_t imu_gx;
 int16_t imu_gy;
 int16_t imu_gz;
 
-int32_t weight1;
-int32_t weight2;
-
 int16_t tank_pressure = 0;
 float tank_liquid = 0;
-float tank_liquid2 = 0;
-
-int16_t tank_t1;
-int16_t tank_t2;
-int16_t tank_t3;
-int16_t tank_t4;
-int16_t tank_t5;
-uint8_t tank_tactile_bits;
 
 uint16_t arm_reset_timer;
 
@@ -186,94 +175,6 @@ void logger(void)
     write_command(&command_rep, DEFAULT_LOG_INFERFACE);
 }
 
-void read_weight1(void)
-{
-    if (Scale_Module.scale1.is_ready())
-    {
-        // float reading = Scale_Module.scale1.get_units(1);
-        double read = Scale_Module.scale1.read();
-        float read_scaled = read * Scale_Module.scale1_scale + Scale_Module.scale1_offset;
-
-        Scale_Module.weight1 = (int16_t)read_scaled;
-
-        // printf("HX711 1 %f\n", read_scaled);
-    }
-    else
-    {
-        // Serial.println("HX711 1 not found.");
-    }
-}
-
-void read_weight2(void)
-{
-    if (Scale_Module.scale2.is_ready())
-    {
-        // float reading = Scale_Module.scale2.get_units(1);
-        // Scale_Module.weight2 = (int16_t)reading;
-        ////printf("HX711 2 %f\n", reading);
-        double read = Scale_Module.scale2.read();
-        float read_scaled = read * Scale_Module.scale2_scale + Scale_Module.scale2_offset;
-
-        Scale_Module.weight2 = (int16_t)read_scaled;
-
-        // printf("HX711 2 %f\n", read_scaled);
-    }
-    else
-    {
-        // Serial.println("HX711 2 not found.");
-    }
-}
-
-void read_weight3(void)
-{
-    if (Scale_Module.scale3.is_ready())
-    {
-        // float reading = Scale_Module.scale3.get_units(1);
-        // Scale_Module.weight3 = (int16_t)reading;
-        // printf("HX711 3 %f\n", reading);
-        double read = Scale_Module.scale3.read();
-        float read_scaled = read * Scale_Module.scale3_scale + Scale_Module.scale3_offset;
-
-        Scale_Module.weight3 = (int16_t)read_scaled;
-
-        // printf("HX711 3 %f\n", read_scaled);
-    }
-    else
-    {
-        // Serial.println("HX711 3 not found.");
-    }
-}
-
-void read_temperature_chamber_1(void)
-{
-    if(fast_reboot) return;
-
-    Chamber_Module.thermocouple1.read();
-
-    float temp = Chamber_Module.thermocouple1.getTemperature();
-    Chamber_Module.temperature1 = (int16_t)(temp * 10.0);
-}
-
-void read_temperature_chamber_2(void)
-{
-    if(fast_reboot) return;
-
-    Chamber_Module.thermocouple2.read();
-
-    float temp = Chamber_Module.thermocouple2.getTemperature();
-    Chamber_Module.temperature2 = (int16_t)(temp * 10.0);
-}
-
-void read_temperature_chamber_3(void)
-{
-    if(fast_reboot) return;
-
-    Chamber_Module.thermocouple3.read();
-
-    float temp = Chamber_Module.thermocouple3.getTemperature();
-    Chamber_Module.temperature3 = (int16_t)(temp * 10.0);
-}
-
 void read_temperature_tank_top(void)
 {
     if(fast_reboot) return;
@@ -294,29 +195,6 @@ void read_temperature_tank_bot(void)
     float temp = Tank_Bot_Module.thermocouple.getThermocoupleTemp();
     Tank_Bot_Module.temperature = (int16_t)(temp * 10.0);
     // digitalWrite(TEMP_AMP3_SS_PIN, LOW);
-}
-
-void read_tank_tactile(void)
-{
-    // tank_t1 = ADS1.readADC(3);
-    // tank_t2 = ADS2.readADC(0);
-    // tank_t3 = ADS2.readADC(1);
-    // tank_t4 = ADS2.readADC(2);
-    // tank_t5 = ADS2.readADC(3);
-
-    tank_tactile_bits = 0;
-    if (tank_t1 >= TACTILE_THREADHOLD)
-        tank_tactile_bits |= TANK_T1;
-    if (tank_t2 >= TACTILE_THREADHOLD)
-        tank_tactile_bits |= TANK_T2;
-    if (tank_t3 >= TACTILE_THREADHOLD)
-        tank_tactile_bits |= TANK_T3;
-    if (tank_t4 >= TACTILE_THREADHOLD)
-        tank_tactile_bits |= TANK_T4;
-    if (tank_t5 >= TACTILE_THREADHOLD)
-        tank_tactile_bits |= TANK_T5;
-
-    // Serial.printf("Tank tactile %d %d %d %d %d\n", tank_t1, tank_t2, tank_t3, tank_t4, tank_t5);
 }
 
 // constans
@@ -346,19 +224,11 @@ double Vl, Vg; // volume liquido / gas
 double x;      // answer
 double ml, mg;
 
-double hL2;      // altura liquido
-double Vl2, Vg2; // volume liquido / gas
-double x2;       // answer
-double ml2, mg2;
-
 static void MassaVolumica(void)
 {
 
     float T4 = (Tank_Bot_Module.temperature / 10.0f) + 273.5;
     float T5 = (Tank_Top_Module.temperature / 10.0f) + 273.5;
-
-    // mVL = 4e-9 * T4*T4*T4*T4*T4 - 5e-6 * T4*T4*T4*T4 + 0.0083 * T4*T4*T4 + 0.9577 * T4*T4 - 168.817 * T4 + 609918;
-    // mVG = 4e-9 * T4*T4*T4*T4*T4 - 5e-6 * T4*T4*T4*T4 - 0.9467 * T4*T4*T4 + 166.727 * T4*T4 - 155877 * T4 + 603845;
 
     mVL = -0.0258 * T4 * T4 + 8.2291 * T4 + 572.66;
     mVG = 0.0059 * exp(0.0352 * T5);
@@ -371,7 +241,6 @@ static void alturafluido(void)
 
     // put your main code here, to run repeatedly:
     hL = (P1 - P2 - mVG * g * h_tanque) / ((mVL - mVG) * g);
-    hL2 = (P1 - P2) / (mVL * g);
 
     if (hL < h1)
     {                                       // h1 valor conhecido distancia do transdutor de pressao ao fundo do tanque em metros
@@ -389,8 +258,6 @@ static void alturafluido(void)
         mg = mVG * Vg;
         tank_liquid = mg / (mg + ml);
     }
-
-    // tank_pressure = P1;
 }
 
 void calc_liquid(void)

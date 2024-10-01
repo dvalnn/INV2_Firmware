@@ -12,26 +12,31 @@
 #define SPI_MISO_PIN 19
 #define SPI_MOSI_PIN 23
 
-#define V1_PIN 33
-#define V2_PIN 32
+#define I2C_SDA_1_PIN 21
+#define I2C_SCL_1_PIN 22
 
-#define Flash_SS_PIN 0
+#define I2C_SCL_2_PIN 2
+#define I2C_SDA_2_PIN 15
+
+#define V1_PIN 25
+#define V2_PIN 26
+#define V3_PIN 4
+
+#define Flash_SS_PIN 14
 
 #define LORA_SS_PIN 12
-#define LORA_RESET_PIN 5
+#define LORA_RESET_PIN 13
 #define LORA_DIO0_PIN -1
 
-#define TEMP_AMP3_SS_PIN 4
-#define TEMP_AMP4_SS_PIN 27
-#define TEMP_AMP5_SS_PIN 26
+#define GPS_RX_PIN 27
+#define GPS_TX_PIN 5
 
-#define LOADCELL1_OUT_PIN 36 
-#define LOADCELL2_OUT_PIN 39 
-#define LOADCELL3_OUT_PIN 34 
+//--------------PARACHUTES------------
+#define MAIN_CHUTE_READ_PIN 39
+#define DRAG_CHUTE_READ_PIN 34
 
-#define LOADCELL1_SCK_PIN 14
-#define LOADCELL2_SCK_PIN 13
-#define LOADCELL3_SCK_PIN 25
+#define MAIN_CHUTE_READ 33
+#define DRAG_CHUTE_READ 32
 
 //---------------BAUD-----------------
 #define SERIAL_BAUD 115200
@@ -41,11 +46,7 @@
 #define TEMP_AMP1_ADDR 0x60
 #define TEMP_AMP2_ADDR 0x67
 
-#define PRESSURE_AMP1_ADDR 0x48
-#define PRESSURE_AMP2_ADDR 0x49
-
-//---------------TACTILE----------------
-#define TACTILE_THREADHOLD 23000
+#define PRESSURE_AMP_ADDR 0x48
 
 //---------------CALIB Values-----------------
 typedef struct { float m; float b; } pressure_calib;
@@ -82,43 +83,15 @@ typedef struct
 
 typedef struct
 {
+    uint8_t valve_pin;
+
     ADS1115_WE* ADC;
     mux ADC_pressure_id;
     pressure_calib pressure_serial;
 
-    MAX6675 thermocouple1;
-    MAX6675 thermocouple2;
-    MAX6675 thermocouple3;
-
-    float pressure;    
-    
-    int16_t temperature1;
-    int16_t temperature2;
-    int16_t temperature3;
-
+    float pressure;      
+    bool valve_state;
 } Engine_Module;
-
-typedef struct
-{
-    HX711 scale1;
-    //int32_t scale1_offset;
-    float scale1_offset;
-    float scale1_scale;
-
-    HX711 scale2;
-    //int32_t scale2_offset;
-    float scale2_offset;
-    float scale2_scale;
-
-    HX711 scale3;
-    //int32_t scale3_offset;
-    float scale3_offset;
-    float scale3_scale;
-
-    int16_t weight1;
-    int16_t weight2;
-    int16_t weight3;
-} LoadCell_Module;
 
 
 #endif

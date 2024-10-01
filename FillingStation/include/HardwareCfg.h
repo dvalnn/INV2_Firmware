@@ -6,10 +6,6 @@
 #include <Max6675.h>
 
 //---------------PINS-----------------
-
-#define LED_PIN 2
-#define TRIGGER 34 
-
 #define V1_PIN 13 
 #define V2_PIN 4
 #define V3_PIN 27

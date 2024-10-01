@@ -20,8 +20,8 @@ unsigned long ads_measure_time;
 
 void read_pressure_tank_top(void)
 {
-    ADS1.setCompareChannels(Tank_Top_Module.ADC_pressure_id);
-    ADS1.startSingleMeasurement();
+    ADS.setCompareChannels(Tank_Top_Module.ADC_pressure_id);
+    ADS.startSingleMeasurement();
 
     
     ads_measure_time = millis();
@@ -30,8 +30,8 @@ void read_pressure_tank_top(void)
 
 void read_pressure_tank_bot(void)
 {
-    ADS1.setCompareChannels(Tank_Bot_Module.ADC_pressure_id);
-    ADS1.startSingleMeasurement();
+    ADS.setCompareChannels(Tank_Bot_Module.ADC_pressure_id);
+    ADS.startSingleMeasurement();
 
     ads_measure_time = millis();
     ads_target = ads_tank_bot;
@@ -39,8 +39,8 @@ void read_pressure_tank_bot(void)
 
 void read_chamber_pressure(void)
 {
-    ADS1.setCompareChannels(Chamber_Module.ADC_pressure_id);
-    ADS1.startSingleMeasurement();
+    ADS.setCompareChannels(Chamber_Module.ADC_pressure_id);
+    ADS.startSingleMeasurement();
 
     ads_measure_time = millis();
     ads_target = ads_chamber;
@@ -66,7 +66,7 @@ void ADS_reader(void)
 
     const float betha = 0.250f;
     float voltage = 0.0;
-    voltage = ADS1.getResult_V(); // alternative: getResult_mV for Millivolt
+    voltage = ADS.getResult_V(); // alternative: getResult_mV for Millivolt
 
     switch (ads_target)
     {
@@ -147,13 +147,6 @@ void ADS_handler(int16_t sample_times[ADS1115_CHANNELS])
             msec_best = channel[i].begin;
             index_best = i;
         }
-        // else
-        //{
-        // Serial2.printf("channel %d %d %d %d ", i,
-        // sample_times[i] > 0,
-        // msec > (unsigned long)sample_times[i],
-        // channel[i].begin < msec_best);
-        //}
     }
 
     if (index_best != -1)
@@ -161,16 +154,6 @@ void ADS_handler(int16_t sample_times[ADS1115_CHANNELS])
         channel[index_best].begin = end;
         channel[index_best].channel();
     }
-    // else
-    //{
-    // Serial2.printf("-1\nchannel 0: %u channel 1: %u now %d",
-    // end - channel[0].begin,
-    // end - channel[1].begin,
-    // end);
-    //}
-
-    // Serial2.printf("ads channel %d", index_best);
-    // Serial2.flush();
 }
 
 void ADS_handler_slow()

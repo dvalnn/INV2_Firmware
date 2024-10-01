@@ -27,29 +27,14 @@ rocket_state_t comm_transition[rocket_state_size][cmd_size] = {
     /* Abort           */ {    -1,  -1,  -1,   -1,   -1,      -1,     -1,     -1,    IDLE,  -1,  -1,     -1,     -1,},
     /* IMU PID         */ {    -1,  -1, IDLE,  -1,   -1,      -1,     -1,     -1,    -1,    -1,  -1,     -1,     -1,}};
 
-#define TANK_TEMPERATURE_SENSORS(val)                                    \
-    {.channel = read_temperature_tank_top, .sample = val},               \
-    {                                                                    \
-        .channel = read_temperature_tank_bot, .sample = val, .delay = 50 \
-    }
+#define TANK_TEMPERATURE_SENSORS(val) \
+    {.channel = read_temperature_tank_top, .sample = val}, \
+    {.channel = read_temperature_tank_bot, .sample = val, .delay = 50}
 
-#define TANK_PRESSURE_SENSORS(val)                                    \
-    {.channel = read_pressure_tank_top, .sample = val},               \
-    {                                                                 \
-        .channel = read_pressure_tank_bot, .sample = val, .delay = 50 \
-    }
+#define TANK_PRESSURE_SENSORS(val) \
+    {.channel = read_pressure_tank_top, .sample = val}, \
+    {.channel = read_pressure_tank_bot, .sample = val, .delay = 50}
 
-#define CHAMBER_TEMPERATURE_SENSORS(val)                                     \
-    {.channel = read_temperature_chamber_1, .sample = val},                  \
-        {.channel = read_temperature_chamber_2, .sample = val, .delay = 50}, \
-    {                                                                        \
-        .channel = read_temperature_chamber_3, .sample = val, .delay = 100   \
-    }
-
-#define ROCKET_LOAD_CELLS(val)                                 \
-    {.channel = read_weight1, .sample = val},                  \
-    {.channel = read_weight2, .sample = val}, \
-    {.channel = read_weight3, .sample = val}
 
 #define CLOSE_VALVES                             \
     {.channel = V_Vpu_close, .sample = 100},     \
@@ -63,8 +48,6 @@ State_t state_machine[rocket_state_size] =
     {
         .work = {
             TANK_TEMPERATURE_SENSORS(1000),
-            
-            ROCKET_LOAD_CELLS(1000),
             
             CLOSE_VALVES,
             
@@ -85,7 +68,6 @@ State_t state_machine[rocket_state_size] =
     {
         .work = {
             TANK_TEMPERATURE_SENSORS(100),
-            CHAMBER_TEMPERATURE_SENSORS(1000),
 
             {.channel = calc_liquid, .sample = 1000},
 
@@ -109,7 +91,6 @@ State_t state_machine[rocket_state_size] =
     {
         .work = {
             TANK_TEMPERATURE_SENSORS(100),
-            CHAMBER_TEMPERATURE_SENSORS(1000),
 
             {.channel = ADS_handler_fast, .sample = 1},
 
@@ -129,7 +110,6 @@ State_t state_machine[rocket_state_size] =
     {
         .work = {
             TANK_TEMPERATURE_SENSORS(100),
-            CHAMBER_TEMPERATURE_SENSORS(1000),
 
             {.channel = ADS_handler_fast, .sample = 1},
 
@@ -150,7 +130,6 @@ State_t state_machine[rocket_state_size] =
     {
         .work = {
             TANK_TEMPERATURE_SENSORS(100),
-            CHAMBER_TEMPERATURE_SENSORS(1000),
 
             {.channel = ADS_handler_fast, .sample = 1},
 
@@ -171,7 +150,6 @@ State_t state_machine[rocket_state_size] =
     {
         .work = {
             TANK_TEMPERATURE_SENSORS(100),
-            CHAMBER_TEMPERATURE_SENSORS(1000),
 
             {.channel = ADS_handler_fast, .sample = 1},
 
@@ -192,7 +170,6 @@ State_t state_machine[rocket_state_size] =
     {
         .work = {
             TANK_TEMPERATURE_SENSORS(100),
-            CHAMBER_TEMPERATURE_SENSORS(1000),
 
             {.channel = ADS_handler_fast, .sample = 1},
 
@@ -213,11 +190,8 @@ State_t state_machine[rocket_state_size] =
     {
         .work = {
             TANK_TEMPERATURE_SENSORS(1000),
-            CHAMBER_TEMPERATURE_SENSORS(500),
 
             {.channel = ADS_handler_all_slow, .sample = 1},
-
-            ROCKET_LOAD_CELLS(500),
 
             {.channel = reset_timers, .sample = 200}, // used to reset the timers used in armed, fire, launch
 
@@ -236,11 +210,8 @@ State_t state_machine[rocket_state_size] =
     {
         .work = {
             TANK_TEMPERATURE_SENSORS(1000),
-            CHAMBER_TEMPERATURE_SENSORS(250),
             
             {.channel = ADS_handler_all_fast, .sample = 1},
-
-            ROCKET_LOAD_CELLS(150),
 
             {.channel = arm_timer_tick, .sample = 1000},
             {.channel = logger, .sample = 50},
@@ -263,10 +234,7 @@ State_t state_machine[rocket_state_size] =
 
             //TANK_TEMPERATURE_SENSORS(1000),
 
-            //CHAMBER_TEMPERATURE_SENSORS(1000),
             {.channel = ADS_handler_all_fast, .sample = 1},
-
-            ROCKET_LOAD_CELLS(150),
 
             {.channel = logger, .sample = 100},
             {.channel = flash_log_sensors, .sample = 100},
@@ -286,7 +254,6 @@ State_t state_machine[rocket_state_size] =
             {.channel = V_Vpu_open, .sample = 5},
 
             //TANK_TEMPERATURE_SENSORS(250),
-            //CHAMBER_TEMPERATURE_SENSORS(250),
 
             {.channel = ADS_handler_all_fast, .sample = 1},
             //{.channel = calc_liquid, .sample = 1000},

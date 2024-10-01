@@ -42,13 +42,6 @@ bool safety_stop_cond(void)
     return false;
 }
 
-bool IgniteCond(void)
-{
-    if(Chamber_Module.temperature3 > CHAMBER_TEMP_THREASHOLD)
-        return true;
-    return false;
-}
-
 float he_mol = 0;
 float tank_mol_lost = 0;
 float last_tank_moles = 0;

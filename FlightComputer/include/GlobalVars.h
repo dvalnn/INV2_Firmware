@@ -31,25 +31,14 @@ extern int16_t imu_gx;
 extern int16_t imu_gy;
 extern int16_t imu_gz;
 
-//-----------LOADCELL--------------
-extern LoadCell_Module Scale_Module;
-
 //-----------Pressure AMP--------------
-extern ADS1115_WE ADS1;
-extern ADS1115_WE ADS2;
+extern ADS1115_WE ADS;
 
 //----------- Line Modules ------------
 extern Control_Module Tank_Top_Module;
 extern Control_Module Tank_Bot_Module;
 extern Engine_Module Chamber_Module;
 
-//----------- Ultra sonic liquid sensors ------------
-extern uint8_t tank_tactile_bits;
-extern int16_t tank_t1;
-extern int16_t tank_t2;
-extern int16_t tank_t3;
-extern int16_t tank_t4;
-extern int16_t tank_t5;
 
 //---------------Tank state--------------
 

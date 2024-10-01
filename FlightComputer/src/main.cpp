@@ -64,27 +64,16 @@ void pressure_Setup(void)
 {
     //Serial.println("Pressure amp starting");
 
-    if(!ADS1.init()){
+    if(!ADS.init()){
         //Serial.println("ADS1115 not connected!");
     }
     
-    ADS1.setVoltageRange_mV(ADS1115_RANGE_6144); //comment line/change parameter to change range
-    ADS1.setCompareChannels(ADS1115_COMP_0_GND); //comment line/change parameter to change range
-    ADS1.setAlertPinMode(ADS1115_ASSERT_AFTER_2); // alternative: ...AFTER_2 or 4. If you disable this sketch does not work
-    ADS1.setConvRate(ADS1115_860_SPS); //uncomment if you want to change the default
-    ADS1.setMeasureMode(ADS1115_SINGLE); //comment or change you want to change to single shot
-    ADS1.setAlertPinToConversionReady(); //needed for this sketch
-
-    //ADS1.begin();
-    //ADS1.setGain(1); //6v
-    ////ADS1.setDataRate(4); //16 hz
-    //ADS1.setDataRate(5); //16 hz
-    //ADS1.setMode(1); //single mode
-    
-    //ADS2.begin();
-    //ADS2.setGain(0); //6v
-    //ADS2.setDataRate(7); //fastest
-    //ADS2.setMode(1); //single mode
+    ADS.setVoltageRange_mV(ADS1115_RANGE_6144); //comment line/change parameter to change range
+    ADS.setCompareChannels(ADS1115_COMP_0_GND); //comment line/change parameter to change range
+    ADS.setAlertPinMode(ADS1115_ASSERT_AFTER_2); // alternative: ...AFTER_2 or 4. If you disable this sketch does not work
+    ADS.setConvRate(ADS1115_860_SPS); //uncomment if you want to change the default
+    ADS.setMeasureMode(ADS1115_SINGLE); //comment or change you want to change to single shot
+    ADS.setAlertPinToConversionReady(); //needed for this sketch
 }
 
 void temp_i2c_Setup(void)
@@ -117,24 +106,6 @@ void temp_i2c_Setup(void)
     }
 }
 
-void loadCell_Setup(void)
-{
-    //Serial.println("Loadcells starting\n");
-
-    Scale_Module.scale1.begin(LOADCELL1_OUT_PIN, LOADCELL1_SCK_PIN);
-    //loadcell.tare(100); // average 20 measurements.
-    Scale_Module.scale1.set_offset(Scale_Module.scale1_offset);
-    Scale_Module.scale1.set_scale(Scale_Module.scale1_scale);
-
-    Scale_Module.scale2.begin(LOADCELL2_OUT_PIN, LOADCELL2_SCK_PIN);
-    Scale_Module.scale2.set_offset(Scale_Module.scale2_offset);
-    Scale_Module.scale2.set_scale(Scale_Module.scale2_scale);
-
-    Scale_Module.scale3.begin(LOADCELL3_OUT_PIN, LOADCELL3_SCK_PIN);
-    Scale_Module.scale3.set_offset(Scale_Module.scale3_offset);
-    Scale_Module.scale3.set_scale(Scale_Module.scale3_scale);
-}
-
 void gyroSetup(void)
 {
     Serial.println("Gyro starting");
@@ -163,30 +134,8 @@ void Flash_Setup()
     }
 
     current_id = get_last_id() + 1;
-    //Serial.print("current id");
-    //Serial.print(current_id);
-    //Serial.printf("\n");
-
-    //Serial.print("Card type ");
-    //Serial.println(SD.cardType());
-
-    //Serial.print("Used bytes ");
-    //Serial.println(SD.usedBytes());
-
-    //Serial.print("Capacity ");
-    //Serial.println(SD.cardSize());
-
 }
 
-void Spi_Thermo_Setup(void)
-{
-    Chamber_Module.thermocouple1.begin();
-    Chamber_Module.thermocouple2.begin();
-    Chamber_Module.thermocouple3.begin();
-    Chamber_Module.thermocouple1.setSPIspeed(100000);
-    Chamber_Module.thermocouple2.setSPIspeed(100000);
-    Chamber_Module.thermocouple3.setSPIspeed(100000);
-}
 
 void LoRa_Setup(void)
 {
@@ -225,15 +174,9 @@ void setup() {
     
     SPI.begin();
 
-    pinMode(TEMP_AMP3_SS_PIN, OUTPUT);
-    pinMode(TEMP_AMP4_SS_PIN, OUTPUT);
-    pinMode(TEMP_AMP5_SS_PIN, OUTPUT);
     pinMode(LORA_SS_PIN, OUTPUT);
     pinMode(Flash_SS_PIN, OUTPUT);
 
-    digitalWrite(TEMP_AMP3_SS_PIN, HIGH);
-    digitalWrite(TEMP_AMP4_SS_PIN, HIGH);
-    digitalWrite(TEMP_AMP5_SS_PIN, HIGH);
     digitalWrite(LORA_SS_PIN, HIGH);
     digitalWrite(Flash_SS_PIN, HIGH);
 
@@ -266,14 +209,11 @@ void setup() {
 
     Valves_Setup();
 
-    loadCell_Setup();
-
     pressure_Setup();
 
     if(! fast_reboot)
     {
         temp_i2c_Setup();
-        Spi_Thermo_Setup();
     }
 
     printf("Setup done\n");
