@@ -111,13 +111,6 @@ void log(void *data, uint16_t size, log_event_t event)
         buff[index++] = (ipressure >> 8) & 0xff;
         buff[index++] = (ipressure) & 0xff;
 
-        buff[index++] = (tank_pressure >> 8) & 0xff;
-        buff[index++] = (tank_pressure) & 0xff;
-
-        int16_t itank_liquid = (int16_t)(tank_liquid * 10000);
-        buff[index++] = (itank_liquid >> 8) & 0xff;
-        buff[index++] = (itank_liquid) & 0xff;
-
         buff[index++] = (uint8_t)((log_running << 7) |
                                   (Tank_Top_Module.valve_state << 6) |
                                   (Tank_Bot_Module.valve_state << 5));
@@ -126,33 +119,6 @@ void log(void *data, uint16_t size, log_event_t event)
         buff[index++] = (ipressure >> 8) & 0xff;
         buff[index++] = (ipressure) & 0xff;
 
-        int16_t ialtura = (int16_t)(hL * 100);
-        buff[index++] = (ialtura >> 8) & 0xff;
-        buff[index++] = (ialtura) & 0xff;
-
-        int16_t iVl = (int16_t)(Vl * 1000);
-        buff[index++] = (iVl >> 8) & 0xff;
-        buff[index++] = (iVl) & 0xff;
-
-        int16_t iml = (int16_t)(ml * 100);
-        buff[index++] = (iml >> 8) & 0xff;
-        buff[index++] = (iml) & 0xff;
-
-        int16_t he_moles_i = (int16_t)(he_mol * 10);
-        buff[index++] = (he_moles_i >> 8) & 0xff;
-        buff[index++] = (he_moles_i) & 0xff;
-
-        int16_t tank_mol_lost_i = (int16_t)(tank_mol_lost * 10);
-        buff[index++] = (tank_mol_lost_i >> 8) & 0xff;
-        buff[index++] = (tank_mol_lost_i) & 0xff;
-        
-        int16_t hL_i = (int16_t)(he_mol * 10);
-        buff[index++] = (hL_i >> 8) & 0xff;
-        buff[index++] = (hL_i) & 0xff;
-
-        int16_t ml_i = (int16_t)(tank_mol_lost * 10);
-        buff[index++] = (ml_i >> 8) & 0xff;
-        buff[index++] = (ml_i) & 0xff;
     }
     break;
 

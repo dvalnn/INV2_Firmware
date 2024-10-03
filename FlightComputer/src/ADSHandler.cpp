@@ -59,8 +59,8 @@ static float calibrated_pressure(float value, pressure_calib paramm)
 
 void ADS_reader(void)
 {
-    // Serial2.printf("Ads reader");
-    // Serial2.flush();
+    //Serial2.printf("Ads reader");
+    //Serial2.flush();
 
     // while(ADS1.isBusy()) {}
 
@@ -80,7 +80,6 @@ void ADS_reader(void)
         ttp_values[ttp_index] = lpf_val;
         ttp_index = (ttp_index + 1) % press_values_size;
         Tank_Top_Module.pressure = lpf_val;
-        tank_pressure = (int16_t)(Tank_Top_Module.pressure * 100);
     }
     break;
     case ads_tank_bot:

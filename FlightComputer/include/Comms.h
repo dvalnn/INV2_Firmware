@@ -49,6 +49,29 @@
 #define ARN_TRIGGER_2 2
 #define ARN_TRIGGER_3 3
 
+
+/*
+    Sensors bit mask
+*/
+
+#define ROCKET_STATE_BIT 1 << 0
+#define ROCKET_PRESSURE_BIT 1 << 1
+#define ROCKET_TEMPERATURE_BIT 1 << 2
+#define ROCKET_GPS_BIT 1 << 3
+#define ROCKET_BAROMETER_BIT 1 << 4
+#define ROCKET_IMU_BIT 1 << 5
+#define ROCKET_KALMAN_BIT 1 << 6
+#define ROCKET_CHUTE_EMATCH_BIT 1 << 7
+
+#define FILL_STATE_BIT  1 << 8
+#define FILL_PRESSURE_BIT 1 << 9
+#define FILL_TEMPERATURE_BIT 1 << 10
+#define FILL_LOAD_CELL_BIT 1 << 11
+
+#define IGNITION_STATE_BIT 1 << 12
+#define IGNIITON_CHAMBER_TEMPERATURE_BIT 1 << 13
+#define IGNITION_EMATCH_BIT 1 << 14
+
 /*
     Commands
 */
@@ -123,6 +146,7 @@ typedef enum
     CMD_MANUAL_VALVE_MS,
 
     CMD_MANUAL_IMU_CALIBRATE,
+    CMD_MANUAL_BAROMETER_CALIBRATE,
 
     CMD_MANUAL_LOADCELL_CALIBRATE,
     CMD_MANUAL_LOADCELL_TARE,
@@ -138,6 +162,7 @@ typedef enum
     CMD_MANUAL_VALVE_STATE_ACK,
     CMD_MANUAL_VALVE_MS_ACK,
     CMD_MANUAL_IMU_CALIBRATE_ACK,
+    CMD_MANUAL_BAROMETER_CALIBRATE_ACK,
     CMD_MANUAL_LOADCELL_CALIBRATE_ACK,
     CMD_MANUAL_LOADCELL_TARE_ACK,
     CMD_MANUAL_TANK_TARE_ACK,
@@ -192,16 +217,11 @@ typedef enum
 #define GROUND_ID 0
 #define ROCKET_ID 1
 #define FILL_STATION_ID 2
+#define IGNITION_ID 3
 #define BROADCAST_ID 0xFF
 
 #define DEFAULT_ID ROCKET_ID
 
-// tank tactile sensors mask
-#define TANK_T1 1 << 0
-#define TANK_T2 1 << 1
-#define TANK_T3 1 << 2
-#define TANK_T4 1 << 3
-#define TANK_T5 1 << 4
 
 void write_command(command_t *cmd, interface_t interface);
 command_t *read_command(int *error, interface_t interface);

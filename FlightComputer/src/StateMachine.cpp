@@ -47,11 +47,9 @@ State_t state_machine[rocket_state_size] =
     // IDLE
     {
         .work = {
-            TANK_TEMPERATURE_SENSORS(1000),
+            //TANK_TEMPERATURE_SENSORS(1000),
             
             CLOSE_VALVES,
-            
-            {.channel = calc_liquid, .sample = 1000},
             
             {.channel = ADS_handler_slow, .sample = 1},
             {.channel = logger, .sample = 1000},
@@ -68,8 +66,6 @@ State_t state_machine[rocket_state_size] =
     {
         .work = {
             TANK_TEMPERATURE_SENSORS(100),
-
-            {.channel = calc_liquid, .sample = 1000},
 
             {.channel = ADS_handler_fast, .sample = 1},
 
@@ -94,7 +90,6 @@ State_t state_machine[rocket_state_size] =
 
             {.channel = ADS_handler_fast, .sample = 1},
 
-            {.channel = calc_liquid, .sample = 1000},
 
             {.channel = logger, .sample = 50},
             {.channel = flash_log_sensors, .sample = 100},
@@ -113,7 +108,6 @@ State_t state_machine[rocket_state_size] =
 
             {.channel = ADS_handler_fast, .sample = 1},
 
-            {.channel = calc_liquid, .sample = 1000},
             {.channel = V_Vpu_close, .sample = 500}, // safety
             {.channel = logger, .sample = 50},
             {.channel = flash_log_sensors, .sample = 100},
@@ -133,7 +127,6 @@ State_t state_machine[rocket_state_size] =
 
             {.channel = ADS_handler_fast, .sample = 1},
 
-            {.channel = calc_liquid, .sample = 1000},
             {.channel = V_Vpu_open, .sample = 500},
             {.channel = logger, .sample = 50},
             {.channel = flash_log_sensors, .sample = 100},
@@ -153,7 +146,6 @@ State_t state_machine[rocket_state_size] =
 
             {.channel = ADS_handler_fast, .sample = 1},
 
-            {.channel = calc_liquid, .sample = 1000},
             {.channel = V_Vpu_open, .sample = 500},
             {.channel = logger, .sample = 50},
             {.channel = flash_log_sensors, .sample = 100},
@@ -173,7 +165,6 @@ State_t state_machine[rocket_state_size] =
 
             {.channel = ADS_handler_fast, .sample = 1},
 
-            {.channel = calc_liquid, .sample = 1000},
             {.channel = V_Vpu_open, .sample = 500},
             {.channel = logger, .sample = 50},
             {.channel = flash_log_sensors, .sample = 100},
@@ -256,7 +247,6 @@ State_t state_machine[rocket_state_size] =
             //TANK_TEMPERATURE_SENSORS(250),
 
             {.channel = ADS_handler_all_fast, .sample = 1},
-            //{.channel = calc_liquid, .sample = 1000},
 
             {.channel = logger, .sample = 500},
             {.channel = flash_log_sensors, .sample = 500},

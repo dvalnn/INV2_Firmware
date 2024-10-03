@@ -15,8 +15,8 @@
 #define I2C_SDA_1_PIN 21
 #define I2C_SCL_1_PIN 22
 
-#define I2C_SCL_2_PIN 2
-#define I2C_SDA_2_PIN 15
+#define I2C_SDA_2_PIN 2
+#define I2C_SCL_2_PIN 15
 
 #define V1_PIN 25
 #define V2_PIN 26
@@ -32,14 +32,15 @@
 #define GPS_TX_PIN 5
 
 //--------------PARACHUTES------------
-#define MAIN_CHUTE_READ_PIN 39
-#define DRAG_CHUTE_READ_PIN 34
+#define MAIN_CHUTE_DEPLOY_PIN 33
+#define DRAG_CHUTE_DEPLOY_PIN 32
 
-#define MAIN_CHUTE_READ 33
-#define DRAG_CHUTE_READ 32
+#define MAIN_CHUTE_READ 39
+#define DRAG_CHUTE_READ 34
 
 //---------------BAUD-----------------
 #define SERIAL_BAUD 115200
+#define SERIAL1_BAUD 9600 
 #define SERIAL2_BAUD 115200
 
 //---------------ADDR-----------------
@@ -47,6 +48,20 @@
 #define TEMP_AMP2_ADDR 0x67
 
 #define PRESSURE_AMP_ADDR 0x48
+
+//---------------SENSORS-------------------
+#define IMU_READ_TIME 1 //ms
+#define BMP_READ_TIME 1 //ms
+
+#define FREEFALL_ALTITUDE_THRESHOLD 2 //free-fall considered if altitude decreases by more than this
+#define FREEFALL_THRESHOLD 3 //free-fall considered if global acceleration is smaller than it 
+#define WAY_TOO_MUCH_SPEED 1
+
+#define OFFSET_X 0.0075
+#define OFFSET_Y -0.015
+#define OFFSET_Z 0.045
+
+#define MAX_STORAGE 100 //Kalman
 
 //---------------CALIB Values-----------------
 typedef struct { float m; float b; } pressure_calib;

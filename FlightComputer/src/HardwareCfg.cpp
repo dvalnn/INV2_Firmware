@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
 #include "HardwareCfg.h"
+#include "GlobalVars.h"
 #include "StmWork.h"
 
 #include <Max6675.h>
@@ -9,10 +10,16 @@
 #include <MPU6050.h>
 
 MPU6050 accelgyro;
-HX711 scale1;
-HX711 scale2;
-HX711 scale3;
 ADS1115_WE ADS(PRESSURE_AMP_ADDR);
+
+TinyGPSPlus gps;
+
+const float cuttoff_ferquency_alt = (1.0/(float(BMP_READ_TIME)*1000.0))/4; 
+const float betha_alt = 1-exp(-BMP_READ_TIME*1000 * 2 * M_PI * cuttoff_ferquency_alt); 
+
+const float cuttoff_ferquency_imu = (1.0/(float(IMU_READ_TIME)*1000.0))/4; 
+const float betha_imu = 1-exp(-IMU_READ_TIME*1000 * 2 * M_PI * cuttoff_ferquency_imu); 
+
 
 Control_Module Tank_Top_Module = 
 {

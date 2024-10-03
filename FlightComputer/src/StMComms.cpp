@@ -9,8 +9,6 @@
 
 #include "FlashLog.h"
 
-#include "Utils.h"
-
 int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 {
     // Serial.printf("run command %d\n", cmd->cmd);
@@ -21,58 +19,139 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
     {
     case CMD_STATUS:
     {
+        uint16_t index = 0;
+        
+        //union used to get bit representation of float
+        union ufloat{
+            float f;
+            uint32_t i;
+        };
+        union ufloat f;
+
         /*
          * Prepare ACK response
          * Send response
          */
         command_rep.cmd = CMD_STATUS_ACK;
 
-        command_rep.size = 36;
-        command_rep.data[0] = state;
-        command_rep.data[1] = (Tank_Top_Module.temperature >> 8) & 0xff;
-        command_rep.data[2] = (Tank_Top_Module.temperature) & 0xff;
-        command_rep.data[3] = (Tank_Bot_Module.temperature >> 8) & 0xff;
-        command_rep.data[4] = (Tank_Bot_Module.temperature) & 0xff;
+        command_rep.data[index++] = cmd->data[0];
+        command_rep.data[index++] = cmd->data[1];
 
-        int16_t ipressure = (int16_t)(Tank_Top_Module.pressure * 100);
-        command_rep.data[11] = (ipressure >> 8) & 0xff;
-        command_rep.data[12] = (ipressure) & 0xff;
+        uint16_t log_bits = (cmd->data[0] << 8) + cmd->data[1];
 
-        ipressure = (int16_t)(Tank_Bot_Module.pressure * 100);
-        command_rep.data[13] = (ipressure >> 8) & 0xff;
-        command_rep.data[14] = (ipressure) & 0xff;
+        if((log_bits & ROCKET_STATE_BIT))
+           command_rep.data[index++] = state; 
+           //TODO add flags
 
-        command_rep.data[15] = (tank_pressure >> 8) & 0xff;
-        command_rep.data[16] = (tank_pressure) & 0xff;
+        if((log_bits & ROCKET_PRESSURE_BIT))
+        {
+            int16_t ipressure;
+            ipressure = (int16_t)(Tank_Top_Module.pressure * 100);
+            command_rep.data[index++] = (ipressure >> 8) & 0xff;
+            command_rep.data[index++] = (ipressure) & 0xff;
 
-        int16_t itank_liquid = (int16_t)(tank_liquid * 10000);
-        command_rep.data[17] = (itank_liquid >> 8) & 0xff;
-        command_rep.data[18] = (itank_liquid) & 0xff;
+            ipressure = (int16_t)(Tank_Bot_Module.pressure * 100);
+            command_rep.data[index++] = (ipressure >> 8) & 0xff;
+            command_rep.data[index++] = (ipressure) & 0xff;
 
-        command_rep.data[19] = (uint8_t)((log_running << 7) |
-                                         (Tank_Top_Module.valve_state << 6) |
-                                         (Tank_Bot_Module.valve_state << 5));
+            ipressure = (int16_t)(Chamber_Module.pressure * 100);
+            command_rep.data[index++] = (ipressure >> 8) & 0xff;
+            command_rep.data[index++] = (ipressure) & 0xff;
+        }
 
-        ipressure = (int16_t)(Chamber_Module.pressure * 100);
-        command_rep.data[26] = (ipressure >> 8) & 0xff;
-        command_rep.data[27] = (ipressure) & 0xff;
+        if((log_bits & ROCKET_TEMPERATURE_BIT))
+        {
+            command_rep.data[index++] = (Tank_Top_Module.temperature >> 8) & 0xff;
+            command_rep.data[index++] = (Tank_Top_Module.temperature) & 0xff;
+            command_rep.data[index++] = (Tank_Bot_Module.temperature >> 8) & 0xff;
+            command_rep.data[index++] = (Tank_Bot_Module.temperature) & 0xff;
+        }
 
-        int16_t he_moles_i = (int16_t)(he_mol * 10);
-        command_rep.data[28] = (he_moles_i >> 8) & 0xff;
-        command_rep.data[29] = (he_moles_i) & 0xff;
+        if((log_bits & ROCKET_GPS_BIT))
+        {
 
-        int16_t tank_mol_lost_i = (int16_t)(tank_mol_lost * 10);
-        command_rep.data[30] = (tank_mol_lost_i >> 8) & 0xff;
-        command_rep.data[31] = (tank_mol_lost_i) & 0xff;
+            float gps_lat = gps.location.lat();
+            float gps_lon = gps.location.lng();
+            uint16_t gps_altitude = (uint16_t)(gps.altitude.meters());
 
-        int16_t hL_i = (int16_t)(he_mol * 100);
-        command_rep.data[32] = (hL_i >> 8) & 0xff;
-        command_rep.data[33] = (hL_i) & 0xff;
 
-        int16_t ml_i = (int16_t)(tank_mol_lost * 100);
-        command_rep.data[34] = (ml_i >> 8) & 0xff;
-        command_rep.data[35] = (ml_i) & 0xff;
+            command_rep.data[index++] = (uint8_t)(gps.satellites.value());
 
+            command_rep.data[index++] = (uint8_t)((gps_altitude >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((gps_altitude) & 0xff);
+
+            f.f = gps_lat;
+            command_rep.data[index++] = (uint8_t)((f.i >> 24) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((f.i >> 16) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((f.i >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((f.i) & 0xff); 
+
+            f.f = gps_lon;
+            command_rep.data[index++] = (uint8_t)((f.i >> 24) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((f.i >> 16) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((f.i >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((f.i) & 0xff); 
+
+            //TODO missing horizontal vel
+        }
+
+        if((log_bits & ROCKET_BAROMETER_BIT))
+        {
+            uint16_t ualtitude = altitude;
+            command_rep.data[index++] = (uint8_t)((ualtitude >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((ualtitude) & 0xff);
+        }
+
+        if((log_bits & ROCKET_IMU_BIT))
+        {
+            uint16_t u_ax = imu_ax * 10;
+            command_rep.data[index++] = (uint8_t)((u_ax >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_ax) & 0xff); 
+
+            uint16_t u_ay = imu_ay * 10;
+            command_rep.data[index++] = (uint8_t)((u_ay >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_ay) & 0xff); 
+
+            uint16_t u_az = imu_az * 10;
+            command_rep.data[index++] = (uint8_t)((u_az >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_az) & 0xff); 
+
+            uint16_t u_gx = imu_gx * 10;
+            command_rep.data[index++] = (uint8_t)((u_gx >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_gx) & 0xff); 
+
+            uint16_t u_gy = imu_gy * 10;
+            command_rep.data[index++] = (uint8_t)((u_gy >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_gy) & 0xff); 
+
+            uint16_t u_gz = imu_gz * 10;
+            command_rep.data[index++] = (uint8_t)((u_gz >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_gz) & 0xff); 
+
+            uint16_t u_mx = imu_mx * 10;
+            command_rep.data[index++] = (uint8_t)((u_mx >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_mx) & 0xff); 
+
+            uint16_t u_my = imu_my * 10;
+            command_rep.data[index++] = (uint8_t)((u_my >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_my) & 0xff); 
+
+            uint16_t u_mz = imu_mz * 10;
+            command_rep.data[index++] = (uint8_t)((u_mz >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_mz) & 0xff); 
+        }
+
+        if((log_bits & ROCKET_KALMAN_BIT))
+        {
+
+        }
+
+        if((log_bits & ROCKET_CHUTE_EMATCH_BIT))
+        {
+
+        }
+
+        command_rep.size = index;
         command_rep.crc = crc((unsigned char *)&command_rep, command_rep.size + 3);
         write_command(&command_rep, interface);
 
@@ -196,7 +275,7 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 
     case CMD_MANUAL_EXEC:
     {
-        if (state != MANUAL)
+        if (state != MANUAL && state != FUELING)
             return CMD_RUN_STATE_ERROR;
 
         command_rep.cmd = CMD_MANUAL_EXEC_ACK;
@@ -318,13 +397,6 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
                 return CMD_RUN_OUT_OF_BOUND;
             }
             };
-        }
-        break;
-
-        case CMD_MANUAL_TANK_TARE:
-        {
-            tank_mol_lost = 0;
-            he_mol = calc_moles(Tank_Top_Module.pressure, Tank_Top_Module.temperature);
         }
         break;
 

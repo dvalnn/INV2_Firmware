@@ -62,10 +62,10 @@ bool fast_reboot = 0;
 
 void pressure_Setup(void)
 {
-    //Serial.println("Pressure amp starting");
+    Serial.println("Pressure amp starting");
 
     if(!ADS.init()){
-        //Serial.println("ADS1115 not connected!");
+        Serial.println("ADS1115 not connected!");
     }
     
     ADS.setVoltageRange_mV(ADS1115_RANGE_6144); //comment line/change parameter to change range
@@ -106,30 +106,54 @@ void temp_i2c_Setup(void)
     }
 }
 
-void gyroSetup(void)
+void GPS_Setup(void)
 {
-    Serial.println("Gyro starting");
-    accelgyro.initialize();
-    Wire.setBufferSize(256);
- // verify connection
-    Serial.println("Testing device connections...");
-    Serial.println(accelgyro.testConnection() ? "MPu6050 connection successful" : "MPu6050 connection failed");
+
+}
+
+void IMU_Setup(void)
+{
+    //Serial.println("Gyro starting");
+    //accelgyro.initialize();
+    //Wire.setBufferSize(256);
+ //// verify connection
+    //Serial.println("Testing device connections...");
+    //Serial.println(accelgyro.testConnection() ? "MPu6050 connection successful" : "MPu6050 connection failed");
     
+}
+
+void BAROMETER_Setup(void)
+{
+
 }
 
 void Valves_Setup(void)
 {
-    //Serial.println("Valves starting");
     pinMode(V1_PIN, OUTPUT);
     pinMode(V2_PIN, OUTPUT);
+    pinMode(V3_PIN, OUTPUT);
 
-    //pinMode(Pressure_PIN, INPUT);
+    digitalWrite(V1_PIN, LOW);
+    digitalWrite(V2_PIN, LOW);
+    digitalWrite(V3_PIN, LOW);
+}
+
+void Pyro_Setup(void)
+{
+    pinMode(MAIN_CHUTE_DEPLOY_PIN, OUTPUT);
+    pinMode(DRAG_CHUTE_DEPLOY_PIN, OUTPUT);
+
+    digitalWrite(MAIN_CHUTE_DEPLOY_PIN, LOW);
+    digitalWrite(DRAG_CHUTE_DEPLOY_PIN, LOW);
+
+    pinMode(MAIN_CHUTE_READ, INPUT);
+    pinMode(DRAG_CHUTE_READ, INPUT);
 }
 
 void Flash_Setup()
 {
     if (!SD.begin(Flash_SS_PIN)) {
-        //printf("Unable to access SPI Flash chip\n");
+        printf("Unable to access SPI Flash chip\n");
         //return;
     }
 
@@ -146,9 +170,9 @@ void LoRa_Setup(void)
   //LoRa.setSpreadingFactor(7);
   //LoRa.setGain(1);
 
-  //Serial.println("Lora starting");
+  Serial.println("Lora starting");
   if (!LoRa.begin(868E6)) {
-    //Serial.println("Starting LoRa failed!");
+    Serial.println("Starting LoRa failed!");
     //while (1);
   }
 }
@@ -157,22 +181,21 @@ void LoRa_Setup(void)
 void setup() {
 
     Serial.begin(SERIAL_BAUD); //USBC serial
-    Serial2.begin(SERIAL2_BAUD);
+    Serial1.begin(SERIAL1_BAUD, 134217756U, GPS_RX_PIN, GPS_TX_PIN); //GPS
+    Serial2.begin(SERIAL2_BAUD); //RS485
 
+    Wire.begin(I2C_SDA_1_PIN, I2C_SCL_1_PIN, 100000);
+    Wire1.begin(I2C_SDA_2_PIN, I2C_SCL_2_PIN, 400000);
+
+    //SPI.begin();
+    
     preferences.begin("config", false);
 
     uint8_t restart_count = preferences.getUInt("restart_count", 0);
     rocket_state_t last_state = preferences.getUInt("last_state", 0);
 
-    // join I2C bus (I2Cdev library doesn't do this automatically)
-    #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
-        Wire.begin();
-        //Wire.setClock(400000);
-    #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
-        Fastwire::setup(400, true);
-    #endif
-    
-    SPI.begin();
+    Pyro_Setup();
+    Valves_Setup();
 
     pinMode(LORA_SS_PIN, OUTPUT);
     pinMode(Flash_SS_PIN, OUTPUT);
@@ -180,7 +203,7 @@ void setup() {
     digitalWrite(LORA_SS_PIN, HIGH);
     digitalWrite(Flash_SS_PIN, HIGH);
 
-    LoRa_Setup();
+    //LoRa_Setup();
     Flash_Setup();
     //printf("Last state %u\n", last_state);
     //printf("Restart_count %u\n", restart_count);
@@ -189,14 +212,14 @@ void setup() {
     {
         state = last_state;
         preferences.putUInt("restart_count", restart_count + 1);
-        start_log();
+        //start_log();
         fast_reboot = 1;
     }
     else if(last_state == ABORT && restart_count < MAX_RESTART_ALLOWED)
     {
         state = last_state;
         preferences.putUInt("restart_count", restart_count + 1);
-        start_log();
+        //start_log();
         fast_reboot = 1;
     }
     else
@@ -205,21 +228,18 @@ void setup() {
         preferences.putUInt("last_state", 0);
     }
 
-    //gyroSetup();
 
-    Valves_Setup();
+    //GPS_Setup();
+    //IMU_Setup();
+    //BAROMETER_Setup();
 
-    pressure_Setup();
-
-    if(! fast_reboot)
-    {
-        temp_i2c_Setup();
-    }
+    //pressure_Setup();
+    //if(! fast_reboot) temp_i2c_Setup();
 
     printf("Setup done\n");
 
     //delay(2000);
-    //while(1){}
+    while(1){}
 }
 
 void loop() {
