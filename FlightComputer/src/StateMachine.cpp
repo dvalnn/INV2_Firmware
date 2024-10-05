@@ -50,8 +50,12 @@ State_t state_machine[rocket_state_size] =
             //TANK_TEMPERATURE_SENSORS(1000),
             
             CLOSE_VALVES,
-            
-            {.channel = ADS_handler_slow, .sample = 1},
+            {.channel = read_barometer, .sample = 1000},
+            {.channel = read_gps, .sample = 100},
+            {.channel = read_imu, .sample = 1000},
+            {.channel = kalman, .sample = 1000},
+
+            //{.channel = ADS_handler_slow, .sample = 1},
             {.channel = logger, .sample = 1000},
             {.channel = flash_log_sensors, .sample = 1000, .delay = 200},
         },

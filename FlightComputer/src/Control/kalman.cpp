@@ -2,6 +2,8 @@
 
 ///_______________________________GENERIC KALMAN______________________________________________________
 
+//#define KALMAN_DEBBUG
+
 void ekf::update(){
     Eigen::MatrixXf IS;
 
@@ -359,7 +361,6 @@ void alt_kalman::B_update(){
 
 
 }
-
 MatrixXf alt_kalman::cicle(MyQuaternion new_Quat, MatrixXf new_Z, MatrixXf new_U){
     
     #ifdef KALMAN_DEBBUG

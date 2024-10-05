@@ -32,10 +32,12 @@
 // for both classes must be in the include path of your project
 #include <I2Cdev.h>
 #include <MPU6050.h>
+#include <MPU9250.h>
 #include <HX711.h>
 #include <Max6675.h>
 #include <ADS1X15.h>
 #include <MCP9600.h>
+#include <Adafruit_BMP280.h>
 
 #include <LoRa.h>
 
@@ -108,23 +110,45 @@ void temp_i2c_Setup(void)
 
 void GPS_Setup(void)
 {
-
+    return;
 }
 
 void IMU_Setup(void)
 {
+    IMU.verbose(true);
     //Serial.println("Gyro starting");
-    //accelgyro.initialize();
+    IMU.setup(0x68, MPU9250Setting() ,Wire1);
+    
+    //IMU.initialize();
+    Serial.println("Testing device connections...");
+    Serial.println(IMU.isConnectedMPU9250() ? "MPU9250 connection successful" : "MPU9250 connection failed");
+    Serial.println(IMU.isConnectedAK8963() ? "AK8963 connection successful" : "AK8963 connection failed");
     //Wire.setBufferSize(256);
  //// verify connection
     //Serial.println("Testing device connections...");
     //Serial.println(accelgyro.testConnection() ? "MPu6050 connection successful" : "MPu6050 connection failed");
-    
+
+    IMU.calibrateAccelGyro();
+
 }
 
 void BAROMETER_Setup(void)
 {
+  bool success = bmp.begin(BMP_ADDR);
+  Serial.printf("Succsess %d\n", success);
 
+  bmp.setSampling(
+                  //Adafruit_BMP280::MODE_FORCED,     /* Operating Mode. */
+                  Adafruit_BMP280::MODE_NORMAL,
+                  Adafruit_BMP280::SAMPLING_X1,     /* Temp. oversampling */
+                  Adafruit_BMP280::SAMPLING_X2,    /* Pressure oversampling */
+                  Adafruit_BMP280::FILTER_OFF,      /* Filtering. */
+                  //Adafruit_BMP280::STANDBY_MS_500   /* Standby time. */
+                  Adafruit_BMP280::STANDBY_MS_1   /* Standby time. */
+                  );
+    
+    ground_hPa = bmp.readPressure(); // in Si units for Pascal
+    ground_hPa /= 100;
 }
 
 void Valves_Setup(void)
@@ -136,6 +160,13 @@ void Valves_Setup(void)
     digitalWrite(V1_PIN, LOW);
     digitalWrite(V2_PIN, LOW);
     digitalWrite(V3_PIN, LOW);
+}
+
+void kalman_Setup(void)
+{
+    att.select_filter(QuatFilterSel::MAHONY);
+    //attitude.begin();
+    alt_kal.begin();
 }
 
 void Pyro_Setup(void)
@@ -181,11 +212,11 @@ void LoRa_Setup(void)
 void setup() {
 
     Serial.begin(SERIAL_BAUD); //USBC serial
-    Serial1.begin(SERIAL1_BAUD, 134217756U, GPS_RX_PIN, GPS_TX_PIN); //GPS
+    Serial1.begin(SERIAL1_BAUD, 134217756U, GPS_TX_PIN, GPS_RX_PIN); //GPS
     Serial2.begin(SERIAL2_BAUD); //RS485
 
     Wire.begin(I2C_SDA_1_PIN, I2C_SCL_1_PIN, 100000);
-    Wire1.begin(I2C_SDA_2_PIN, I2C_SCL_2_PIN, 400000);
+    Wire1.begin(I2C_SDA_2_PIN, I2C_SCL_2_PIN);
 
     //SPI.begin();
     
@@ -203,8 +234,8 @@ void setup() {
     digitalWrite(LORA_SS_PIN, HIGH);
     digitalWrite(Flash_SS_PIN, HIGH);
 
-    //LoRa_Setup();
-    Flash_Setup();
+    LoRa_Setup();
+    //Flash_Setup();
     //printf("Last state %u\n", last_state);
     //printf("Restart_count %u\n", restart_count);
 
@@ -229,9 +260,11 @@ void setup() {
     }
 
 
-    //GPS_Setup();
-    //IMU_Setup();
-    //BAROMETER_Setup();
+    GPS_Setup();
+    IMU_Setup();
+    BAROMETER_Setup();
+
+    kalman_Setup();
 
     //pressure_Setup();
     //if(! fast_reboot) temp_i2c_Setup();
@@ -239,7 +272,7 @@ void setup() {
     printf("Setup done\n");
 
     //delay(2000);
-    while(1){}
+    //while(1){}
 }
 
 void loop() {

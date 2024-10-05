@@ -40,8 +40,13 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
         uint16_t log_bits = (cmd->data[0] << 8) + cmd->data[1];
 
         if((log_bits & ROCKET_STATE_BIT))
+        {
            command_rep.data[index++] = state; 
-           //TODO add flags
+           command_rep.data[index++] = (uint8_t)((log_running << 7) |
+                                 (Tank_Top_Module.valve_state << 6) |
+                                 (Tank_Bot_Module.valve_state << 5) |
+                                 (Chamber_Module.valve_state << 4)); 
+        }
 
         if((log_bits & ROCKET_PRESSURE_BIT))
         {
@@ -92,7 +97,9 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
             command_rep.data[index++] = (uint8_t)((f.i >> 8) & 0xff); 
             command_rep.data[index++] = (uint8_t)((f.i) & 0xff); 
 
-            //TODO missing horizontal vel
+            uint16_t horizontal_vel = (gps.speed.kmph() * 10);
+            command_rep.data[index++] = (uint8_t)((horizontal_vel >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((horizontal_vel) & 0xff);
         }
 
         if((log_bits & ROCKET_BAROMETER_BIT))
@@ -148,7 +155,11 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 
         if((log_bits & ROCKET_CHUTE_EMATCH_BIT))
         {
+            command_rep.data[index++] = ((ematch_drag_reading >> 8) & 0xff);
+            command_rep.data[index++] = ((ematch_drag_reading) & 0xff);
 
+            command_rep.data[index++] = ((ematch_main_reading >> 8) & 0xff);
+            command_rep.data[index++] = ((ematch_main_reading) & 0xff);
         }
 
         command_rep.size = index;

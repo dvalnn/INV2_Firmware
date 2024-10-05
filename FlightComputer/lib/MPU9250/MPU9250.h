@@ -116,6 +116,7 @@ class MPU9250_ {
     bool has_connected {false};
     bool b_ahrs {true};
     bool b_verbose {false};
+    //bool b_verbose {true};
 
     // I2C
     WireType* wire;
@@ -966,6 +967,7 @@ private:
     }
 
     void write_byte(uint8_t address, uint8_t subAddress, uint8_t data) {
+        //Serial.printf("write byte %x\n", data);
         wire->beginTransmission(address);    // Initialize the Tx buffer
         wire->write(subAddress);             // Put slave register address in Tx buffer
         wire->write(data);                   // Put data in Tx buffer
@@ -974,6 +976,7 @@ private:
     }
 
     uint8_t read_byte(uint8_t address, uint8_t subAddress) {
+        //Serial.printf("read byte %x %x\n", address, subAddress);
         uint8_t data = 0;                         // `data` will store the register data
         wire->beginTransmission(address);         // Initialize the Tx buffer
         wire->write(subAddress);                  // Put slave register address in Tx buffer

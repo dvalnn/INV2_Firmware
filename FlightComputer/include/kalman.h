@@ -1,3 +1,6 @@
+#ifndef _KALMAN_H_
+#define _KALMAN_H_
+
 #include <ArduinoEigen.h>
 #include "quaternion.h"
 #include "HardwareCfg.h"
@@ -94,3 +97,5 @@ class alt_kalman: public ekf{
         /// @return state
         MatrixXf cicle(MyQuaternion new_Quat, MatrixXf new_Z, MatrixXf new_U);
 };
+
+#endif

@@ -4,12 +4,15 @@
 #include <inttypes.h>
 
 #include "HardwareCfg.h"
+#include "kalman.h"
 
 #include <I2Cdev.h>
 #include <ADS1115_WE.h>
 #include <MCP9600.h>
 #include <MPU9250.h>
+#include <MPU6050.h>
 #include <TinyGPSPlus.h>
+#include <Adafruit_BMP280.h>
 
 #include <Preferences.h>
 #include <ArduinoEigen.h>
@@ -22,14 +25,21 @@ extern bool fast_reboot;
 
 //----------- IMU vars ------------
 extern MPU9250 IMU;
+//extern MPU6050 IMU;
 
 extern float imu_ax,imu_ay,imu_az; //accel
 extern float imu_gx,imu_gy,imu_gz; //gyro
 extern float imu_mx,imu_my,imu_mz; //magnetometer
 
-//------------ Barometer -----------
+extern const float betha_imu;
 
+//------------ Barometer -----------
+extern Adafruit_BMP280 bmp;
 extern float altitude;
+
+extern const float betha_alt;
+
+extern float ground_hPa;
 
 //------------- GPS ----------------
 extern TinyGPSPlus gps;
@@ -39,6 +49,11 @@ extern TinyGPSPlus gps;
 extern bool Launch;
 extern float maxAltitude;
 extern Eigen::Matrix<float, 9,1> alt_kalman_state; //altitude | vertical velocity | vertical acceleration
+                                // x, v_x, a_x, y, v_y, a_y, z, v_z, a_z
+
+//orientation attitude;
+extern alt_kalman alt_kal;
+extern QuaternionFilter att;
 
 //-----------Pressure AMP--------------
 extern ADS1115_WE ADS;
@@ -53,10 +68,15 @@ const int press_values_size = 10;
 extern float ttp_values[press_values_size], tbp_values[press_values_size], chp_values[press_values_size];
 extern int ttp_index, tbp_index, chp_index;
 
+//---------------EMATCH state----------------
+extern uint16_t ematch_main_reading;
+extern uint16_t ematch_drag_reading;
+
 //---------------Tank CMD vars vars----------------
 extern uint16_t RP1, RP2;
 extern uint16_t RL1;
 
 //---------------Timers----------------
 extern uint16_t arm_reset_timer;
+extern uint16_t burn_timer;
 #endif

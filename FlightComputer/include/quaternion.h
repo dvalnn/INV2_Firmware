@@ -1,3 +1,6 @@
+#ifndef _QUATERNION_H_
+#define _QUATERNION_H_
+
 #include <FastTrig.h>
 #include <ArduinoEigen.h>
 
@@ -39,3 +42,5 @@ int quaternion_to_euler(MyQuaternion Q,  float *euler);
 /// @param q quaternion in question
 /// @return rotation matrix
 Matrix3f quaternion_to_rotation_matrix(MyQuaternion q);
+
+#endif

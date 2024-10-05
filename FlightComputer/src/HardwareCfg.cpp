@@ -9,9 +9,11 @@
 #include <HX711.h>
 #include <MPU6050.h>
 
-MPU6050 accelgyro;
 ADS1115_WE ADS(PRESSURE_AMP_ADDR);
 
+//MPU6050 IMU;
+MPU9250 IMU;
+Adafruit_BMP280 bmp(&Wire1);
 TinyGPSPlus gps;
 
 const float cuttoff_ferquency_alt = (1.0/(float(BMP_READ_TIME)*1000.0))/4; 

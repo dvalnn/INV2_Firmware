@@ -36,7 +36,7 @@ void write_command(command_t* cmd, interface_t interface)
             LoRa.beginPacket();
             int sz = LoRa.write(buff, size);
             LoRa.endPacket(true);
-            //Serial.printf("Lora sent %d packets\n");
+            Serial.printf("Lora sent %d packets\n");
         }
         break;
         case RS485_INTERFACE:
@@ -137,7 +137,7 @@ command_t* read_command(int* error, interface_t interface)
             while(packetSize != 0 && LoRa.available() && *state != END)
             {
                 read_byte = LoRa.read();
-                //printf("got byte %x\n", read_byte);
+                printf("got byte %x\n", read_byte);
                 *state = parse_input(read_byte, command, *state);
             }
         }
@@ -173,7 +173,7 @@ command_t* read_command(int* error, interface_t interface)
     //if timeout reset state
     if(*state != SYNC && msec > RS485_TIMEOUT_TIME_MS) //timeout
     {
-        //Serial.printf("TIMEOUT\n"); //debug
+        Serial.printf("TIMEOUT\n"); //debug
         *state = SYNC;
         
         *error = CMD_READ_TIMEOUT;
@@ -186,7 +186,7 @@ command_t* read_command(int* error, interface_t interface)
              command->id == BROADCAST_ID )
              && (check_crc(command) || ! CRC_ENABLED) )
     {
-        //Serial.printf("got message %d %d\n", command->cmd, command->id);
+        Serial.printf("got message %d %d\n", command->cmd, command->id);
         *state = SYNC;
 
         *error = CMD_READ_OK;
@@ -198,7 +198,7 @@ command_t* read_command(int* error, interface_t interface)
     }
     else if(*state == END)
     {
-        //Serial.printf("crc error %d %d %d\n", command->id, command->crc, (uint16_t)crc((unsigned char*)command, command->size + 3));
+        Serial.printf("crc error %d %d %d\n", command->id, command->crc, (uint16_t)crc((unsigned char*)command, command->size + 3));
         //uint8_t* ptr = (uint8_t*)command;
         //printf("%x %x %x\n", command->cmd, command->id, command->size);
         //for(int i = 0; i < command->size + 3; i++)

@@ -49,6 +49,9 @@
 
 #define PRESSURE_AMP_ADDR 0x48
 
+#define IMU_ADDR 0x68
+
+#define BMP_ADDR 0x76
 //---------------SENSORS-------------------
 #define IMU_READ_TIME 1 //ms
 #define BMP_READ_TIME 1 //ms

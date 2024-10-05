@@ -7,6 +7,8 @@
 #include "GlobalVars.h"
 #include "Comms.h"
 #include "FlashLog.h"
+#include "kalman.h"
+#include "quaternion.h"
 
 #include <I2Cdev.h>
 #include <MPU6050.h>
@@ -27,16 +29,25 @@ float imu_mx;
 float imu_my;
 float imu_mz;
 
-float altitude;
+float altitude = 0;
 float maxAltitude;
+
+float ground_hPa = 0;
+
+alt_kalman alt_kal;
+QuaternionFilter att;
+Eigen::Matrix<float, 9,1> alt_kalman_state; //altitude | vertical velocity | vertical acceleration
 
 int16_t tank_pressure = 0;
 float tank_liquid = 0;
 
 uint16_t arm_reset_timer;
+uint16_t burn_timer;
 
 float ttp_values[press_values_size], tbp_values[press_values_size], chp_values[press_values_size];
 int ttp_index = 0, tbp_index = 0, chp_index = 0;
+
+uint16_t ematch_main_reading = 0, ematch_drag_reading = 0;
 
 void V_Vpu_close(void)
 {
@@ -98,25 +109,129 @@ void imu_pid_calibration(void)
     //accelgyro.setFullScaleAccelRange(2);
 }
 
-void read_IMU(void)
+void read_imu(void)
 {
     // if(accelgyro.testConnection())
     // accelgyro.getMotion6(&imu_ax, &imu_ay, &imu_az,
     //&imu_gx, &imu_gy, &imu_gz);
+    
+    IMU.update_accel_gyro();
+
+    imu_ax = IMU.getAccX();
+    imu_ay = IMU.getAccY();
+    imu_az = IMU.getAccZ();
+
+    imu_gx = IMU.getGyroX();
+    imu_gy = IMU.getGyroY();
+    imu_gz = IMU.getGyroZ();
+
+    Serial.printf("%f %f %f %f %f %f\n", imu_ax, imu_ay, imu_az, imu_gx, imu_gy, imu_gz);
 
     return;
 }
 
 void read_barometer(void)
 {
+    static float lpf_alt = 0.0f;
+    //LOW PASS altitude
+    lpf_alt = bmp.readAltitude(ground_hPa);
+    altitude += (lpf_alt - altitude) * betha_alt;
 
+
+    Serial.printf("Altitude barometer %f\n", altitude);
 }
 
 void read_gps(void)
 {
-    while(Serial1.available())
-        gps.encode(Serial1.read());
+    bool reading = false;
+    while(Serial1.available() && reading == false)
+        reading = gps.encode(Serial1.read());
+
+    if(reading)
+    {
+        //Serial.printf("N satalites %d\n", gps.satellites.value());
+        //Serial.printf("Lat %f Lon %f\n", gps.location.lat(), gps.location.lng());
+        //Serial.printf("GPS altitude %f\n", gps.altitude.meters());
+    }
 }
+
+void kalman(void)
+{
+    const Vector3f norm_g( 0.0, 0.0, 1.0); 
+    static float angles[3];
+
+    static MyQuaternion Q;
+    static Matrix<float,7,1> Z;
+    static Matrix<float,3,1> U,Acc;
+    static Matrix<float,9,1> Z_2,U_2;
+    static Vector3f norm_acc,axis,acc;
+    static float q[4],last_alt = altitude;
+    static float gps_alt_offset,alt_offset,last_lat, last_long;
+    static bool first = true;
+
+    if(first){
+      acc << imu_ax, imu_ay, imu_az;
+      norm_acc = acc/acc.norm();
+      axis = norm_acc.cross(norm_g);
+      axis = axis/axis.norm();
+
+      float t = iacos(norm_acc.dot(norm_g));
+
+      q[0]= icos(t/2.0);
+      q[1]= axis(0)*isin(t/2);
+      q[2]= axis(1)*isin(t/2);
+      q[3]= axis(2)*isin(t/2);
+      first = false;
+      Z_2 << 0, 0, 0, 0, 0, 0, 0, 0, 0;
+      last_lat = gps.location.lat();
+      last_long = gps.location.lng();
+      gps_alt_offset = gps.altitude.meters();
+      alt_offset = altitude;
+    }
+
+    att.update(imu_ax,imu_ay,imu_az,imu_gx,imu_gy,imu_gz,0,0,0,q);
+
+    Q.qw = q[0];
+    Q.qx = q[1];
+    Q.qy = q[2];
+    Q.qz = q[3];
+
+    //Serial.println("Orientation done");
+    
+    quaternion_to_euler(Q,angles);
+    Acc << imu_ax, imu_ay, imu_az;
+    //Acc = quaternion_to_rotation_matrix(Q)*Acc;
+
+    U_2 << 0, 0, Acc(0), 0, 0, Acc(1), altitude- alt_offset, 0, Acc(2);
+    Z_2 << (last_lat-gps.location.lat())*111000.0, gps.speed.mps()*icos(angles[2]), 0, (last_long-gps.location.lng())*111000.0, gps.speed.mps()*isin(angles[2]), 0, gps.altitude.meters()-gps_alt_offset, 0, 0; 
+
+    last_alt=altitude;
+
+    //Serial.println("Starting kalman");
+    
+    alt_kalman_state = alt_kal.cicle(Q,Z_2,U_2);
+
+    Serial.print(" |pos_X:");
+    Serial.print(alt_kalman_state(0));
+    Serial.print(" |vel_X:");
+    Serial.print(alt_kalman_state(1));
+    Serial.print(" |Acc_X:");
+    Serial.print(alt_kalman_state(2));
+    Serial.print(" |pos_Y:");
+    Serial.print(alt_kalman_state(3));
+    Serial.print(" |vel_Y:");
+    Serial.print(alt_kalman_state(4));
+    Serial.print(" |Acc_Y:");
+    Serial.print(alt_kalman_state(5));
+    Serial.print(" |altitude:");
+    Serial.print(alt_kalman_state(6));
+    Serial.print(" |vel_Z:");
+    Serial.print(alt_kalman_state(7));
+    Serial.print(" |Acc_Z:");
+    Serial.print(alt_kalman_state(8));
+    Serial.println("");
+}
+
 
 void flash_log_sensors(void)
 {
@@ -156,6 +271,29 @@ void read_temperature_tank_bot(void)
     Tank_Bot_Module.temperature = (int16_t)(temp * 10.0);
 }
 
+void main_ematch_high(void) { digitalWrite(MAIN_CHUTE_DEPLOY_PIN, HIGH); }
+
+void main_ematch_low(void) { digitalWrite(MAIN_CHUTE_DEPLOY_PIN, LOW); }
+
+void drag_ematch_high(void) { digitalWrite(DRAG_CHUTE_DEPLOY_PIN, HIGH); }
+
+void drag_ematch_low(void) { digitalWrite(DRAG_CHUTE_DEPLOY_PIN, LOW); }
+
+void read_main_ematch(void)
+{
+    //should already be low 
+    digitalWrite(MAIN_CHUTE_READ, LOW);
+    
+    ematch_main_reading = analogRead(MAIN_CHUTE_READ);
+}
+
+void read_drag_ematch(void)
+{
+    //should already be low 
+    digitalWrite(DRAG_CHUTE_READ, LOW);
+    
+    ematch_drag_reading = analogRead(DRAG_CHUTE_READ);
+}
 
 //---------TIMERS---------------
 void reset_timers(void)
@@ -166,3 +304,4 @@ void reset_timers(void)
 void timer_tick(uint16_t *timer) { (*timer)++; }
 
 void arm_timer_tick(void) { timer_tick(&arm_reset_timer); }
+void burn_timer_tick(void) { timer_tick(&burn_timer); }

@@ -74,7 +74,7 @@ void MPU6050::initialize() {
  */
 bool MPU6050::testConnection() {
     uint8_t deviceId = getDeviceID();
-    //printf("%d\n",deviceId); //we don't want garbage on the serial output
+    printf("%d\n",deviceId); //we don't want garbage on the serial output
     return (deviceId == 0x3A) || (deviceId == 0xC);
 }
 
