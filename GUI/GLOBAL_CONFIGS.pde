@@ -19,7 +19,7 @@ List<String> programs = Arrays.asList("Safety Pressure", "Purge Pressure", "Purg
 byte[] prog_cmds = {(byte)0x00, (byte)0x01, (byte)0x02, (byte)0x03, (byte)0x04, (byte)0x05};
 
 List<String> vars = Arrays.asList("Target Pressure", "Trigger Pressure", "Target Liquid");
-List<String> IDs = Arrays.asList( "1 : Rocket", "2 : Filling Station", "3 : Broadcast");
+List<String> IDs = Arrays.asList( "1 : Rocket", "2 : Filling Station", "3 : Ignition", "4 : Broadcast");
 
 String logFileName = "log.txt";
 

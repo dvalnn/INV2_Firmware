@@ -7,13 +7,13 @@ void setupDiagrams() {
     .setColor(labelColor)
     .setFont(font)
     .moveTo("global")
-    .setPosition(displayWidth*.5, displayHeight*.55)
+    .setPosition(displayWidth*.5, displayHeight*.47)
     .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
     .setLock(true)
     ;
 
   he_toggle = cp5.addToggle("He Toggle")
-    .setPosition(width*.53, height*.54)
+    .setPosition(width*.495, height*.553)
     .setSize((int)(width*.02), (int)(height*.02))
     .setValue(false)
     .setMode(ControlP5.SWITCH)
@@ -22,19 +22,19 @@ void setupDiagrams() {
     .setColorForeground(color(255, 0, 0))  // Red when off
     .setColorBackground(color(100, 0, 0))
     .setColorActive(color(255, 0, 0))
-    .moveTo("default")
+    .moveTo("global")
     ;
 
   n2o_label = cp5.addLabel("N2O\nT : ####\nP : ####\nW : ####")
     .setColor(labelColor)
     .setFont(font)
     .moveTo("global")
-    .setPosition(displayWidth*.5, displayHeight*.75)
+    .setPosition(displayWidth*.5, displayHeight*.69)
     .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
     .setLock(true)
     ;
   n2o_toggle = cp5.addToggle("N2O Toggle")
-    .setPosition(width*.5, height*.85)
+    .setPosition(width*.495, height*.65)
     .setSize((int)(width*.02), (int)(width*.01))
     .setValue(false)
     .setMode(ControlP5.SWITCH)
@@ -43,18 +43,18 @@ void setupDiagrams() {
     .setColorForeground(color(255, 0, 0))  // Red when off
     .setColorBackground(color(100, 0, 0))
     .setColorActive(color(255, 0, 0))
-    .moveTo("default");
+    .moveTo("global");
 
   line_label = cp5.addLabel("Line Purge\nT : ####\nP : ####")
     .setColor(labelColor)
     .setFont(font)
     .moveTo("global")
-    .setPosition(displayWidth*.4, displayHeight*.72)
+    .setPosition(displayWidth*.4, displayHeight*.48)
     .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
     .setLock(true)
     ;
   line_toggle = cp5.addToggle("Line Toggle")
-    .setPosition(width*.4, height*.8)
+    .setPosition(width*.394, height*.566)
     .setSize((int)(width*.02), (int)(width*.01))
     .setValue(false)
     .setMode(ControlP5.SWITCH)
@@ -63,18 +63,18 @@ void setupDiagrams() {
     .setColorForeground(color(255, 0, 0))  // Red when off
     .setColorBackground(color(100, 0, 0))
     .setColorActive(color(255, 0, 0))
-    .moveTo("default");
+    .moveTo("global");
 
   tt_label = cp5.addLabel("Tank Top\nT : ####\nP : ####")
     .setColor(labelColor)
     .setFont(font)
     .moveTo("global")
-    .setPosition(displayWidth*.33, displayHeight*.41)
+    .setPosition(displayWidth*.31, displayHeight*.35)
     .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
     .setLock(true)
     ;
   tt_toggle = cp5.addToggle("VPU Toggle")
-    .setPosition(width*.39, height*.41)
+    .setPosition(width*.275, height*.405)
     .setSize((int)(width*.02), (int)(width*.01))
     .setValue(false)
     .setMode(ControlP5.SWITCH)
@@ -83,18 +83,18 @@ void setupDiagrams() {
     .setColorForeground(color(255, 0, 0))  // Red when off
     .setColorBackground(color(100, 0, 0))
     .setColorActive(color(255, 0, 0))
-    .moveTo("default");
+    .moveTo("global");
 
   tb_label = cp5.addLabel("Tank Bottom\nT : ####\nP : ####")
     .setColor(labelColor)
     .setFont(font)
     .moveTo("global")
-    .setPosition(displayWidth*.35, displayHeight*.91)
+    .setPosition(displayWidth*.25, displayHeight*.89)
     .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
     .setLock(true)
     ;
-  tb_toggle = cp5.addToggle("Engine Toggle")
-    .setPosition(width*.43, height*.91)
+  tb_toggle = cp5.addToggle("Tank Bot Toggle")
+    .setPosition(width*.275, height*.83)
     .setSize((int)(width*.02), (int)(width*.01))
     .setValue(false)
     .setMode(ControlP5.SWITCH)
@@ -103,85 +103,93 @@ void setupDiagrams() {
     .setColorForeground(color(255, 0, 0))  // Red when off
     .setColorBackground(color(100, 0, 0))
     .setColorActive(color(255, 0, 0))
-    .moveTo("default");
+    .moveTo("global");
 
-  tl_label = cp5.addTextlabel("Tank Liquid")
-    .setText("He lost:\nXX.xx mol\n\nTotal Gas loss:\nXX.xx mol\n\nN2O lost:\nXX.xx g")
-    .setColor(labelColor)
-    .setPosition(displayWidth*.26, displayHeight*.55)
-    .moveTo("global")
-    .setFont(font);
+  chamber_toggle = cp5.addToggle("Chamber Toggle")
+    .setPosition(width*.345, height*.85)
+    .setSize((int)(width*.02), (int)(width*.01))
+    .setValue(false)
+    .setMode(ControlP5.SWITCH)
+    .setLabel("")
+    .setFont(font)
+    .setColorForeground(color(255, 0, 0))  // Red when off
+    .setColorBackground(color(100, 0, 0))
+    .setColorActive(color(255, 0, 0))
+    .moveTo("global");
 
 
-  diagram_labels = Arrays.asList(he_label, n2o_label, line_label, tt_label, tb_label, tl_label);
-  valve_toggles = Arrays.asList(tt_toggle, tb_toggle, he_toggle, n2o_toggle, line_toggle);
+  diagram_labels = Arrays.asList(he_label, n2o_label, line_label, tt_label, tb_label);
+  valve_toggles = Arrays.asList(tt_toggle, tb_toggle, chamber_toggle, he_toggle, n2o_toggle, line_toggle);
 }
 
 void updateDiagrams() {
   background(bgColor);
-  image(fill_diagram, width*.25, height*.45, fill_diagram.width* 1.2 * width/1920, fill_diagram.height * 1.2 * height/1080); // scale image with display size
-  String fbools = String.format("%8s", Integer.toBinaryString(f_bools & 0xFF)).replace(' ', '0');
-  String rbools = String.format("%8s", Integer.toBinaryString(r_bools & 0xFF)).replace(' ', '0');
-
-  int tt_valve = Integer.parseInt(rbools.substring(1, 2));
-  int tb_valve = Integer.parseInt(rbools.substring(2, 3));
-  int he_valve = Integer.parseInt(fbools.substring(1, 2));
-  int n2o_valve = Integer.parseInt(fbools.substring(2, 3));
-  int line_valve = Integer.parseInt(fbools.substring(3, 4));
+  if (!cp5.getTab("launch").isActive()) {
+    image(fill_diagram, width*.23, height*.38, fill_diagram.width* 1.2 * width/1920, fill_diagram.height * 1.2 * height/1080); // scale image with display size
+  }
 
   for ( Toggle toggle : valve_toggles) {
     toggle.setBroadcast(false);
   }
 
   // he valve
-  if (he_valve == 1) {
+  if (filling_data.he.valve) {
     fill(0, 255, 0);
     he_toggle.setState(true);
   } else {
     fill(255, 0, 0);
     he_toggle.setState(false);
   }
-  circle(width*.56, height*.633, height*.018);
+  //circle(width*.56, height*.633, height*.018);
 
   // n2o valve
-  if (n2o_valve == 1) {
+  if (filling_data.n2o.valve) {
     fill(0, 255, 0);
     n2o_toggle.setState(true);
   } else {
     fill(255, 0, 0);
     n2o_toggle.setState(false);
   }
-  circle(width*.56, height*.73, height*.018);
+  //circle(width*.56, height*.73, height*.018);
 
   // line valve
-  if (line_valve == 1) {
+  if (filling_data.line.valve) {
     fill(0, 255, 0);
     line_toggle.setState(true);
   } else {
     fill(255, 0, 0);
     line_toggle.setState(false);
   }
-  circle(width*.423, height*.698, height*.018);
+  //circle(width*.423, height*.698, height*.018);
 
   // tt valve
-  if (tt_valve == 1) {
+  if (rocket_data.valves.purge_top) {
     fill(0, 255, 0);
     tt_toggle.setState(true);
   } else {
     fill(255, 0, 0);
     tt_toggle.setState(false);
   }
-  circle(width*.304, height*.46, height*.018);
+  //circle(width*.304, height*.46, height*.018);
 
   // tb valve
-  if (tb_valve == 1) {
+  if (rocket_data.valves.purge_bot) {
     fill(0, 255, 0);
     tb_toggle.setState(true);
   } else {
     fill(255, 0, 0);
     tb_toggle.setState(false);
   }
-  circle(width*.304, height*.935, height*.018);
+  //circle(width*.304, height*.935, height*.018);
+
+  if (rocket_data.valves.chamber) {
+    fill(0, 255, 0);
+    chamber_toggle.setState(true);
+  } else {
+    fill(255, 0, 0);
+    chamber_toggle.setState(false);
+  }
+  //circle(width*.304, height*.935, height*.018);
 
   for (Toggle toggle : valve_toggles) {
     boolean v_state = toggle.getState();
@@ -199,9 +207,25 @@ void updateDiagrams() {
 }
 
 void multi_tab_controllers(String tab) {
-    if (tab == "default") {
-      chamber_temps_label.hide();
-    } else {
-      chamber_temps_label.show();
+  if (tab == "default") {
+    chamber_temps_label.hide();
+  } else {
+    chamber_temps_label.show();
+  }
+
+  if (tab == "launch") {
+    for (Toggle toggle : valve_toggles) {
+      toggle.hide();
     }
+    for (Textlabel label : diagram_labels) {
+      label.hide();
+    }
+  } else {
+    for (Toggle toggle : valve_toggles) {
+      toggle.show();
+    }
+    for (Textlabel label : diagram_labels) {
+      label.show();
+    }
+  }
 }

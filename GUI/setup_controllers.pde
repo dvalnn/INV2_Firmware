@@ -183,7 +183,7 @@ void setupControllers() {
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
 
   cp5.addScrollableList("Select ID")
-    .setPosition(displayWidth*.02, displayHeight*.75)
+    .setPosition(displayWidth*.02, displayHeight*.73)
     .setSize((int)(displayWidth*.17), (int)(displayHeight*.5))
     .setBarHeight((int)(displayHeight*.05))
     .setItemHeight((int)(displayHeight*.05))
@@ -261,7 +261,7 @@ void setupControllers() {
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
 
   cp5.addButton("Change Valve State")
-    .setPosition(width*.02, height*.45)
+    .setPosition(width*.6, height*.45)
     .setSize((int)(width*.17), (int)(height*.05))
     .moveTo("default")
     .setColor(defaultColor)
@@ -270,7 +270,7 @@ void setupControllers() {
     .setFont(font);
 
   valve_toggle = cp5.addToggle("Valve Toggle")
-    .setPosition(width*.02, height*.37)
+    .setPosition(width*.02, height*.45)
     .setSize((int)(width*.05), (int)(width*.02))
     .setValue(false)
     .setMode(ControlP5.SWITCH)
