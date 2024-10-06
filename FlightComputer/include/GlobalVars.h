@@ -47,6 +47,8 @@ extern TinyGPSPlus gps;
 //------------ Kalman -------------
 
 extern bool Launch;
+extern bool DragDeployed;
+extern bool MainDeployed;
 extern float maxAltitude;
 extern Eigen::Matrix<float, 9,1> alt_kalman_state; //altitude | vertical velocity | vertical acceleration
                                 // x, v_x, a_x, y, v_y, a_y, z, v_z, a_z

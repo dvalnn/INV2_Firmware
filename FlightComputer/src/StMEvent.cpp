@@ -8,6 +8,9 @@
 uint16_t RP1 = 0, RP2 = 0; //target and trigger
 uint16_t RL1 = 0; //target liquid
 
+bool DragDeployed = false;
+bool MainDeployed = false;
+
 bool IdleCond(void) { return false; }
 bool TrueCond(void) { return true; }
 
@@ -56,4 +59,26 @@ void exit_safety_purge(void)
 bool arm_timer_event(void)
 {
     return (arm_reset_timer > ARM_TIMER_TRIGGER);
+}
+
+
+//---------Kalman------------
+bool apogee_event(void)
+{
+    if(Launch && ((maxAltitude-alt_kalman_state(6))>0.5) &&(abs(alt_kalman_state(7))<0.1))
+    {
+      DragDeployed = true;
+      return true;
+    }
+    return false;
+}
+
+bool main_deployment_condition(void)
+{
+    if(DragDeployed && !MainDeployed && alt_kalman_state(6) < 400)
+    {
+        MainDeployed = true;
+        return true;
+    }
+    return false;
 }

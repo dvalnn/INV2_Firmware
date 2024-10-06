@@ -38,9 +38,13 @@ rocket_state_t comm_transition[rocket_state_size][cmd_size] = {
 
 #define CLOSE_VALVES                             \
     {.channel = V_Vpu_close, .sample = 100},     \
-    {                                            \
-        .channel = V_Engine_close, .sample = 100 \
-    }
+    {.channel = V_Engine_close, .sample = 100 }
+
+#define RUN_KALMAN \
+    {.channel = read_barometer, .sample = 10}, \
+    {.channel = read_imu, .sample = 10}, \
+    {.channel = read_gps, .sample = 100}, \
+    {.channel = kalman, .sample = 10}
 
 State_t state_machine[rocket_state_size] =
 {
@@ -53,7 +57,6 @@ State_t state_machine[rocket_state_size] =
             {.channel = read_barometer, .sample = 1000},
             {.channel = read_gps, .sample = 100},
             {.channel = read_imu, .sample = 1000},
-            {.channel = kalman, .sample = 1000},
 
             //{.channel = ADS_handler_slow, .sample = 1},
             {.channel = logger, .sample = 1000},
@@ -186,6 +189,8 @@ State_t state_machine[rocket_state_size] =
         .work = {
             TANK_TEMPERATURE_SENSORS(1000),
 
+            RUN_KALMAN,
+
             {.channel = ADS_handler_all_slow, .sample = 1},
 
             {.channel = reset_timers, .sample = 200}, // used to reset the timers used in armed, fire, launch
@@ -206,6 +211,8 @@ State_t state_machine[rocket_state_size] =
         .work = {
             TANK_TEMPERATURE_SENSORS(1000),
             
+            RUN_KALMAN,
+
             {.channel = ADS_handler_all_fast, .sample = 1},
 
             {.channel = arm_timer_tick, .sample = 1000},
@@ -228,6 +235,7 @@ State_t state_machine[rocket_state_size] =
             {.channel = V_Engine_open, .sample = 5},
 
             //TANK_TEMPERATURE_SENSORS(1000),
+            RUN_KALMAN,
 
             {.channel = ADS_handler_all_fast, .sample = 1},
 
@@ -237,6 +245,8 @@ State_t state_machine[rocket_state_size] =
 
         .events = {
             {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
+            {.condition = apogee_event, .reaction = drag_ematch_high, .next_state = -1},
+            {.condition = main_deployment_condition, .reaction = main_ematch_high, .next_state = -1},
         },
 
         .comms = comm_transition[LAUNCH],
@@ -248,7 +258,9 @@ State_t state_machine[rocket_state_size] =
             {.channel = V_Engine_close, .sample = 5},
             {.channel = V_Vpu_open, .sample = 5},
 
-            //TANK_TEMPERATURE_SENSORS(250),
+            TANK_TEMPERATURE_SENSORS(250),
+            
+            RUN_KALMAN,
 
             {.channel = ADS_handler_all_fast, .sample = 1},
 
@@ -263,7 +275,7 @@ State_t state_machine[rocket_state_size] =
         .comms = comm_transition[ABORT],
 
     },
-    // IMU_TUNE
+    // FLIGHT
     {
         .work = {
             {.channel = imu_pid_calibration, .sample = 1000},
@@ -271,7 +283,7 @@ State_t state_machine[rocket_state_size] =
 
         .events = {{TrueCond, NULL, IDLE}}, // this will always evaluate true, imu calib is run one time and is automaticly sent to idle
 
-        .comms = comm_transition[IMU_TUNE],
+        .comms = comm_transition[FLIGHT],
     }
 };
 

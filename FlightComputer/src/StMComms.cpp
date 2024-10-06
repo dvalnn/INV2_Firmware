@@ -227,6 +227,12 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
     }
     break;
 
+    case CMD_ALLOW_LAUNCH:
+    {
+        Launch = true; // used in kalman for events
+    }
+    break;
+
     case CMD_EXEC_PROG:
     {
         if (cmd->size != 7) // 1 byte for prog 2 bytes per var (p1,p2,p3,l1,l2)

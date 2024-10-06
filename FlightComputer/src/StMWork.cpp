@@ -30,7 +30,7 @@ float imu_my;
 float imu_mz;
 
 float altitude = 0;
-float maxAltitude;
+float maxAltitude = 0;
 
 float ground_hPa = 0;
 
@@ -80,6 +80,26 @@ void V_Engine_open(void)
     digitalWrite(Chamber_Module.valve_pin, 1);
     Chamber_Module.valve_state = 1;
 }
+
+void barometer_calibrate(void)
+{
+    //read barometer every 10ms for 5 seconds to avg the ground pha
+    float pressure = 0;
+    for(int i = 0; i < 500; i++)
+    {
+        pressure += bmp.readPressure();
+        delay(10);
+    }
+
+    pressure /= 500;
+    ground_hPa = pressure;
+}
+
+void imu_calibrate(void)
+{
+
+}
+
 
 void imu_pid_calibration(void)
 {
@@ -169,6 +189,8 @@ void kalman(void)
     static float gps_alt_offset,alt_offset,last_lat, last_long;
     static bool first = true;
 
+    static unsigned int start;
+
     if(first){
       acc << imu_ax, imu_ay, imu_az;
       norm_acc = acc/acc.norm();
@@ -187,8 +209,18 @@ void kalman(void)
       last_long = gps.location.lng();
       gps_alt_offset = gps.altitude.meters();
       alt_offset = altitude;
+      start = millis();
     }
-
+    
+    /* acc << ax, ay, az;
+    norm_acc = acc/acc.norm();
+    axis = norm_acc.cross(norm_g);
+    axis = axis/axis.norm();
+    float t = iacos(norm_acc.dot(norm_g));
+    Z << icos(t/2.0), axis(0)*isin(t/2), axis(1)*isin(t/2), axis(2)*isin(t/2), gx, gy, gz;
+    U << gx, gy, gz;
+    
+    orientation_state = attitude.cicle(Z,U); */
     att.update(imu_ax,imu_ay,imu_az,imu_gx,imu_gy,imu_gz,0,0,0,q);
 
     Q.qw = q[0];
@@ -196,40 +228,44 @@ void kalman(void)
     Q.qy = q[2];
     Q.qz = q[3];
 
-    //Serial.println("Orientation done");
-    
+    /* Q.qw = orientation_state(0);
+    Q.qx = orientation_state(1);
+    Q.qy = orientation_state(2);
+    Q.qz = orientation_state(3); */
+
+    #ifdef KALMAN_DEBBUG
+        Serial.println("Orientation done");
+        Serial.print(" |qw:");
+        Serial.print(Q.qw);
+        Serial.print(" |qx:");
+        Serial.print(Q.qx);
+        Serial.print(" |qy:");
+        Serial.print(Q.qy);
+        Serial.print(" |qz:");
+        Serial.print(Q.qz);
+        Serial.println("Starting altitude");
+    #endif
     quaternion_to_euler(Q,angles);
     Acc << imu_ax, imu_ay, imu_az;
     //Acc = quaternion_to_rotation_matrix(Q)*Acc;
 
-    U_2 << 0, 0, Acc(0), 0, 0, Acc(1), altitude- alt_offset, 0, Acc(2);
-    Z_2 << (last_lat-gps.location.lat())*111000.0, gps.speed.mps()*icos(angles[2]), 0, (last_long-gps.location.lng())*111000.0, gps.speed.mps()*isin(angles[2]), 0, gps.altitude.meters()-gps_alt_offset, 0, 0; 
+    U_2 << 0, 0, Acc(0), 0, 0, Acc(1), 0, 0, Acc(2);
+    Z_2 << (last_lat-gps.location.lat())*111000.0, gps.speed.mps()*icos(angles[2]), Acc(0), (last_long-gps.location.lng())*111000.0, gps.speed.mps()*isin(angles[2]), Acc(1), altitude, 0, Acc(2); 
 
     last_alt=altitude;
-
-    //Serial.println("Starting kalman");
-    
+    #ifdef KALMAN_DEBBUG
+        Serial.println("measurements done");
+        Serial.println("Starting kalman");
+    #endif
     alt_kalman_state = alt_kal.cicle(Q,Z_2,U_2);
 
-    Serial.print(" |pos_X:");
-    Serial.print(alt_kalman_state(0));
-    Serial.print(" |vel_X:");
-    Serial.print(alt_kalman_state(1));
-    Serial.print(" |Acc_X:");
-    Serial.print(alt_kalman_state(2));
-    Serial.print(" |pos_Y:");
-    Serial.print(alt_kalman_state(3));
-    Serial.print(" |vel_Y:");
-    Serial.print(alt_kalman_state(4));
-    Serial.print(" |Acc_Y:");
-    Serial.print(alt_kalman_state(5));
-    Serial.print(" |altitude:");
-    Serial.print(alt_kalman_state(6));
-    Serial.print(" |vel_Z:");
-    Serial.print(alt_kalman_state(7));
-    Serial.print(" |Acc_Z:");
-    Serial.print(alt_kalman_state(8));
-    Serial.println("");
+    if(Launch)
+      maxAltitude=max(maxAltitude,alt_kalman_state(6)); 
+
+    #ifdef KALMAN_DEBBUG
+        Serial.println("altitude done");
+    #endif
+
 }
 
 

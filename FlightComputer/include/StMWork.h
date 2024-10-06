@@ -14,6 +14,11 @@ void V_Engine_close(void);
 void V_Vpu_open(void);
 void V_Engine_open(void);
 
+void main_ematch_high(void);
+void main_ematch_low(void);
+void drag_ematch_high(void);
+void drag_ematch_low(void);
+
 void read_temperature_tank_top(void);
 void read_temperature_tank_bot(void);
 

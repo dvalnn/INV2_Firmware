@@ -62,6 +62,8 @@
 Preferences preferences;
 bool fast_reboot = 0;
 
+bool Launch = false;
+
 void pressure_Setup(void)
 {
     Serial.println("Pressure amp starting");

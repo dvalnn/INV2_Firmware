@@ -34,7 +34,7 @@ enum
 
     ABORT,
 
-    IMU_TUNE,
+    FLIGHT,
 
     rocket_state_size, //this needs to be the last state for size to work
 } rocket_state;
