@@ -45,7 +45,9 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
            command_rep.data[index++] = (uint8_t)((log_running << 7) |
                                  (Tank_Top_Module.valve_state << 6) |
                                  (Tank_Bot_Module.valve_state << 5) |
-                                 (Chamber_Module.valve_state << 4)); 
+                                 (Chamber_Module.valve_state << 4) |
+                                 (DragDeployed << 3) |
+                                 (MainDeployed << 2) ); 
         }
 
         if((log_bits & ROCKET_PRESSURE_BIT))
@@ -150,7 +152,47 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 
         if((log_bits & ROCKET_KALMAN_BIT))
         {
+            uint16_t u_x = alt_kalman_state(0) * 10;
+            uint16_t u_y = alt_kalman_state(3) * 10;
+            uint16_t u_z = alt_kalman_state(6) * 10;
+            uint16_t u_vz = alt_kalman_state(7) * 10;
+            uint16_t u_az = alt_kalman_state(8) * 10;
 
+            command_rep.data[index++] = (uint8_t)((u_x >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_x) & 0xff); 
+
+            command_rep.data[index++] = (uint8_t)((u_y >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_y) & 0xff); 
+
+            command_rep.data[index++] = (uint8_t)((u_z >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_z) & 0xff); 
+
+            command_rep.data[index++] = (uint8_t)((u_vz >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_vz) & 0xff); 
+
+            command_rep.data[index++] = (uint8_t)((u_az >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_az) & 0xff); 
+
+            command_rep.data[index++] = (uint8_t)((u_az >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_az) & 0xff); 
+
+            //convert quaternion [0:1] to uint16 [0, 2^16 - 1]
+            uint16_t u_quat1 = q[0] * (0xFFFF);
+            uint16_t u_quat2 = q[1] * (0xFFFF);
+            uint16_t u_quat3 = q[2] * (0xFFFF);
+            uint16_t u_quat4 = q[3] * (0xFFFF);
+
+            command_rep.data[index++] = (uint8_t)((u_quat1 >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_quat1) & 0xff); 
+
+            command_rep.data[index++] = (uint8_t)((u_quat2 >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_quat2) & 0xff); 
+
+            command_rep.data[index++] = (uint8_t)((u_quat3 >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_quat3) & 0xff); 
+
+            command_rep.data[index++] = (uint8_t)((u_quat4 >> 8) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_quat4) & 0xff); 
         }
 
         if((log_bits & ROCKET_CHUTE_EMATCH_BIT))

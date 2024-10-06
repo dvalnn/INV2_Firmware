@@ -50,12 +50,10 @@ extern bool Launch;
 extern bool DragDeployed;
 extern bool MainDeployed;
 extern float maxAltitude;
-extern Eigen::Matrix<float, 9,1> alt_kalman_state; //altitude | vertical velocity | vertical acceleration
-                                // x, v_x, a_x, y, v_y, a_y, z, v_z, a_z
-
-//orientation attitude;
+extern Eigen::Matrix<float, 9,1> alt_kalman_state; // x, v_x, a_x, y, v_y, a_y, z, v_z, a_z
 extern alt_kalman alt_kal;
 extern QuaternionFilter att;
+extern float q[4];
 
 //-----------Pressure AMP--------------
 extern ADS1115_WE ADS;

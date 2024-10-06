@@ -37,6 +37,7 @@ float ground_hPa = 0;
 alt_kalman alt_kal;
 QuaternionFilter att;
 Eigen::Matrix<float, 9,1> alt_kalman_state; //altitude | vertical velocity | vertical acceleration
+float q[4];
 
 int16_t tank_pressure = 0;
 float tank_liquid = 0;
@@ -185,7 +186,7 @@ void kalman(void)
     static Matrix<float,3,1> U,Acc;
     static Matrix<float,9,1> Z_2,U_2;
     static Vector3f norm_acc,axis,acc;
-    static float q[4],last_alt = altitude;
+    static float last_alt = altitude;
     static float gps_alt_offset,alt_offset,last_lat, last_long;
     static bool first = true;
 
