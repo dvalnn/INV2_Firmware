@@ -278,10 +278,11 @@ State_t state_machine[rocket_state_size] =
     // FLIGHT
     {
         .work = {
-            {.channel = imu_pid_calibration, .sample = 1000},
         },
 
-        .events = {{TrueCond, NULL, IDLE}}, // this will always evaluate true, imu calib is run one time and is automaticly sent to idle
+        .events = {
+            {TrueCond, NULL, IDLE}
+        }, // this will always evaluate true, imu calib is run one time and is automaticly sent to idle
 
         .comms = comm_transition[FLIGHT],
     }
