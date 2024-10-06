@@ -78,69 +78,7 @@ void echo_reply(void)
     {
         Serial.println("send response");
         /* Update rocket tank values */
-        tank_pressure =  (cmd->data[15] << 8) + (cmd->data[16]);
-        tank_liquid =  (cmd->data[17] << 8) + (cmd->data[18]);
-        tank_liquid_kg = (cmd->data[32] << 8) + (cmd->data[33]);
-
-        //tank_liquid = (cmd->data[9] << 8) + (cmd->data[10]);
-        //tank_liquid = (tank_liquid > 20000);
-
-        /* Send response to the bus*/
-        command_t command_rep;
-        command_rep.cmd = CMD_STATUS;
-        command_rep.id = ROCKET_ID;
-
-        /*
-        command_rep.size = 2*4 + 1;
-        //command_rep.size = 100; //test
-
-        command_rep.data[0] = state;
-        command_rep.data[1] = 0;
-        command_rep.data[2] = 1;
-        command_rep.data[3] = 2;
-        command_rep.data[4] = 3;
-        command_rep.data[5] = 4;
-        command_rep.data[6] = 5;
-        command_rep.data[7] = 6;
-        command_rep.data[8] = 7;
-        command_rep.crc = 0x5252;
-        */
-
-        command_rep.size = 22;
-        command_rep.data[0] = state;
-        //TODO remove this from filling
-        command_rep.data[1] = (tank_pressure >> 8) & 0xff;
-        command_rep.data[2] = (tank_pressure) & 0xff;
-        command_rep.data[3] = (tank_liquid >> 8) & 0xff;
-        command_rep.data[4] = (tank_liquid) & 0xff;
-
-        command_rep.data[5] = (He_Module.temperature >> 8) & 0xff;
-        command_rep.data[6] = (He_Module.temperature) & 0xff;
-        command_rep.data[7] = (N2O_Module.temperature >> 8) & 0xff;
-        command_rep.data[8] = (N2O_Module.temperature) & 0xff;
-        command_rep.data[9] = (Line_Module.temperature >> 8) & 0xff;
-        command_rep.data[10] = (Line_Module.temperature) & 0xff;
-
-        command_rep.data[11] = (He_Module.pressure >> 8) & 0xff;
-        command_rep.data[12] = (He_Module.pressure) & 0xff;
-        command_rep.data[13] = (N2O_Module.pressure >> 8) & 0xff;
-        command_rep.data[14] = (N2O_Module.pressure) & 0xff;
-        command_rep.data[15] = (Line_Module.pressure >> 8) & 0xff;
-        command_rep.data[16] = (Line_Module.pressure) & 0xff;
-
-        command_rep.data[17] = (ematch_v_reading >> 8) & 0xff;
-        command_rep.data[18] = (ematch_v_reading) & 0xff;
-        
-        command_rep.data[19] = (weight1 >> 8) & 0xff;
-        command_rep.data[20] = (weight1) & 0xff;
-
-        command_rep.data[21] = (uint8_t)((log_running << 7) |
-                                        (He_Module.valve_state << 6) | 
-                                        (N2O_Module.valve_state << 5) |
-                                        (Line_Module.valve_state << 4) );
-
-        command_rep.crc = crc((unsigned char*) &command_rep, command_rep.size + 3);
-        write_command(&command_rep, DEFAULT_LOG_INFERFACE);
+        tank_pressure =  (cmd->data[0] << 8) + (cmd->data[1]);
     }
 }
 
@@ -177,39 +115,6 @@ static float calibrated_pressure(float value, pressure_calib paramm)
 {
     return paramm.b + (value * paramm.m);
 }
-
-
-/*
-void read_pressure_He(void)
-{
-    float pressure_calib = calibrated_pressure(
-                                ADS.readADC(He_Module.ADC_pressure_id), 
-                                He_Module.pressure_serial 
-                           );
-    
-    He_Module.pressure = (int16_t)(pressure_calib * 100);
-}
-
-void read_pressure_N2O(void)
-{
-    float pressure_calib = calibrated_pressure(
-                                ADS.readADC(N2O_Module.ADC_pressure_id), 
-                                N2O_Module.pressure_serial 
-                           );
-    
-    N2O_Module.pressure = (int16_t)(pressure_calib * 100);
-}
-
-void read_pressure_Line(void)
-{
-    float pressure_calib = calibrated_pressure(
-                                ADS.readADC(Line_Module.ADC_pressure_id), 
-                                Line_Module.pressure_serial 
-                           );
-    
-    Line_Module.pressure = (int16_t)(pressure_calib * 100);
-}
-*/
 
 #define TIMEOUT 3
 void ads_handler_stm(unsigned long sample_timer)

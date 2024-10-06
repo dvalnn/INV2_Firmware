@@ -49,6 +49,28 @@
 #define ARN_TRIGGER_2 2
 #define ARN_TRIGGER_3 3
 
+/*
+    Sensors bit mask
+*/
+
+#define ROCKET_STATE_BIT 1 << 0
+#define TANK_PRESSURE_BIT 1 << 1
+#define TANK_TEMPERATURE_BIT 1 << 2
+#define GPS_BIT 1 << 3
+#define BAROMETER_BIT 1 << 4
+#define IMU_BIT 1 << 5
+#define KALMAN_BIT 1 << 6
+#define CHUTE_EMATCH_BIT 1 << 7
+
+#define FILL_FLAGS_BIT  1 << 8
+#define FILL_PRESSURE_BIT 1 << 9
+#define FILL_TEMPERATURE_BIT 1 << 10
+#define FILL_LOAD_CELL 1 << 11
+#define FILL_FLAGS_BIT 1 << 12
+
+#define IGNITION_FLAGS_BIT 1 << 13
+#define CHAMBER_TEMPERATURE_BIT 1 << 13
+#define IGNITION_EMATCH_BIT 1 << 14
 
 /*
     Commands
@@ -193,6 +215,7 @@ typedef enum
 #define GROUND_ID 0
 #define ROCKET_ID 1
 #define FILL_STATION_ID 2
+#define IGNITION_ID 3
 #define BROADCAST_ID 0xFF
 
 #define DEFAULT_ID FILL_STATION_ID
