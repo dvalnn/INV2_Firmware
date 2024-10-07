@@ -1,3 +1,5 @@
+import java.util.BitSet;
+
 enum ParseState {
   START,
     CMD,
@@ -112,21 +114,18 @@ void processPacket() {
   //println(rx_packet.getPacket());
   if (rx_packet.command == (byte) 0x00) {
     if (rx_packet.id == (byte) 0x02) {
-      displayLogRocket();
+      updateData(rx_packet);
       updateLogStats(1);
     } else if (rx_packet.id == (byte) 0x01) {
-      displayLogFilling();
+      updateData(rx_packet);
       updateLogStats(2);
     }
   } else if (rx_packet.command == (byte) 0x0e) { // STATUS ACK
     displayAck((int)0x0e);
-    if (rx_packet.payloadLength == 36) {
-      displayLogRocket();
-    } else if (rx_packet.payloadLength == 22) {
-      displayLogFilling();
-    }
+    updateData(rx_packet);
   } else if (CMD >= (byte)0x0f && CMD <= (byte)0x1a) {
     displayAck((int)CMD);
+    updateData(rx_packet);
   }
 }
 
@@ -153,76 +152,126 @@ void updateLogStats() {
   log_stats.setText("Rocket Log Rate: " + String.format("%.2f", r_log_rate) + "\nFilling Log Rate: " + String.format("%.2f", f_log_rate) + "\nLog Packets Lost: " + log_packet_loss + "\nAck Packets Lost: " + ack_packet_loss);
 }
 
-void displayLogRocket() {
-  String state = "\n" + "State: " + state_map_rocket.get(Byte.toUnsignedInt(rx_packet.payload[0]));
-  tank_top_temp = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 1, 3))).getShort();
-  tank_bot_temp = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 3, 5))).getShort();
-  chamber_temp1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 5, 7))).getShort(); // launch
-  chamber_temp2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 7, 9))).getShort(); // launch
-  chamber_temp3 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 9, 11))).getShort(); // launch
-  tank_top_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 11, 13))).getShort();
-  tank_bot_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 13, 15))).getShort();
-  r_tank_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 15, 17))).getShort();
-  r_tank_liquid = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 17, 19))).getShort();
-  r_bools = rx_packet.payload[19];
-  r_weight1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 20, 22))).getShort(); // launch
-  r_weight2 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 22, 24))).getShort(); // launch
-  r_weight3 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 24, 26))).getShort(); // launch
-  r_chamber_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 26, 28))).getShort();
-
-  he_mol = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 28, 30))).getShort();
-  tank_mol_loss = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 30, 32))).getShort();
-  
-  liquid_height = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 32, 34))).getShort();
-  liquid_mass = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 34, 36))).getShort();
-  // add gas mass
-
-
-  chamber_temps_label.setText("Chamber Temperatures\n1: " + df.format(chamber_temp1 * .1) + "\n2: " + df.format(chamber_temp2 * .1) + "\n3: " + df.format(chamber_temp3 * .1) + "\nChamber Pressure: " + df.format(r_chamber_press * .01) + "\nThrust: " + df.format((r_weight1 + r_weight2 + r_weight3) * .1) + " kg");
-
-  String bools = String.format("%8s", Integer.toBinaryString(r_bools & 0xFF)).replace(' ', '0');
-  int log_running = Integer.parseInt(bools.substring(0, 1));
-  if (log_running == 1) {
-    r_flash_log = true;
-  } else {
-    r_flash_log = false;
+void updateData(dataPacket packet) {
+  short asks = (short) ((packet.payload[0] << 8) | (packet.payload[1] & 0xff));
+  BitSet bits = BitSet.valueOf(new long[]{asks});
+  int index = 2;
+  for (int i = 0; i < 16; i++) {
+    if (bits.get(i)) {
+      AskData ask = AskData.values()[i];
+      switch (ask) {
+      case rocket_flags_state:
+        if( index + 2 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
+        rocket_data.state = packet.payload[index];
+        byte rocket_flags = packet.payload[index + 1];
+        rocket_data.flash_running = (rocket_flags & (0x01 << 7)) != 0 ? true : false;
+        rocket_data.valves.purge_top = (rocket_flags & (0x01 << 6)) != 0 ? true : false;
+        rocket_data.valves.purge_bot = (rocket_flags & (0x01 << 5)) != 0 ? true : false;
+        rocket_data.valves.chamber = (rocket_flags & (0x01 << 4)) != 0 ? true : false;
+        index += 2;
+        break;
+      case tank_pressures:
+      if( index + 4> packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
+        rocket_data.tank.pressure_top = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
+        rocket_data.tank.pressure_bot = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
+        index += 4;
+        break;
+      case tank_temps:
+      if( index + 4 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
+        rocket_data.tank.temp_top = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
+        rocket_data.tank.temp_bot = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
+        index += 4;
+        break;
+      case gps_data:
+      if( index + 13 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
+        rocket_data.gps.satellite_count = packet.payload[index];
+        rocket_data.gps.altitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 1, index + 3)).getShort();
+        rocket_data.gps.latitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 3, index + 7)).getInt();
+        rocket_data.gps.longitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 7, index + 11)).getInt();
+        rocket_data.gps.horizontal_velocity = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 11, index + 13)).getShort();
+        index += 13;
+        break;
+      case barometer_altitude:
+      if( index + 2 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
+        rocket_data.barometer_altitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
+        index += 2;
+        break;
+      case imu_data:
+      if( index + 18 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
+        rocket_data.imu.accel_x = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
+        rocket_data.imu.accel_y = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
+        rocket_data.imu.accel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
+        rocket_data.imu.gyro_x = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 6, index + 8)).getShort();
+        rocket_data.imu.gyro_y = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 8, index + 10)).getShort();
+        rocket_data.imu.gyro_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 10, index + 12)).getShort();
+        rocket_data.imu.mag_x = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 12, index + 14)).getShort();
+        rocket_data.imu.mag_y = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 14, index + 16)).getShort();
+        rocket_data.imu.mag_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 16, index + 18)).getShort();
+        index += 18; 
+        break;
+      case kalman_data:
+      if( index + 16 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
+        rocket_data.kalman.pos_x = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
+        rocket_data.kalman.pos_y = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
+        rocket_data.kalman.orient_x = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
+        rocket_data.kalman.orient_y = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 6, index + 8)).getShort();
+        rocket_data.kalman.orient_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 8, index + 10)).getShort();
+        rocket_data.kalman.vel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 10, index + 12)).getShort();
+        rocket_data.kalman.acel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 12, index + 14)).getShort();
+        rocket_data.kalman.altitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 14, index + 16)).getShort();
+        index += 16;
+        break;
+      case parachutes_ematches:
+      if( index  + 2 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
+        rocket_data.parachute.main_ematch = packet.payload[index];
+        rocket_data.parachute.drogue_ematch = packet.payload[index + 1];
+        index += 2;
+        break;
+      case fill_station_state:
+      if( index  + 1 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
+        filling_data.state = packet.payload[index];
+        index += 1;
+        break;
+      case fill_pressures:
+      if( index + 6 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
+        filling_data.he.pressure = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
+        filling_data.n2o.pressure = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
+        filling_data.line.pressure = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
+        index += 6;
+        break;
+      case fill_temps:
+      if( index + 6 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
+        filling_data.he.temperature = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
+        filling_data.n2o.temperature = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
+        filling_data.line.temperature = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
+        index += 6;
+        break;
+      case nitro_loadcell:
+      if( index  + 2 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
+        filling_data.n2o.loadcell = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
+        index += 2;
+        break;
+      case ignition_station_state:
+      if( index + 1 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
+        ignition_data.state = packet.payload[index];
+        index += 1;
+        break;
+      case chamber_trigger_temp:
+      if( index + 2 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
+        ignition_data.chamber_trigger_temp = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
+        index += 2;
+        break;
+      case main_ematch:
+      if( index + 1 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
+        ignition_data.main_ematch = packet.payload[index];
+        index += 1;
+        break;
+      default:
+        println("Unknown ask: " + ask);
+        break;
+    }
   }
-
-  log_display_rocket.setText("Rocket" + state);
-  tt_label.setText("Tank Top\nT : " + String.format("%.2f", tank_top_temp * .1) + "\nP : " + String.format("%.2f", tank_top_press * .01));
-  tb_label.setText("Tank Bottom\nT : " + String.format("%.2f", tank_bot_temp * .1) + "\nP : " + String.format("%.2f", tank_bot_press * .01));
-  tl_label.setText("He:\n" + String.format("%.2f", (he_mol * .1)) + " mol\n\nTotal Gas loss:\n" + String.format("%.2f", tank_mol_loss * .1) + " mol\n\nN2O lost:\n" + String.format("%.2f", calc_n2o_loss()) + " g\n\nLiquid mass:\n" + df.format(liquid_mass * .01) + " kg\n\nLiquid height:\n" + df.format(liquid_height * .01) + " m");
 }
-
-void displayLogFilling() {
-  String state = "\n" + "State: " + state_map_filling.get(Byte.toUnsignedInt(rx_packet.payload[0]));
-  f_tank_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 1, 3))).getShort();
-  f_tank_liquid = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 3, 5))).getShort();
-  he_temp = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 5, 7))).getShort();
-  n2o_temp = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 7, 9))).getShort();
-  line_temp = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 9, 11))).getShort();
-  he_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 11, 13))).getShort();
-  n2o_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 13, 15))).getShort();
-  line_press = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 15, 17))).getShort();
-  ematch_v = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 17, 19))).getShort();
-  f_weight1 = (ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, 19, 21))).getShort();
-  f_bools = rx_packet.payload[21];
-
-  String bools = String.format("%8s", Integer.toBinaryString(f_bools & 0xFF)).replace(' ', '0');
-  int log_running = Integer.parseInt(bools.substring(0, 1));
-  if (log_running == 1) {
-    f_flash_log = true;
-  } else {
-    f_flash_log = false;
-  }
-
-  log_display_filling.setText("Filling Station" + state);
-  he_label.setText("He\nT : " + String.format("%.2f", he_temp * .1) + "\nP : " + String.format("%.2f", he_press * .01));
-  n2o_label.setText("N2O\nT : " + String.format("%.2f", n2o_temp * .1) + "\nP : " + String.format("%.2f", n2o_press * .01) + "\nW : " +String.format("%.2f", f_weight1 * .1));
-  line_label.setText("Line Purge\nT : " + String.format("%.2f", line_temp * .1) + "\nP : " + String.format("%.2f", line_press * .01));
-  ematch_label.setText("E-Match value : " + ematch_v);
-  
-  chamber_threshold_temp.setText("Chamber threshold temp: " + df.format(n2o_temp));
 }
 
 void displayAck(int ackValue) {
@@ -303,25 +352,53 @@ void send(byte command, byte[] payload) {
     print("No ID selected\n");
     return;
   }
-  println(command, payload);
-  if (targetID == 3) {
+  //println(command, payload);
+  if (targetID == 4) {
     targetID = (byte)0xFF;
   }
   tx_packet = new dataPacket(command, targetID, payload);
   tx_packet.logPacket(LogEvent.MSG_SENT);
   if (myPort != null) {
-    byte[] packet = tx_packet.getPacket();
-    println(packet);
+    //byte[] packet = tx_packet.getPacket();
+    //println(packet);
     tx_queue.add(tx_packet);
   } else {
     println("No serial port selected!");
   }
 }
 
-float calc_n2o_loss() {
-  if (tank_mol_loss > he_mol) {
-    return (((tank_mol_loss - he_mol) * .1) * 44.012);
-  } else {
-    return 0.0;
+//float calc_n2o_loss() {
+//  if (tank_mol_loss > he_mol) {
+//    return (((tank_mol_loss - he_mol) * .1) * 44.012);
+//  } else {
+//    return 0.0;
+//  }
+//}
+
+short createAskDataMask(AskData[] asks) {
+      short mask = 0;
+      for (AskData ask : asks) {
+        mask |= (1 << ask.ordinal());
+      }
+      return mask;
+    }
+
+void request_status() {
+  if (millis() - last_status_request > status_interval && status_toggle_state == 1) {
+    byte oldID = targetID;
+    if(last_status_id == 1) {
+      targetID = 2;
+      last_status_id = 2;
+    }
+    else {
+      targetID = 1;
+      last_status_id = 1;
+    }
+    AskData[] asks = {AskData.rocket_flags_state};
+    short askShort = createAskDataMask(asks);
+    byte[] asksBytes = ByteBuffer.allocate(2).putShort(askShort).array();
+    send((byte)0x00, asksBytes);
+    targetID = oldID;
+    last_status_request = millis();
   }
 }

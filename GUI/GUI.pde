@@ -2,7 +2,6 @@ import controlP5.*;
 import processing.serial.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
-//import java.util.ArrayDeque;
 import java.nio.*;
 import java.text.DecimalFormat;
 
@@ -44,10 +43,14 @@ ParseState currentParseState = ParseState.START;
 int rx_payload_index = 0;
 byte[] empty_payload = {};
 
+// maps
 HashMap<String, boolean[]> prog_args = new HashMap<String, boolean[]>();
 Map<Integer, String> state_map_rocket = new HashMap<>();
 Map<Integer, String> state_map_filling = new HashMap<>();
+HashMap<String, Byte> man_commands_map = new HashMap<String, Byte>();
+HashMap<Byte, String> command_names = new HashMap<Byte, String>();
 
+// controllers
 Textfield[] textfields = new Textfield[3];
 Textlabel log_display_rocket;
 Textlabel log_display_filling;
@@ -56,23 +59,22 @@ Textlabel log_stats;
 Textlabel history;
 ArrayDeque<String> history_deque;
 Chart fillingChart, launchChart;
-
+Textlabel pressureLabel, temperatureLabel, weightLabel;
+Textlabel weight1Label, weight2Label, weight3Label, tankPressureLabel, chamberPressureLabel;
+Textlabel ematch_label, chamber_temps_label, chamber_threshold_temp;
+Textlabel he_label, n2o_label, line_label, tt_label, tb_label;
+Toggle he_toggle, n2o_toggle, line_toggle, tt_toggle, tb_toggle, chamber_toggle;
 Toggle status_toggle;
+
+// status toggle
 int status_toggle_state = 0;
 int last_status_request = 0;
 int last_status_id = 1;
 
-short tank_top_temp, tank_bot_temp, chamber_temp1, chamber_temp2, chamber_temp3, tank_top_press, tank_bot_press, r_tank_press, r_tank_liquid, r_weight1, r_weight2, r_weight3, r_chamber_press;
-short he_mol, tank_mol_loss, liquid_mass, liquid_height;
-byte r_bools;
-short f_tank_press, f_tank_liquid, he_temp, n2o_temp, line_temp, he_press, n2o_press, line_press, ematch_v, f_bools;
-int f_weight1;
 float max_f = .01, max_l = .01;
 int max_size = 100000;
 int[] prog_inputs = new int[3];
 int selected_index = -1;
-
-float mock_value1, mock_value2, mock_value3, mock_value4;
 
 boolean r_flash_log, f_flash_log;
 
@@ -85,20 +87,11 @@ int valve_toggle_state = 0;
 int last_open_valve = -1;
 
 Textfield valve_ms;
-Textlabel pressureLabel, liquidLabel, temperatureLabel, weightLabel;
-Textlabel weight1Label, weight2Label, weight3Label, tankPressureLabel, chamberPressureLabel;
-Textlabel ematch_label, chamber_temps_label, chamber_threshold_temp;
-Textlabel he_label, n2o_label, line_label, tt_label, tb_label, tl_label;
 
 List<Toggle> valve_toggles;
-Toggle he_toggle, n2o_toggle, line_toggle, tt_toggle, tb_toggle;
 HashMap<Toggle, Byte> valve_toggle_map = new HashMap<Toggle, Byte>();
 
 List<Textlabel> diagram_labels;
-List<String> man_commands = Arrays.asList("Flash Log Start", "Flash Log Stop", "Flash IDs", "Loadcell Calibrate", "Loadcell Tare", "Tank Tare");
-HashMap<String, Byte> man_commands_map = new HashMap<String, Byte>();
-HashMap<Byte, String> command_names = new HashMap<Byte, String>();
-List<String> valves = Arrays.asList("VPU Valve", "Engine Valve", "He Valve", "N2O Valve", "Line Valve");
 int valve_selected = -1;
 
 void setup() {
@@ -125,99 +118,24 @@ void setup() {
 
   font = createFont("arial", displayWidth*.013);
   cp5 = new ControlP5(this);
-
-  setupColors();
+  
+  init_data_objects(); // in data models tab
+  setupColors(); // in global configs tab
   setupControllers(); // in setup controllers tab
   setupCharts(); // in chart functions tab
   init_log(); // log initialization
-  setupDiagrams();
-
-  boolean[] _bl1 = {true, true, false};
-  prog_args.put("Safety Pressure", _bl1);
-  boolean[] _bl2 = {true, false, false};
-  prog_args.put("Purge Pressure", _bl2);
-  boolean[] _bl3 = {false, false, true};
-  prog_args.put("Purge Liquid", _bl3);
-  boolean[] _bl4 = {true, false, false};
-  prog_args.put("Fill He", _bl4);
-  boolean[] _bl5 = {false, true, false};
-  prog_args.put("Fill N2O", _bl5);
-  boolean[] _bl6 = {true, false, false};
-  prog_args.put("Purge Line", _bl6);
-
-  state_map_rocket.put(0, "IDLE");
-  state_map_rocket.put(1, "FUELING");
-  state_map_rocket.put(2, "MANUAL");
-  state_map_rocket.put(3, "SAFETY_PRESSURE");
-  state_map_rocket.put(4, "PURGE_PRESSURE");
-  state_map_rocket.put(5, "PURGE_LIQUID");
-  state_map_rocket.put(6, "SAFETY_PRESSURE_ACTIVE");
-  state_map_rocket.put(7, "READY");
-  state_map_rocket.put(8, "ARMED");
-  state_map_rocket.put(9, "LAUNCH");
-  state_map_rocket.put(10, "ABORT");
-  state_map_rocket.put(11, "IMU_CALIB");
-
-  state_map_filling.put(0, "IDLE");
-  state_map_filling.put(1, "FUELING");
-  state_map_filling.put(2, "MANUEL");
-  state_map_filling.put(3, "FILL_He");
-  state_map_filling.put(4, "FILL_N2O");
-  state_map_filling.put(5, "PURGE_LINE");
-  state_map_filling.put(6, "SAFETY");
-  state_map_filling.put(7, "ABORT");
-  state_map_filling.put(8, "READY");
-  state_map_filling.put(9, "ARMED");
-  state_map_filling.put(10, "FIRE");
-  state_map_filling.put(11, "LAUNCH");
-
-  man_commands_map.put("Flash Log Start", (byte) 0);
-  man_commands_map.put("Flash Log Stop", (byte) 1);
-  man_commands_map.put("Flash IDs", (byte) 2);
-  man_commands_map.put("Loadcell Calibrate", (byte) 7);
-  man_commands_map.put("Loadcell Tare", (byte) 8);
-  man_commands_map.put("Tank Tare", (byte) 9);
-
-  valve_toggle_map.put(tt_toggle, (byte) 0x00);
-  valve_toggle_map.put(tb_toggle, (byte) 0x01);
-  valve_toggle_map.put(he_toggle, (byte) 0x02);
-  valve_toggle_map.put(n2o_toggle, (byte) 0x03);
-  valve_toggle_map.put(line_toggle, (byte) 0x04);
-
-  command_names.put((byte) 0x00, "Status");
-  command_names.put((byte) 0x02, "Abort");
-  command_names.put((byte) 0x03, "Exec Prog");
-  command_names.put((byte) 0x04, "Stop");
-  command_names.put((byte) 0x05, "Start Filling");
-  command_names.put((byte) 0x06, "Manual");
-  command_names.put((byte) 0x07, "Manual Exec");
-  command_names.put((byte) 0x08, "Ready");
-  command_names.put((byte) 0x09, "Arm");
-  command_names.put((byte) 0x0a, "Allow Launch");
-  command_names.put((byte) 0x0b, "Resume");
-  command_names.put((byte) 0x0c, "Fire");
+  setupDiagrams(); // in diagrams tab
+  maps(); // in maps tab
 }
 
 void draw() {
-  updateDiagrams();
+  updateDiagrams(); // diagrams tab
+  updateControllers(); // update controllers tab
   if (millis() - last_chart_time > chart_interval) {
-    updateCharts(r_tank_press, r_tank_liquid, tank_top_temp, f_weight1, r_weight1, r_weight2, r_weight3, r_tank_press, r_chamber_press);
+    updateCharts();
     last_chart_time = millis();
   }
-  if (millis() - last_status_request > status_interval && status_toggle_state == 1) {
-    byte oldID = targetID;
-    if(last_status_id == 1) {
-      targetID = 2;
-      last_status_id = 2;
-    }
-    else {
-      targetID = 1;
-      last_status_id = 1;
-    }
-    send((byte)0x00, empty_payload);
-    targetID = oldID;
-    last_status_request = millis();
-  }
+  request_status(); // comms tab
   if (last_cmd_sent != (byte)0xff) {
     if (millis() - last_cmd_sent_time > packet_loss_timeout) {
       ack_packet_loss++;
@@ -240,6 +158,8 @@ void draw() {
     fill(255, 0, 0);
   }
   circle(width*.79, height*.81, height*.018);
+
+  
 }
 
 public void controlEvent(ControlEvent event) {
