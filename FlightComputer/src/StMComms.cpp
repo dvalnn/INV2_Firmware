@@ -216,6 +216,9 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 
     case CMD_ARM:
     {
+        if(state != READY)
+            return CMD_RUN_STATE_ERROR;
+
         // stage 1
         if (cmd->data[0] != ARN_TRIGGER_1)
         {
@@ -272,6 +275,13 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
     case CMD_ALLOW_LAUNCH:
     {
         Launch = true; // used in kalman for events
+
+        command_rep.cmd = CMD_ALLOW_LAUNCH_ACK;
+        command_rep.size = 0;
+        command_rep.crc = crc((unsigned char *)&command_rep, command_rep.size + 3);
+        write_command(&command_rep, interface);
+
+        return CMD_RUN_OK;
     }
     break;
 

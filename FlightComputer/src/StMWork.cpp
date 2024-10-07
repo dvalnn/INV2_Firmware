@@ -95,13 +95,13 @@ void barometer_calibrate(void)
 
     pressure /= 500;
     ground_hPa = pressure;
-    
+
     preferences.putFloat("ground_hpa", ground_hPa);
 }
 
 void imu_calibrate(void)
 {
-
+    IMU.calibrateAccelGyro();
 }
 
 void read_imu(void)
@@ -120,7 +120,7 @@ void read_imu(void)
     imu_gy = IMU.getGyroY();
     imu_gz = IMU.getGyroZ();
 
-    Serial.printf("%f %f %f %f %f %f\n", imu_ax, imu_ay, imu_az, imu_gx, imu_gy, imu_gz);
+    //Serial.printf("%f %f %f %f %f %f\n", imu_ax, imu_ay, imu_az, imu_gx, imu_gy, imu_gz);
 
     return;
 }
@@ -133,7 +133,7 @@ void read_barometer(void)
     altitude += (lpf_alt - altitude) * betha_alt;
 
 
-    Serial.printf("Altitude barometer %f\n", altitude);
+    //Serial.printf("Altitude barometer %f\n", altitude);
 }
 
 void read_gps(void)
