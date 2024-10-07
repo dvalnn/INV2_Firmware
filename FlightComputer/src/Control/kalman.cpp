@@ -333,6 +333,16 @@ void alt_kalman::H_update(){
     
     float t = (float)delta_update/1000.0;
 
+<<<<<<< HEAD
+    H << 1,t,                                 0.5*t*t,0,    0,                                      0,0,0,                                      0,
+         0,1,                                       t,0,    0,                                      0,0,0,                                      0,
+         0,0, 1 - 2*(Quat.qy*Quat.qy+Quat.qz*Quat.qz),0,    0,  2*(Quat.qx*Quat.qy + Quat.qz*Quat.qw),0,0,  2*(Quat.qx*Quat.qz - Quat.qy*Quat.qw),
+         0,0,                                       0,1,    t,                                0.5*t*t,0,0,                                      0,
+         0,0,                                       0,0,    1,                                      t,0,0,                                      0,
+         0,0,   2*(Quat.qx*Quat.qy - Quat.qz*Quat.qw),0,    0,1 - 2*(Quat.qx*Quat.qx+Quat.qz*Quat.qz),0,0,  2*(Quat.qy*Quat.qz + Quat.qx*Quat.qw),
+         0,0,                                       0,0,    0,                                      0,1,t,                                0.5*t*t,
+         0,0,                                       0,0,    0,                                      0,0,1,                                      t,
+=======
 
 
     H << 0,0,                                       0,0,    0,                                      0,0,0,                                      0,
@@ -343,6 +353,7 @@ void alt_kalman::H_update(){
          0,0,   2*(Quat.qx*Quat.qy - Quat.qz*Quat.qw),0,    0,1 - 2*(Quat.qx*Quat.qx+Quat.qz*Quat.qz),0,0,  2*(Quat.qy*Quat.qz + Quat.qx*Quat.qw),
          0,0,                                       0,0,    0,                                      0,1,0,                                      0,
          0,0,                                       0,0,    0,                                      0,0,0,                                      0,
+>>>>>>> bbeb7f8538b0b38f6621460af72097e70bb4f2d9
          0,0,   2*(Quat.qx*Quat.qz + Quat.qy*Quat.qw),0,    0,  2*(Quat.qy*Quat.qz - Quat.qx*Quat.qw),0,0,1 - 2*(Quat.qx*Quat.qx+Quat.qy*Quat.qy);
 
 

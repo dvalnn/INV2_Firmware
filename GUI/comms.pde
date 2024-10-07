@@ -86,6 +86,8 @@ void parseIncomingByte(byte rx_byte) {
       rx_payload = new byte[PLEN];
       rx_payload_index = 0;
     } else {
+      rx_payload = empty_payload;
+      rx_payload_index = 0;
       currentParseState = ParseState.CRC1;
     }
     break;
@@ -108,10 +110,9 @@ void parseIncomingByte(byte rx_byte) {
 void processPacket() {
   dataPacket new_packet = new dataPacket(CMD, ID, rx_payload);
   rx_packet = new_packet;
-  println();
+  //println();
   println(rx_packet.getPacket());
   rx_packet.logPacket(LogEvent.MSG_RECEIVED);
-  //println(rx_packet.getPacket());
   if (rx_packet.command == (byte) 0x00) {
     if (rx_packet.id == (byte) 0x02) {
       updateData(rx_packet);
@@ -125,7 +126,6 @@ void processPacket() {
     updateData(rx_packet);
   } else if (CMD >= (byte)0x0f && CMD <= (byte)0x1a) {
     displayAck((int)CMD);
-    updateData(rx_packet);
   }
 }
 
@@ -159,9 +159,12 @@ void updateData(dataPacket packet) {
   for (int i = 0; i < 16; i++) {
     if (bits.get(i)) {
       AskData ask = AskData.values()[i];
+      if(packet.payloadLength < index) {
+      println(ask + "? nao ha mais payload filho");
+      return;
+      }
       switch (ask) {
       case rocket_flags_state:
-        if( index + 2 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
         rocket_data.state = packet.payload[index];
         byte rocket_flags = packet.payload[index + 1];
         rocket_data.flash_running = (rocket_flags & (0x01 << 7)) != 0 ? true : false;
@@ -171,19 +174,16 @@ void updateData(dataPacket packet) {
         index += 2;
         break;
       case tank_pressures:
-      if( index + 4> packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
         rocket_data.tank.pressure_top = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         rocket_data.tank.pressure_bot = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
         index += 4;
         break;
       case tank_temps:
-      if( index + 4 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
         rocket_data.tank.temp_top = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         rocket_data.tank.temp_bot = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
         index += 4;
         break;
       case gps_data:
-      if( index + 13 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
         rocket_data.gps.satellite_count = packet.payload[index];
         rocket_data.gps.altitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 1, index + 3)).getShort();
         rocket_data.gps.latitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 3, index + 7)).getInt();
@@ -192,12 +192,10 @@ void updateData(dataPacket packet) {
         index += 13;
         break;
       case barometer_altitude:
-      if( index + 2 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
         rocket_data.barometer_altitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         index += 2;
         break;
       case imu_data:
-      if( index + 18 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
         rocket_data.imu.accel_x = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         rocket_data.imu.accel_y = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
         rocket_data.imu.accel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
@@ -210,7 +208,6 @@ void updateData(dataPacket packet) {
         index += 18; 
         break;
       case kalman_data:
-      if( index + 16 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
         rocket_data.kalman.pos_x = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         rocket_data.kalman.pos_y = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
         rocket_data.kalman.orient_x = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
@@ -220,49 +217,50 @@ void updateData(dataPacket packet) {
         rocket_data.kalman.acel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 12, index + 14)).getShort();
         rocket_data.kalman.altitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 14, index + 16)).getShort();
         index += 16;
+        println("Kalman Data: ");
+        println(rocket_data.kalman.pos_x);
+        println(rocket_data.kalman.pos_y);
+        println(rocket_data.kalman.orient_x);
+        println(rocket_data.kalman.orient_y);
+        println(rocket_data.kalman.orient_z);
+        println(rocket_data.kalman.vel_z);
+        println(rocket_data.kalman.acel_z);
+        println(rocket_data.kalman.altitude);
         break;
       case parachutes_ematches:
-      if( index  + 2 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
         rocket_data.parachute.main_ematch = packet.payload[index];
         rocket_data.parachute.drogue_ematch = packet.payload[index + 1];
         index += 2;
         break;
       case fill_station_state:
-      if( index  + 1 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
         filling_data.state = packet.payload[index];
         index += 1;
         break;
       case fill_pressures:
-      if( index + 6 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
         filling_data.he.pressure = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         filling_data.n2o.pressure = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
         filling_data.line.pressure = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
         index += 6;
         break;
       case fill_temps:
-      if( index + 6 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
         filling_data.he.temperature = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         filling_data.n2o.temperature = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
         filling_data.line.temperature = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
         index += 6;
         break;
       case nitro_loadcell:
-      if( index  + 2 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
         filling_data.n2o.loadcell = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         index += 2;
         break;
       case ignition_station_state:
-      if( index + 1 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
         ignition_data.state = packet.payload[index];
         index += 1;
         break;
       case chamber_trigger_temp:
-      if( index + 2 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
         ignition_data.chamber_trigger_temp = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         index += 2;
         break;
       case main_ematch:
-      if( index + 1 > packet.payloadLength) { print("ja nao ha mais payload filho"); return;}
         ignition_data.main_ematch = packet.payload[index];
         index += 1;
         break;
@@ -360,7 +358,10 @@ void send(byte command, byte[] payload) {
   tx_packet.logPacket(LogEvent.MSG_SENT);
   if (myPort != null) {
     //byte[] packet = tx_packet.getPacket();
-    //println(packet);
+    //for(byte b : packet) {
+      //println(hex(b));
+    //}
+    //println();
     tx_queue.add(tx_packet);
   } else {
     println("No serial port selected!");
@@ -397,6 +398,7 @@ void request_status() {
     AskData[] asks = {AskData.rocket_flags_state};
     short askShort = createAskDataMask(asks);
     byte[] asksBytes = ByteBuffer.allocate(2).putShort(askShort).array();
+    //byte[] asksBytes = {(byte)0xff, (byte)0xff};
     send((byte)0x00, asksBytes);
     targetID = oldID;
     last_status_request = millis();

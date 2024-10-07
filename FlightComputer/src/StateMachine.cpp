@@ -97,7 +97,7 @@ State_t state_machine[rocket_state_size] =
     // MANUAL
     {
         .work = {
-            TANK_TEMPERATURE_SENSORS(100),
+            //TANK_TEMPERATURE_SENSORS(100),
 
             {.channel = ADS_handler_fast, .sample = 1},
 
