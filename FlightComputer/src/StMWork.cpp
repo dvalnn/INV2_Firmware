@@ -4,6 +4,7 @@
 
 #include "HardwareCfg.h"
 #include "StMWork.h"
+#include "StMComms.h"
 #include "GlobalVars.h"
 #include "Comms.h"
 #include "FlashLog.h"
@@ -95,12 +96,15 @@ void barometer_calibrate(void)
 
     pressure /= 500;
     ground_hPa = pressure;
+    
+    preferences.putFloat("ground_hpa", ground_hPa);
 }
 
 void imu_calibrate(void)
 {
 }
 
+<<<<<<< HEAD
 void imu_pid_calibration(void)
 {
 
@@ -129,6 +133,8 @@ void imu_pid_calibration(void)
     // accelgyro.setFullScaleAccelRange(2);
 }
 
+=======
+>>>>>>> bbeb7f8538b0b38f6621460af72097e70bb4f2d9
 void read_imu(void)
 {
     // if(accelgyro.testConnection())
@@ -288,6 +294,18 @@ void logger(void)
     write_command(&command_rep, DEFAULT_LOG_INFERFACE);
 }
 
+void telemetry(void)
+{
+    command_t command;
+    command.cmd = CMD_STATUS;
+    command.size = 2; 
+    uint16_t ask_bits = (ROCKET_STATE_BIT | ROCKET_PRESSURE_BIT | ROCKET_GPS_BIT | ROCKET_KALMAN_BIT | ROCKET_CHUTE_EMATCH_BIT);
+    command.data[0] = ((ask_bits >> 8) & 0xff);
+    command.data[1] = ((ask_bits) & 0xff);
+
+    run_command(&command, -1, DEFAULT_CMD_INTERFACE);    
+}
+
 void read_temperature_tank_top(void)
 {
     if (fast_reboot)
@@ -334,6 +352,7 @@ void read_drag_ematch(void)
 void reset_timers(void)
 {
     arm_reset_timer = 0;
+    burn_timer = 0;
 }
 
 void timer_tick(uint16_t *timer) { (*timer)++; }
