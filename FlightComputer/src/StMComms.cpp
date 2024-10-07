@@ -14,15 +14,15 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
     // Serial.printf("run command %d\n", cmd->cmd);
     command_t command_rep;
     command_rep.id = GROUND_ID;
-
+    Serial.printf("State: %d\n", state);
     switch (cmd->cmd)
     {
     case CMD_STATUS:
     {
         uint16_t index = 0;
-        
-        //union used to get bit representation of float
-        union ufloat{
+        // union used to get bit representation of float
+        union ufloat
+        {
             float f;
             uint32_t i;
         };
@@ -39,18 +39,18 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 
         uint16_t log_bits = (cmd->data[0] << 8) + cmd->data[1];
 
-        if((log_bits & ROCKET_STATE_BIT))
+        if ((log_bits & ROCKET_STATE_BIT))
         {
-           command_rep.data[index++] = state; 
-           command_rep.data[index++] = (uint8_t)((log_running << 7) |
-                                 (Tank_Top_Module.valve_state << 6) |
-                                 (Tank_Bot_Module.valve_state << 5) |
-                                 (Chamber_Module.valve_state << 4) |
-                                 (DragDeployed << 3) |
-                                 (MainDeployed << 2) ); 
+            command_rep.data[index++] = state;
+            command_rep.data[index++] = (uint8_t)((log_running << 7) |
+                                                  (Tank_Top_Module.valve_state << 6) |
+                                                  (Tank_Bot_Module.valve_state << 5) |
+                                                  (Chamber_Module.valve_state << 4) |
+                                                  (DragDeployed << 3) |
+                                                  (MainDeployed << 2));
         }
 
-        if((log_bits & ROCKET_PRESSURE_BIT))
+        if ((log_bits & ROCKET_PRESSURE_BIT))
         {
             int16_t ipressure;
             ipressure = (int16_t)(Tank_Top_Module.pressure * 100);
@@ -66,7 +66,7 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
             command_rep.data[index++] = (ipressure) & 0xff;
         }
 
-        if((log_bits & ROCKET_TEMPERATURE_BIT))
+        if ((log_bits & ROCKET_TEMPERATURE_BIT))
         {
             command_rep.data[index++] = (Tank_Top_Module.temperature >> 8) & 0xff;
             command_rep.data[index++] = (Tank_Top_Module.temperature) & 0xff;
@@ -74,13 +74,12 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
             command_rep.data[index++] = (Tank_Bot_Module.temperature) & 0xff;
         }
 
-        if((log_bits & ROCKET_GPS_BIT))
+        if ((log_bits & ROCKET_GPS_BIT))
         {
 
             float gps_lat = gps.location.lat();
             float gps_lon = gps.location.lng();
             uint16_t gps_altitude = (uint16_t)(gps.altitude.meters());
-
 
             command_rep.data[index++] = (uint8_t)(gps.satellites.value());
 
@@ -88,69 +87,69 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
             command_rep.data[index++] = (uint8_t)((gps_altitude) & 0xff);
 
             f.f = gps_lat;
-            command_rep.data[index++] = (uint8_t)((f.i >> 24) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((f.i >> 16) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((f.i >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((f.i) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((f.i >> 24) & 0xff);
+            command_rep.data[index++] = (uint8_t)((f.i >> 16) & 0xff);
+            command_rep.data[index++] = (uint8_t)((f.i >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((f.i) & 0xff);
 
             f.f = gps_lon;
-            command_rep.data[index++] = (uint8_t)((f.i >> 24) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((f.i >> 16) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((f.i >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((f.i) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((f.i >> 24) & 0xff);
+            command_rep.data[index++] = (uint8_t)((f.i >> 16) & 0xff);
+            command_rep.data[index++] = (uint8_t)((f.i >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((f.i) & 0xff);
 
             uint16_t horizontal_vel = (gps.speed.kmph() * 10);
             command_rep.data[index++] = (uint8_t)((horizontal_vel >> 8) & 0xff);
             command_rep.data[index++] = (uint8_t)((horizontal_vel) & 0xff);
         }
 
-        if((log_bits & ROCKET_BAROMETER_BIT))
+        if ((log_bits & ROCKET_BAROMETER_BIT))
         {
             uint16_t ualtitude = altitude;
             command_rep.data[index++] = (uint8_t)((ualtitude >> 8) & 0xff);
             command_rep.data[index++] = (uint8_t)((ualtitude) & 0xff);
         }
 
-        if((log_bits & ROCKET_IMU_BIT))
+        if ((log_bits & ROCKET_IMU_BIT))
         {
             uint16_t u_ax = imu_ax * 10;
-            command_rep.data[index++] = (uint8_t)((u_ax >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_ax) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_ax >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_ax) & 0xff);
 
             uint16_t u_ay = imu_ay * 10;
-            command_rep.data[index++] = (uint8_t)((u_ay >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_ay) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_ay >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_ay) & 0xff);
 
             uint16_t u_az = imu_az * 10;
-            command_rep.data[index++] = (uint8_t)((u_az >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_az) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_az >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_az) & 0xff);
 
             uint16_t u_gx = imu_gx * 10;
-            command_rep.data[index++] = (uint8_t)((u_gx >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_gx) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_gx >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_gx) & 0xff);
 
             uint16_t u_gy = imu_gy * 10;
-            command_rep.data[index++] = (uint8_t)((u_gy >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_gy) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_gy >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_gy) & 0xff);
 
             uint16_t u_gz = imu_gz * 10;
-            command_rep.data[index++] = (uint8_t)((u_gz >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_gz) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_gz >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_gz) & 0xff);
 
             uint16_t u_mx = imu_mx * 10;
-            command_rep.data[index++] = (uint8_t)((u_mx >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_mx) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_mx >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_mx) & 0xff);
 
             uint16_t u_my = imu_my * 10;
-            command_rep.data[index++] = (uint8_t)((u_my >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_my) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_my >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_my) & 0xff);
 
             uint16_t u_mz = imu_mz * 10;
-            command_rep.data[index++] = (uint8_t)((u_mz >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_mz) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_mz >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_mz) & 0xff);
         }
 
-        if((log_bits & ROCKET_KALMAN_BIT))
+        if ((log_bits & ROCKET_KALMAN_BIT))
         {
             uint16_t u_x = alt_kalman_state(0) * 10;
             uint16_t u_y = alt_kalman_state(3) * 10;
@@ -158,44 +157,44 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
             uint16_t u_vz = alt_kalman_state(7) * 10;
             uint16_t u_az = alt_kalman_state(8) * 10;
 
-            command_rep.data[index++] = (uint8_t)((u_x >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_x) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_x >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_x) & 0xff);
 
-            command_rep.data[index++] = (uint8_t)((u_y >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_y) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_y >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_y) & 0xff);
 
-            command_rep.data[index++] = (uint8_t)((u_z >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_z) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_z >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_z) & 0xff);
 
-            command_rep.data[index++] = (uint8_t)((u_vz >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_vz) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_vz >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_vz) & 0xff);
 
-            command_rep.data[index++] = (uint8_t)((u_az >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_az) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_az >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_az) & 0xff);
 
-            command_rep.data[index++] = (uint8_t)((u_az >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_az) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_az >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_az) & 0xff);
 
-            //convert quaternion [0:1] to uint16 [0, 2^16 - 1]
+            // convert quaternion [0:1] to uint16 [0, 2^16 - 1]
             uint16_t u_quat1 = q[0] * (0xFFFF);
             uint16_t u_quat2 = q[1] * (0xFFFF);
             uint16_t u_quat3 = q[2] * (0xFFFF);
             uint16_t u_quat4 = q[3] * (0xFFFF);
 
-            command_rep.data[index++] = (uint8_t)((u_quat1 >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_quat1) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_quat1 >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_quat1) & 0xff);
 
-            command_rep.data[index++] = (uint8_t)((u_quat2 >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_quat2) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_quat2 >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_quat2) & 0xff);
 
-            command_rep.data[index++] = (uint8_t)((u_quat3 >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_quat3) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_quat3 >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_quat3) & 0xff);
 
-            command_rep.data[index++] = (uint8_t)((u_quat4 >> 8) & 0xff); 
-            command_rep.data[index++] = (uint8_t)((u_quat4) & 0xff); 
+            command_rep.data[index++] = (uint8_t)((u_quat4 >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_quat4) & 0xff);
         }
 
-        if((log_bits & ROCKET_CHUTE_EMATCH_BIT))
+        if ((log_bits & ROCKET_CHUTE_EMATCH_BIT))
         {
             command_rep.data[index++] = ((ematch_drag_reading >> 8) & 0xff);
             command_rep.data[index++] = ((ematch_drag_reading) & 0xff);
@@ -208,7 +207,7 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
         command_rep.crc = crc((unsigned char *)&command_rep, command_rep.size + 3);
         write_command(&command_rep, interface);
 
-        //Serial.printf("he moles %f %d\ntank_moles %f %d\n", he_mol, he_moles_i, tank_mol_lost, tank_mol_lost_i);
+        // Serial.printf("he moles %f %d\ntank_moles %f %d\n", he_mol, he_moles_i, tank_mol_lost, tank_mol_lost_i);
 
         return CMD_RUN_OK;
     }
@@ -364,13 +363,13 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
             // fill data buff with all file indexs
             for (int i = 0; i < index; i++)
             {
-                command_rep.data[i*2 + 1] = ((files[i] >> 8) & 0xff);
-                command_rep.data[i*2 + 2] = (files[i] & 0xff);
+                command_rep.data[i * 2 + 1] = ((files[i] >> 8) & 0xff);
+                command_rep.data[i * 2 + 2] = (files[i] & 0xff);
             }
             command_rep.size += index * 2;
 
-            //for(int i = 0; i < index; i++)
-                //printf("%x %x\n", command_rep.data[i*2 + 1], command_rep.data[i*2 + 2]);
+            // for(int i = 0; i < index; i++)
+            // printf("%x %x\n", command_rep.data[i*2 + 1], command_rep.data[i*2 + 2]);
         }
         break;
 
