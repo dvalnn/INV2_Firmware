@@ -46,6 +46,10 @@ rocket_state_t comm_transition[rocket_state_size][cmd_size] = {
     {.channel = read_gps, .sample = 100}, \
     {.channel = kalman, .sample = 10}
 
+#define KALMAN_EVENTS \
+    {.condition = apogee_event, .reaction = drag_ematch_high, .next_state = -1}, \
+    {.condition = main_deployment_condition, .reaction = main_ematch_high, .next_state = -1}
+
 State_t state_machine[rocket_state_size] =
 {
     // IDLE
@@ -237,16 +241,18 @@ State_t state_machine[rocket_state_size] =
             //TANK_TEMPERATURE_SENSORS(1000),
             RUN_KALMAN,
 
+            {.channel = burn_timer_tick, .sample = 7},
+
             {.channel = ADS_handler_all_fast, .sample = 1},
 
-            {.channel = logger, .sample = 100},
+            {.channel = telemetry, .sample = 1000},
             {.channel = flash_log_sensors, .sample = 100},
         },
 
         .events = {
             {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
-            {.condition = apogee_event, .reaction = drag_ematch_high, .next_state = -1},
-            {.condition = main_deployment_condition, .reaction = main_ematch_high, .next_state = -1},
+            {.condition = motor_timer_event, .reaction = V_Engine_close, .next_state = FLIGHT},
+            KALMAN_EVENTS,
         },
 
         .comms = comm_transition[LAUNCH],
@@ -256,7 +262,7 @@ State_t state_machine[rocket_state_size] =
     {
         .work = {
             {.channel = V_Engine_close, .sample = 5},
-            {.channel = V_Vpu_open, .sample = 5},
+            {.channel = V_Purge_open, .sample = 5},
 
             TANK_TEMPERATURE_SENSORS(250),
             
@@ -265,11 +271,13 @@ State_t state_machine[rocket_state_size] =
             {.channel = ADS_handler_all_fast, .sample = 1},
 
             {.channel = logger, .sample = 500},
+            {.channel = telemetry, .sample = 1000},
             {.channel = flash_log_sensors, .sample = 500},
         },
 
         .events = {
             {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
+            KALMAN_EVENTS,
         },
 
         .comms = comm_transition[ABORT],
@@ -278,11 +286,16 @@ State_t state_machine[rocket_state_size] =
     // FLIGHT
     {
         .work = {
+            {.channel = V_Engine_close, .sample = 5},
+            
+            {.channel = telemetry, .sample = 1000},
+            {.channel = flash_log_sensors, .sample = 100},
+            RUN_KALMAN,
         },
 
         .events = {
-            {TrueCond, NULL, IDLE}
-        }, // this will always evaluate true, imu calib is run one time and is automaticly sent to idle
+            KALMAN_EVENTS,
+        }, 
 
         .comms = comm_transition[FLIGHT],
     }

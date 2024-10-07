@@ -16,7 +16,7 @@ bool TrueCond(void) { return true; }
 
 bool prog2_finish_cond(void)
 {
-    if((int16_t)(Tank_Top_Module.pressure * 100) < RP1)
+    if((int16_t)(Tank_Top_Module.pressure * 100) < RP1 || Tank_Bot_Module.temperature < RP2)
     {
         return true;
     }
@@ -61,6 +61,10 @@ bool arm_timer_event(void)
     return (arm_reset_timer > ARM_TIMER_TRIGGER);
 }
 
+bool motor_timer_event(void)
+{
+    return (burn_timer > MOTOR_BURN_TIMER_TRIGGER);
+}
 
 //---------Kalman------------
 bool apogee_event(void)

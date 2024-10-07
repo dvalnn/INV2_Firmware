@@ -433,7 +433,7 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
             break;
             case Purge_valve:
             {
-                if (!Tank_Top_Module.valve_state)
+                if (!Tank_Bot_Module.valve_state)
                 {
                     digitalWrite(Tank_Bot_Module.valve_pin, 1);
                     delay(valve_time);

@@ -312,9 +312,10 @@ void alt_kalman::begin(){
     Q_mean = MatrixXf::Zero(9,1);
 }
 
+
 void alt_kalman::A_update(){
 
-    float t = (float)delta_predict/2000.0;
+    float t = (float)delta_predict/1000.0;
 
     A << 1,t,0.5*t*t,0,    0,      0,0,0,      0,
          0,1,      t,0,    0,      0,0,0,      0,
@@ -322,7 +323,7 @@ void alt_kalman::A_update(){
          0,0,      0,1,    t,0.5*t*t,0,0,      0,
          0,0,      0,0,    1,      t,0,0,      0,
          0,0,      0,0,    0,      0,0,0,      0,
-         0,0,      0,0,    0,      0,0,t,0.5*t*t,
+         0,0,      0,0,    0,      0,1,t,0.5*t*t,
          0,0,      0,0,    0,      0,0,1,      t,
          0,0,      0,0,    0,      0,0,0,      0;
 
@@ -330,24 +331,26 @@ void alt_kalman::A_update(){
 
 void alt_kalman::H_update(){
     
-    float t = (float)delta_update/2000.0;
+    float t = (float)delta_update/1000.0;
 
-    H << 1,t,                                 0.5*t*t,0,    0,                                      0,0,0,                                      0,
-         0,1,                                       t,0,    0,                                      0,0,0,                                      0,
-         0,0, 1 - 2*(Quat.qy*Quat.qy+Quat.qz*Quat.qz),0,    0,  2*(Quat.qx*Quat.qy - Quat.qz*Quat.qw),0,0,  2*(Quat.qx*Quat.qz + Quat.qy*Quat.qw),
-         0,0,                                       0,1,    t,                                0.5*t*t,0,0,                                      0,
-         0,0,                                       0,0,    1,                                      t,0,0,                                      0,
-         0,0,   2*(Quat.qx*Quat.qy + Quat.qz*Quat.qw),0,    0,1 - 2*(Quat.qx*Quat.qx+Quat.qz*Quat.qz),0,0,  2*(Quat.qy*Quat.qz - Quat.qx*Quat.qw),
-         0,0,                                       0,0,    0,                                      0,1,t,                                0.5*t*t,
-         0,0,                                       0,0,    0,                                      0,0,1,                                      t,
-         0,0,   2*(Quat.qx*Quat.qz - Quat.qy*Quat.qw),0,    0,  2*(Quat.qy*Quat.qz + Quat.qx*Quat.qw),0,0,1 - 2*(Quat.qx*Quat.qx+Quat.qy*Quat.qy);
+
+
+    H << 0,0,                                       0,0,    0,                                      0,0,0,                                      0,
+         0,0,                                       0,0,    0,                                      0,0,0,                                      0,
+         0,0, 1 - 2*(Quat.qy*Quat.qy+Quat.qz*Quat.qz),0,    0,  2*(Quat.qx*Quat.qy + Quat.qz*Quat.qw),0,0,  2*(Quat.qx*Quat.qz - Quat.qy*Quat.qw),
+         0,0,                                       0,0,    0,                                      0,0,0,                                      0,
+         0,0,                                       0,0,    0,                                      0,0,0,                                      0,
+         0,0,   2*(Quat.qx*Quat.qy - Quat.qz*Quat.qw),0,    0,1 - 2*(Quat.qx*Quat.qx+Quat.qz*Quat.qz),0,0,  2*(Quat.qy*Quat.qz + Quat.qx*Quat.qw),
+         0,0,                                       0,0,    0,                                      0,1,0,                                      0,
+         0,0,                                       0,0,    0,                                      0,0,0,                                      0,
+         0,0,   2*(Quat.qx*Quat.qz + Quat.qy*Quat.qw),0,    0,  2*(Quat.qy*Quat.qz - Quat.qx*Quat.qw),0,0,1 - 2*(Quat.qx*Quat.qx+Quat.qy*Quat.qy);
 
 
 }
 
 void alt_kalman::B_update(){
     
-    float t = (float)delta_predict/2000.0;
+    float t = (float)delta_predict/1000.0;
 
     B << 0,0,                                       0,0,    0,                                      0,0,0,                                      0,
          0,0,                                       0,0,    0,                                      0,0,0,                                      0,
@@ -355,12 +358,13 @@ void alt_kalman::B_update(){
          0,0,                                       0,0,    0,                                      0,0,0,                                      0,
          0,0,                                       0,0,    0,                                      0,0,0,                                      0,
          0,0,   2*(Quat.qx*Quat.qy + Quat.qz*Quat.qw),0,    0,1 - 2*(Quat.qx*Quat.qx+Quat.qz*Quat.qz),0,0,  2*(Quat.qy*Quat.qz - Quat.qx*Quat.qw),
-         0,0,                                       0,0,    0,                                      0,1,0,                                      0,
+         0,0,                                       0,0,    0,                                      0,0,0,                                      0,
          0,0,                                       0,0,    0,                                      0,0,0,                                      0,
          0,0,   2*(Quat.qx*Quat.qz - Quat.qy*Quat.qw),0,    0,  2*(Quat.qy*Quat.qz + Quat.qx*Quat.qw),0,0,1 - 2*(Quat.qx*Quat.qx+Quat.qy*Quat.qy);
 
 
 }
+
 MatrixXf alt_kalman::cicle(MyQuaternion new_Quat, MatrixXf new_Z, MatrixXf new_U){
     
     #ifdef KALMAN_DEBBUG

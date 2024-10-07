@@ -9,9 +9,11 @@
  */
 
 void V_Vpu_close(void);
+void V_Purge_close(void);
 void V_Engine_close(void);
 
 void V_Vpu_open(void);
+void V_Purge_open(void);
 void V_Engine_open(void);
 
 void main_ematch_high(void);
@@ -49,9 +51,11 @@ void imu_pid_calibration(void);
 
 void flash_log_sensors(void);
 void logger(void);
+void telemetry(void);
 
 void reset_timers(void);
 void arm_timer_tick(void);
+void burn_timer_tick(void);
 
 
 void single_mode_stm();

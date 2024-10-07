@@ -27,4 +27,5 @@ void enter_safety_purge(void);
 void exit_safety_purge(void);
 
 bool arm_timer_event(void);
+bool motor_timer_event(void);
 #endif

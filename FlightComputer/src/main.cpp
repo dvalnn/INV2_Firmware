@@ -149,8 +149,15 @@ void BAROMETER_Setup(void)
                   Adafruit_BMP280::STANDBY_MS_1   /* Standby time. */
                   );
     
-    ground_hPa = bmp.readPressure(); // in Si units for Pascal
-    ground_hPa /= 100;
+    if(fast_reboot)
+    {
+        ground_hPa = preferences.getFloat("ground_hpa", 1015.6);
+    }
+    else
+    {
+        ground_hPa = bmp.readPressure(); // in Si units for Pascal
+        ground_hPa /= 100;
+    }
 }
 
 void Valves_Setup(void)
@@ -241,14 +248,8 @@ void setup() {
     //printf("Last state %u\n", last_state);
     //printf("Restart_count %u\n", restart_count);
 
-    if(last_state == LAUNCH && restart_count < MAX_RESTART_ALLOWED)
-    {
-        state = last_state;
-        preferences.putUInt("restart_count", restart_count + 1);
-        //start_log();
-        fast_reboot = 1;
-    }
-    else if(last_state == ABORT && restart_count < MAX_RESTART_ALLOWED)
+    if((last_state == LAUNCH || last_state == FLIGHT || last_state == ABORT)  
+        && restart_count < MAX_RESTART_ALLOWED)
     {
         state = last_state;
         preferences.putUInt("restart_count", restart_count + 1);
@@ -268,7 +269,7 @@ void setup() {
 
     kalman_Setup();
 
-    //pressure_Setup();
+    pressure_Setup();
     //if(! fast_reboot) temp_i2c_Setup();
 
     printf("Setup done\n");
