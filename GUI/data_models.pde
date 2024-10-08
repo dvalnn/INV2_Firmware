@@ -51,14 +51,13 @@ class RocketData {
         mag_z;
     }
     class Kalman {
-        short pos_x,
-        pos_y,
-        orient_x,
-        orient_y,
-        orient_z,
+        short altitude,
         vel_z,
         acel_z,
-        altitude;
+        q1,
+        q2,
+        q3,
+        q4;
     }
     class Parachute {
         short main_ematch,

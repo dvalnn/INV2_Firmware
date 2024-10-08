@@ -82,9 +82,9 @@ void updateCharts() {
   weightLabel.setText("Weight: " + df.format(fw));
 
   // launch chart
-  float lalt = float(rocket_data.kalman.altitude),
-        lvel = float(rocket_data.kalman.vel_z),
-        lacel = float(rocket_data.kalman.acel_z);
+  float lalt = float(rocket_data.kalman.altitude) * .1,
+        lvel = float(rocket_data.kalman.vel_z) * .1,
+        lacel = float(rocket_data.kalman.acel_z) * .1;
 
   launchChart.addData("Altitude", lalt);
   launchChart.addData("Velocity", lvel);

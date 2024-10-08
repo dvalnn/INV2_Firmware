@@ -121,6 +121,9 @@ void processPacket() {
       updateData(rx_packet);
       updateLogStats(2);
     }
+  } else if (rx_packet.command == (byte) 0x01) {
+    updateData(rx_packet);
+    //updateLogStats(1);
   } else if (rx_packet.command == (byte) 0x0e) { // STATUS ACK
     displayAck((int)0x0e);
     updateData(rx_packet);
@@ -159,9 +162,9 @@ void updateData(dataPacket packet) {
   for (int i = 0; i < 16; i++) {
     if (bits.get(i)) {
       AskData ask = AskData.values()[i];
-      if(packet.payloadLength < index) {
-      println(ask + "? nao ha mais payload filho");
-      return;
+      if (packet.payloadLength < index) {
+        println(ask + "? nao ha mais payload filho");
+        return;
       }
       switch (ask) {
       case rocket_flags_state:
@@ -176,7 +179,8 @@ void updateData(dataPacket packet) {
       case tank_pressures:
         rocket_data.tank.pressure_top = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         rocket_data.tank.pressure_bot = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
-        index += 4;
+        rocket_data.chamber_pressure = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
+        index += 6;
         break;
       case tank_temps:
         rocket_data.tank.temp_top = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
@@ -205,31 +209,21 @@ void updateData(dataPacket packet) {
         rocket_data.imu.mag_x = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 12, index + 14)).getShort();
         rocket_data.imu.mag_y = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 14, index + 16)).getShort();
         rocket_data.imu.mag_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 16, index + 18)).getShort();
-        index += 18; 
+        index += 18;
         break;
       case kalman_data:
-        rocket_data.kalman.pos_x = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
-        rocket_data.kalman.pos_y = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
-        rocket_data.kalman.orient_x = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
-        rocket_data.kalman.orient_y = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 6, index + 8)).getShort();
-        rocket_data.kalman.orient_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 8, index + 10)).getShort();
-        rocket_data.kalman.vel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 10, index + 12)).getShort();
-        rocket_data.kalman.acel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 12, index + 14)).getShort();
-        rocket_data.kalman.altitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 14, index + 16)).getShort();
-        index += 16;
-        println("Kalman Data: ");
-        println(rocket_data.kalman.pos_x);
-        println(rocket_data.kalman.pos_y);
-        println(rocket_data.kalman.orient_x);
-        println(rocket_data.kalman.orient_y);
-        println(rocket_data.kalman.orient_z);
-        println(rocket_data.kalman.vel_z);
-        println(rocket_data.kalman.acel_z);
-        println(rocket_data.kalman.altitude);
+        rocket_data.kalman.altitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
+        rocket_data.kalman.vel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
+        rocket_data.kalman.acel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
+        rocket_data.kalman.q1 = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 6, index + 8)).getShort();
+        rocket_data.kalman.q2 = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 8, index + 10)).getShort();
+        rocket_data.kalman.q3 = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 10, index + 12)).getShort();
+        rocket_data.kalman.q4 = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 12, index + 14)).getShort();
+        index += 14;
         break;
       case parachutes_ematches:
-        rocket_data.parachute.main_ematch = packet.payload[index];
-        rocket_data.parachute.drogue_ematch = packet.payload[index + 1];
+        rocket_data.parachute.main_ematch = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
+        rocket_data.parachute.drogue_ematch = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
         index += 2;
         break;
       case fill_station_state:
@@ -267,9 +261,9 @@ void updateData(dataPacket packet) {
       default:
         println("Unknown ask: " + ask);
         break;
+      }
     }
   }
-}
 }
 
 void displayAck(int ackValue) {
@@ -359,7 +353,7 @@ void send(byte command, byte[] payload) {
   if (myPort != null) {
     //byte[] packet = tx_packet.getPacket();
     //for(byte b : packet) {
-      //println(hex(b));
+    //println(hex(b));
     //}
     //println();
     tx_queue.add(tx_packet);
@@ -377,21 +371,20 @@ void send(byte command, byte[] payload) {
 //}
 
 short createAskDataMask(AskData[] asks) {
-      short mask = 0;
-      for (AskData ask : asks) {
-        mask |= (1 << ask.ordinal());
-      }
-      return mask;
-    }
+  short mask = 0;
+  for (AskData ask : asks) {
+    mask |= (1 << ask.ordinal());
+  }
+  return mask;
+}
 
 void request_status() {
   if (millis() - last_status_request > status_interval && status_toggle_state == 1) {
     byte oldID = targetID;
-    if(last_status_id == 1) {
+    if (last_status_id == 1) {
       targetID = 2;
       last_status_id = 2;
-    }
-    else {
+    } else {
       targetID = 1;
       last_status_id = 1;
     }

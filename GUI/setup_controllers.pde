@@ -261,8 +261,9 @@ void setupControllers() {
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
 
   cp5.addButton("Change Valve State")
-    .setPosition(width*.6, height*.45)
-    .setSize((int)(width*.17), (int)(height*.05))
+    .setPosition(width*.12, height*.45)
+    .setSize((int)(width*.05), (int)(height*.04))
+    .setLabel("Set")
     .moveTo("default")
     .setColor(defaultColor)
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
@@ -295,8 +296,8 @@ void setupControllers() {
 
   for (int i = 0; i < man_commands.size(); i++) {
     cp5.addButton(man_commands.get(i))
-      .setPosition(width*.6, height*.05 + height*.06*i)
-      .setSize((int)(width*.17), (int)(height*.05))
+      .setPosition(width*.6, height*.05 + height*.05*i)
+      .setSize((int)(width*.17), (int)(height*.04))
       .moveTo("default")
       .setColor(defaultColor)
       .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
