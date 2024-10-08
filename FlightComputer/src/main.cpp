@@ -174,7 +174,6 @@ void Valves_Setup(void)
 void kalman_Setup(void)
 {
     att.select_filter(QuatFilterSel::MAHONY);
-    //attitude.begin();
     alt_kal.begin();
 }
 

@@ -204,33 +204,16 @@ void kalman(void)
         q[3] = axis(2) * isin(t / 2);
         first = false;
         Z_2 << 0, 0, 0, 0, 0, 0, 0, 0, 0;
-        last_lat = gps.location.lat();
-        last_long = gps.location.lng();
-        gps_alt_offset = gps.altitude.meters();
-        alt_offset = altitude;
+        
         start = millis();
     }
 
-    /* acc << ax, ay, az;
-    norm_acc = acc/acc.norm();
-    axis = norm_acc.cross(norm_g);
-    axis = axis/axis.norm();
-    float t = iacos(norm_acc.dot(norm_g));
-    Z << icos(t/2.0), axis(0)*isin(t/2), axis(1)*isin(t/2), axis(2)*isin(t/2), gx, gy, gz;
-    U << gx, gy, gz;
-
-    orientation_state = attitude.cicle(Z,U); */
     att.update(imu_ax, imu_ay, imu_az, imu_gx, imu_gy, imu_gz, 0, 0, 0, q);
 
     Q.qw = q[0];
     Q.qx = q[1];
     Q.qy = q[2];
     Q.qz = q[3];
-
-    /* Q.qw = orientation_state(0);
-    Q.qx = orientation_state(1);
-    Q.qy = orientation_state(2);
-    Q.qz = orientation_state(3); */
 
 #ifdef KALMAN_DEBBUG
     Serial.println("Orientation done");
@@ -244,12 +227,10 @@ void kalman(void)
     Serial.print(Q.qz);
     Serial.println("Starting altitude");
 #endif
-    quaternion_to_euler(Q, angles);
     Acc << imu_ax, imu_ay, imu_az;
-    // Acc = quaternion_to_rotation_matrix(Q)*Acc;
 
     U_2 << 0, 0, Acc(0), 0, 0, Acc(1), 0, 0, Acc(2);
-    Z_2 << (last_lat - gps.location.lat()) * 111000.0, gps.speed.mps() * icos(angles[2]), Acc(0), (last_long - gps.location.lng()) * 111000.0, gps.speed.mps() * isin(angles[2]), Acc(1), altitude, 0, Acc(2);
+    Z_2 << 0, 0, Acc(0), 0, 0, Acc(1), altitude, 0, Acc(2); 
 
     last_alt = altitude;
 #ifdef KALMAN_DEBBUG
