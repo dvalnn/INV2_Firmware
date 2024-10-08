@@ -39,18 +39,14 @@ int run_command(command_t* cmd, rocket_state_t state, interface_t interface)
 
             if((log_bits & FILL_PRESSURE_BIT))
             {
-                int16_t ipressure;
-                ipressure = (int16_t)(He_Module.pressure * 100);
-                command_rep.data[index++] = (ipressure >> 8) & 0xff;
-                command_rep.data[index++] = (ipressure) & 0xff;
+                command_rep.data[index++] = (He_Module.pressure >> 8) & 0xff;
+                command_rep.data[index++] = (He_Module.pressure ) & 0xff;
 
-                ipressure = (int16_t)(N2O_Module.pressure * 100);
-                command_rep.data[index++] = (ipressure >> 8) & 0xff;
-                command_rep.data[index++] = (ipressure) & 0xff;
+                command_rep.data[index++] = (N2O_Module.pressure >> 8) & 0xff;
+                command_rep.data[index++] = (N2O_Module.pressure) & 0xff;
 
-                ipressure = (int16_t)(Line_Module.pressure * 100);
-                command_rep.data[index++] = (ipressure >> 8) & 0xff;
-                command_rep.data[index++] = (ipressure) & 0xff;
+                command_rep.data[index++] = (Line_Module.pressure >> 8) & 0xff;
+                command_rep.data[index++] = (Line_Module.pressure) & 0xff;
             }
 
             if((log_bits & FILL_TEMPERATURE_BIT))
