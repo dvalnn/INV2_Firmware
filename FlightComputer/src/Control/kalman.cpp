@@ -2,8 +2,6 @@
 
 ///_______________________________GENERIC KALMAN______________________________________________________
 
-//#define KALMAN_DEBBUG
-
 void ekf::update(){
     Eigen::MatrixXf IS;
 
@@ -30,7 +28,7 @@ void ekf::update(){
         Serial.println("Starting X update");
     #endif
 
-    X = X + K * (Z - H * X);
+    X = X + K * (Z - H * (X + X_off));
     
     #ifdef KALMAN_UPDATE_DEBBUG
         Serial.println("X done");
@@ -53,7 +51,7 @@ void ekf::predict(){
         #endif
         Serial.println("Starting X predict");
     #endif
-    X = A * X + B * U;
+    X = A * X + B * U - X_off;
     #ifdef KALMAN_PREDICT_DEBBUG
         Serial.println("X done");
         Serial.println("Starting P predict");
@@ -188,13 +186,12 @@ MatrixXf ekf::tick(MatrixXf new_Z, MatrixXf new_U){
         }
 
         last_X(all,0) =  X; */
-    X_rem = last_X(all,cur_X);
-    last_X(all,cur_X)=X;
-    if(cur_X==MAX_STORAGE-1)
-        cur_X=0;
-    else
-        ++cur_X;
-
+        X_rem = last_X(all,cur_X);
+        last_X(all,cur_X)=X;
+        if(cur_X==MAX_STORAGE-1)
+            cur_X=0;
+        else
+            ++cur_X;
     #ifdef KALMAN_DEBBUG        
         Serial.println("Starting Q");
     #endif
@@ -207,88 +204,6 @@ MatrixXf ekf::tick(MatrixXf new_Z, MatrixXf new_U){
 
     return X;
 
-}
-
-
-///________________________________ORIENTATION KALMAN_____________________________________________
-
-void orientation::begin(){
-    last_X = MatrixXf::Zero(7,MAX_STORAGE);
-    last_Z = MatrixXf::Zero(7,MAX_STORAGE);
-    P = MatrixXf::Identity(7,7);
-    H = MatrixXf::Identity(7,7);
-    Q = MatrixXf::Identity(7,7);
-    R = MatrixXf::Identity(7,7);
-    A = MatrixXf::Identity(7,7);
-    K = MatrixXf::Zero(7,7);
-    B = MatrixXf::Zero(7,3);
-    Z = MatrixXf::Zero(7,1);
-    U = MatrixXf::Zero(3,1);
-    X = MatrixXf::Zero(7,1);
-    R_mean = MatrixXf::Zero(7,1);
-    Q_mean = MatrixXf::Zero(7,1);
-}
-
-void orientation::A_update(){
-
-    float t = (float)delta_predict/2000.0;
-
-    A <<      1, -U(0)*t, -U(1)*t, -U(2)*t, 0, 0, 0,
-         U(0)*t,       1,  U(2)*t, -U(1)*t, 0, 0, 0,
-         U(1)*t, -U(2)*t,       1,  U(0)*t, 0, 0, 0,
-         U(2)*t,  U(1)*t, -U(0)*t,       1, 0, 0, 0,
-              0,       0,       0,       0, 1, 0, 0,
-              0,       0,       0,       0, 0, 1, 0,
-              0,       0,       0,       0, 0, 0, 1;
-
-
-}
-
-void orientation::B_update(){
-    float t = (float)delta_predict/1000.0;
-    #ifdef KALMAN_B_DEBBUG
-        Serial.print("t: ");
-        Serial.print(t);
-        Serial.print(" |X(0): ");
-        Serial.print(X(0));
-        Serial.print(" |X(1): ");
-        Serial.print(X(1));
-        Serial.print(" |X(2): ");
-        Serial.print(X(2));
-        Serial.print(" |X(3): ");
-        Serial.println(X(3));
-    #endif
-    B <<  X(1),  X(2),  X(3),  
-         -X(0),  X(3), -X(2),
-         -X(3), -X(0),  X(1), 
-          X(2), -X(1), -X(0),
-             t,     0,     0,
-             0,     t,     0,
-             0,     0,     t;
-
-
-}
-
-MatrixXf orientation::cicle(MatrixXf new_Z, MatrixXf new_U){
-    
-    #ifdef KALMAN_DEBBUG
-        Serial.println("Starting A");
-    #endif
-
-    A_update();
-
-    #ifdef KALMAN_DEBBUG
-        Serial.println("A done");
-        Serial.println("Starting B");
-    #endif
-
-    B_update();
-
-    #ifdef KALMAN_DEBBUG
-        Serial.println("B done");
-    #endif
-
-    return tick(new_Z, new_U);
 }
 
 
@@ -308,37 +223,41 @@ void alt_kalman::begin(){
     Z = MatrixXf::Zero(9,1);
     U = MatrixXf::Zero(9,1);
     X = MatrixXf::Zero(9,1);
+    X_off = MatrixXf::Zero(9,1);
     R_mean = MatrixXf::Zero(9,1);
     Q_mean = MatrixXf::Zero(9,1);
-}
 
+    X_off << 0,0,0,0,0,0,0,0,9.8;
+}
 
 void alt_kalman::A_update(){
 
     float t = (float)delta_predict/1000.0;
 
-    A << 1,t,0.5*t*t,0,    0,      0,0,0,      0,
-         0,1,      t,0,    0,      0,0,0,      0,
-         0,0,      0,0,    0,      0,0,0,      0,
-         0,0,      0,1,    t,0.5*t*t,0,0,      0,
-         0,0,      0,0,    1,      t,0,0,      0,
-         0,0,      0,0,    0,      0,0,0,      0,
-         0,0,      0,0,    0,      0,1,t,0.5*t*t,
-         0,0,      0,0,    0,      0,0,1,      t,
-         0,0,      0,0,    0,      0,0,0,      0;
+    A << 0,0,0,0,0,0,0,0,0,
+         0,0,0,0,0,0,0,0,0,
+         0,0,0,0,0,0,0,0,0,
+         0,0,0,0,0,0,0,0,0,
+         0,0,0,0,0,0,0,0,0,
+         0,0,0,0,0,0,0,0,0,
+         0,0,0,0,0,0,1,t,0.5*t*t,
+         0,0,0,0,0,0,0,1,t,
+         0,0,0,0,0,0,0,0,0;
 
 }
 
 void alt_kalman::H_update(){
-    
+                    
     float t = (float)delta_update/1000.0;
+
+
 
     H << 0,0,                                       0,0,    0,                                      0,0,0,                                      0,
          0,0,                                       0,0,    0,                                      0,0,0,                                      0,
-         0,0, 1 - 2*(Quat.qy*Quat.qy+Quat.qz*Quat.qz),0,    0,  2*(Quat.qx*Quat.qy + Quat.qz*Quat.qw),0,0,  2*(Quat.qx*Quat.qz - Quat.qy*Quat.qw),
          0,0,                                       0,0,    0,                                      0,0,0,                                      0,
          0,0,                                       0,0,    0,                                      0,0,0,                                      0,
-         0,0,   2*(Quat.qx*Quat.qy - Quat.qz*Quat.qw),0,    0,1 - 2*(Quat.qx*Quat.qx+Quat.qz*Quat.qz),0,0,  2*(Quat.qy*Quat.qz + Quat.qx*Quat.qw),
+         0,0,                                       0,0,    0,                                      0,0,0,                                      0,
+         0,0,                                       0,0,    0,                                      0,0,0,                                      0,
          0,0,                                       0,0,    0,                                      0,1,0,                                      0,
          0,0,                                       0,0,    0,                                      0,0,0,                                      0,
          0,0,   2*(Quat.qx*Quat.qz + Quat.qy*Quat.qw),0,    0,  2*(Quat.qy*Quat.qz - Quat.qx*Quat.qw),0,0,1 - 2*(Quat.qx*Quat.qx+Quat.qy*Quat.qy);
@@ -352,10 +271,10 @@ void alt_kalman::B_update(){
 
     B << 0,0,                                       0,0,    0,                                      0,0,0,                                      0,
          0,0,                                       0,0,    0,                                      0,0,0,                                      0,
-         0,0, 1 - 2*(Quat.qy*Quat.qy+Quat.qz*Quat.qz),0,    0,  2*(Quat.qx*Quat.qy - Quat.qz*Quat.qw),0,0,  2*(Quat.qx*Quat.qz + Quat.qy*Quat.qw),
          0,0,                                       0,0,    0,                                      0,0,0,                                      0,
          0,0,                                       0,0,    0,                                      0,0,0,                                      0,
-         0,0,   2*(Quat.qx*Quat.qy + Quat.qz*Quat.qw),0,    0,1 - 2*(Quat.qx*Quat.qx+Quat.qz*Quat.qz),0,0,  2*(Quat.qy*Quat.qz - Quat.qx*Quat.qw),
+         0,0,                                       0,0,    0,                                      0,0,0,                                      0,
+         0,0,                                       0,0,    0,                                      0,0,0,                                      0,
          0,0,                                       0,0,    0,                                      0,0,0,                                      0,
          0,0,                                       0,0,    0,                                      0,0,0,                                      0,
          0,0,   2*(Quat.qx*Quat.qz - Quat.qy*Quat.qw),0,    0,  2*(Quat.qy*Quat.qz + Quat.qx*Quat.qw),0,0,1 - 2*(Quat.qx*Quat.qx+Quat.qy*Quat.qy);
@@ -365,6 +284,8 @@ void alt_kalman::B_update(){
 
 MatrixXf alt_kalman::cicle(MyQuaternion new_Quat, MatrixXf new_Z, MatrixXf new_U){
     
+    MatrixXf result;
+
     #ifdef KALMAN_DEBBUG
         Serial.println("Starting A");
     #endif
@@ -382,10 +303,12 @@ MatrixXf alt_kalman::cicle(MyQuaternion new_Quat, MatrixXf new_Z, MatrixXf new_U
         Serial.println("H done");
     #endif
 
-    MatrixXf mx = tick(new_Z, new_U);
-    X(8) = X(8) - 1.04;
-    return mx;
+    return tick(new_Z, new_U);
 }
 
+
+void alt_kalman::update_offset(float alt_off, float vel_off, float acc_off){
+    X_off << 0,0,0,0,0,0,alt_off,vel_off,acc_off;
+}
 
 
