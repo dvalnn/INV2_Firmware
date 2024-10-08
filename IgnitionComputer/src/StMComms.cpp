@@ -16,47 +16,36 @@ int run_command(command_t* cmd, rocket_state_t state, interface_t interface)
     {
         case CMD_STATUS:
         {
+            uint16_t index = 0;
             /*
-             * Prepare ACK response
-             * Send response
-             */
+                * Prepare ACK response
+                * Send response
+                */
             command_rep.cmd = CMD_STATUS_ACK;
 
-            command_rep.size = 22;
-            command_rep.data[0] = state;
-            //TODO remove this from filling
-            command_rep.data[1] = (tank_pressure >> 8) & 0xff;
-            command_rep.data[2] = (tank_pressure) & 0xff;
-            command_rep.data[3] = (tank_liquid >> 8) & 0xff;
-            command_rep.data[4] = (tank_liquid) & 0xff;
+            command_rep.data[index++] = cmd->data[0];
+            command_rep.data[index++] = cmd->data[1];
 
-            command_rep.data[5] = (He_Module.temperature >> 8) & 0xff;
-            command_rep.data[6] = (He_Module.temperature) & 0xff;
-            command_rep.data[7] = (N2O_Module.temperature >> 8) & 0xff;
-            command_rep.data[8] = (N2O_Module.temperature) & 0xff;
-            command_rep.data[9] = (Line_Module.temperature >> 8) & 0xff;
-            command_rep.data[10] = (Line_Module.temperature) & 0xff;
+            uint16_t log_bits = (cmd->data[0] << 8) + cmd->data[1];
 
-            command_rep.data[11] = (He_Module.pressure >> 8) & 0xff;
-            command_rep.data[12] = (He_Module.pressure) & 0xff;
-            command_rep.data[13] = (N2O_Module.pressure >> 8) & 0xff;
-            command_rep.data[14] = (N2O_Module.pressure) & 0xff;
-            command_rep.data[15] = (Line_Module.pressure >> 8) & 0xff;
-            command_rep.data[16] = (Line_Module.pressure) & 0xff;
+            if((log_bits & IGNITION_FLAGS_BIT))
+            {
+                command_rep.data[index++] = state;
+            }
 
-            command_rep.data[17] = (ematch_v_reading >> 8) & 0xff;
-            command_rep.data[18] = (ematch_v_reading) & 0xff;
+            if((log_bits & IGNITION_CHAMBER_TEMPERATURE_BIT))
+            {
+                command_rep.data[index++] = ((chamber_temp >> 8) & 0xff);
+                command_rep.data[index++] = ((chamber_temp) & 0xff);
+            }
+
+            if((log_bits & IGNITION_EMATCH_BIT))
+            {
+                command_rep.data[index++] = (ematch_v_reading >> 8) & 0xff;
+                command_rep.data[index++] = (ematch_v_reading) & 0xff;;
+            }
+
             
-            command_rep.data[19] = (weight1 >> 8) & 0xff;
-            command_rep.data[20] = (weight1) & 0xff;
-
-            command_rep.data[21] = (uint8_t)((log_running << 7) |
-                                        (He_Module.valve_state << 6) | 
-                                        (N2O_Module.valve_state << 5) |
-                                        (Line_Module.valve_state << 4) );
-
-            command_rep.crc = crc((unsigned char*)&command_rep, command_rep.size + 3);
-            write_command(&command_rep, interface);
 
             return CMD_RUN_OK;
         }
