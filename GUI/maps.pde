@@ -1,10 +1,10 @@
-List<String> man_commands = Arrays.asList("Flash Log Start", "Flash Log Stop", "Flash IDs", "Loadcell Calibrate", "Loadcell Tare", "Tank Tare");
+List<String> man_commands = Arrays.asList("Flash Log Start", "Flash Log Stop", "Flash IDs", "Loadcell Calibrate", "Loadcell Tare", "Tank Tare", "IMU Calibrate", "Barometer Calibrate", "Kalman Calibrate");
 List<String> valves = Arrays.asList("VPU Valve", "Engine Valve", "Chamber Valve", "He Valve", "N2O Valve", "Line Valve");
 
 void maps() {
     boolean[] _bl1 = {true, true, false};
   prog_args.put("Safety Pressure", _bl1);
-  boolean[] _bl2 = {true, false, false};
+  boolean[] _bl2 = {true, true, false};
   prog_args.put("Purge Pressure", _bl2);
   boolean[] _bl3 = {false, false, true};
   prog_args.put("Purge Liquid", _bl3);
@@ -44,9 +44,12 @@ void maps() {
   man_commands_map.put("Flash Log Start", (byte) 0);
   man_commands_map.put("Flash Log Stop", (byte) 1);
   man_commands_map.put("Flash IDs", (byte) 2);
-  man_commands_map.put("Loadcell Calibrate", (byte) 7);
-  man_commands_map.put("Loadcell Tare", (byte) 8);
-  man_commands_map.put("Tank Tare", (byte) 9);
+  man_commands_map.put("Loadcell Calibrate", (byte) 9);
+  man_commands_map.put("Loadcell Tare", (byte) 10);
+  man_commands_map.put("Tank Tare", (byte) 11);
+  man_commands_map.put("IMU Calibrate", (byte) 6);
+  man_commands_map.put("Barometer Calibrate", (byte) 7);
+  man_commands_map.put("Kalman Calibrate", (byte) 8);
 
   valve_toggle_map.put(tt_toggle, (byte) 0x00);
   valve_toggle_map.put(tb_toggle, (byte) 0x01);

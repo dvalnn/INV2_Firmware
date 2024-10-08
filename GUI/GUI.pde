@@ -304,17 +304,14 @@ public void controlEvent(ControlEvent event) {
     print(valve_selected);
   } else if (event.isFrom("Reset Chart")) {
     fillingChart.setData("Pressure", new float[0]);
-    fillingChart.setData("Liquid", new float[0]);
     fillingChart.setData("Temperature", new float[0]);
     fillingChart.setData("Weight", new float[0]);
   } else if (event.isTab()) {
     multi_tab_controllers(event.getTab().getName());
   } else if (event.isFrom("Reset")) {
-    launchChart.setData("Weight 1", new float[0]);
-    launchChart.setData("Weight 2", new float[0]);
-    launchChart.setData("Weight 3", new float[0]);
-    launchChart.setData("Tank Pressure", new float[0]);
-    launchChart.setData("Chamber Pressure", new float[0]);
+    launchChart.setData("Altitude", new float[0]);
+    launchChart.setData("Velocity", new float[0]);
+    launchChart.setData("Acceleration", new float[0]);
   } else if (event.isFrom("Open valve")) {
     try {
       int valve_time = (int) Float.parseFloat(valve_ms.getText());
