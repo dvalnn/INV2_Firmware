@@ -38,6 +38,7 @@ rocket_state_t comm_transition[rocket_state_size][cmd_size] = {
 
 #define CLOSE_VALVES                             \
     {.channel = V_Vpu_close, .sample = 100},     \
+    {.channel = V_Purge_close, .sample = 100},     \
     {.channel = V_Engine_close, .sample = 100 }
 
 #define RUN_KALMAN \
@@ -58,9 +59,11 @@ State_t state_machine[rocket_state_size] =
             //TANK_TEMPERATURE_SENSORS(1000),
             
             CLOSE_VALVES,
-            {.channel = read_barometer, .sample = 1000},
-            {.channel = read_gps, .sample = 100},
-            {.channel = read_imu, .sample = 1000},
+            //{.channel = read_barometer, .sample = 1000},
+            //{.channel = read_gps, .sample = 100},
+            //{.channel = read_imu, .sample = 1000},
+
+            RUN_KALMAN,
 
             //{.channel = ADS_handler_slow, .sample = 1},
             {.channel = logger, .sample = 1000},
@@ -241,7 +244,7 @@ State_t state_machine[rocket_state_size] =
             //TANK_TEMPERATURE_SENSORS(1000),
             RUN_KALMAN,
 
-            {.channel = burn_timer_tick, .sample = 7},
+            {.channel = burn_timer_tick, .sample = 1000},
 
             {.channel = ADS_handler_all_fast, .sample = 1},
 

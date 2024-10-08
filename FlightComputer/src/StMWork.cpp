@@ -119,6 +119,25 @@ void barometer_calibrate(void)
 void imu_calibrate(void)
 {
     IMU.calibrateAccelGyro();
+
+    double ax = 0;
+    double ay = 0;
+    double az = 0;
+
+    for(int i = 0; i < 1000; i++) //10 seconds of reading imu
+    {
+        read_imu();
+        ax += imu_ax;
+        ay += imu_ay;
+        az += imu_az;
+        delay(10);
+    }
+
+    ax /= 1000;
+    ay /= 1000;
+    az /= 1000;
+
+    Serial.printf("Avg imu:\nax %f\nay %f\naz %f\n", ax, ay, az);
 }
 
 void kalman_calibrate(void)
@@ -135,9 +154,9 @@ void read_imu(void)
 
     IMU.update_accel_gyro();
 
-    imu_ax = IMU.getAccX();
-    imu_ay = IMU.getAccY();
-    imu_az = IMU.getAccZ();
+    imu_ax = IMU.getAccX() * 9.8;
+    imu_ay = IMU.getAccY() * 9.8;
+    imu_az = IMU.getAccZ() * 9.8;
 
     imu_gx = IMU.getGyroX();
     imu_gy = IMU.getGyroY();
@@ -155,7 +174,7 @@ void read_barometer(void)
     lpf_alt = bmp.readAltitude(ground_hPa);
     altitude += (lpf_alt - altitude) * betha_alt;
 
-    Serial.printf("Altitude barometer %f\n", altitude);
+    //Serial.printf("Altitude barometer %f\n", altitude);
 }
 
 void read_gps(void)
@@ -253,6 +272,7 @@ void kalman(void)
     //Serial.print(alt_kalman_state(4));
     //Serial.print(" |Acc_Y:");
     //Serial.print(alt_kalman_state(5));
+
     //Serial.print(" |altitude:");
     //Serial.print(alt_kalman_state(6));
     //Serial.print(" |vel_Z:");
