@@ -6,6 +6,7 @@
 #include "Comms.h"
 
 #include "StMComms.h"
+#include "StMWork.h"
 
 #include "FlashLog.h"
 
@@ -151,26 +152,15 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 
         if ((log_bits & ROCKET_KALMAN_BIT))
         {
-            uint16_t u_x = alt_kalman_state(0) * 10;
-            uint16_t u_y = alt_kalman_state(3) * 10;
             uint16_t u_z = alt_kalman_state(6) * 10;
             uint16_t u_vz = alt_kalman_state(7) * 10;
             uint16_t u_az = alt_kalman_state(8) * 10;
-
-            command_rep.data[index++] = (uint8_t)((u_x >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_x) & 0xff);
-
-            command_rep.data[index++] = (uint8_t)((u_y >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_y) & 0xff);
 
             command_rep.data[index++] = (uint8_t)((u_z >> 8) & 0xff);
             command_rep.data[index++] = (uint8_t)((u_z) & 0xff);
 
             command_rep.data[index++] = (uint8_t)((u_vz >> 8) & 0xff);
             command_rep.data[index++] = (uint8_t)((u_vz) & 0xff);
-
-            command_rep.data[index++] = (uint8_t)((u_az >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_az) & 0xff);
 
             command_rep.data[index++] = (uint8_t)((u_az >> 8) & 0xff);
             command_rep.data[index++] = (uint8_t)((u_az) & 0xff);
@@ -465,6 +455,24 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
                 return CMD_RUN_OUT_OF_BOUND;
             }
             };
+        }
+        break;
+
+        case CMD_MANUAL_IMU_CALIBRATE:
+        {
+            imu_calibrate();
+        }
+        break;
+
+        case CMD_MANUAL_BAROMETER_CALIBRATE:
+        {
+            barometer_calibrate();
+        }
+        break;
+
+        case CMD_MANUAL_KALMAN_CALIBRATE:
+        {
+            kalman_calibrate();
         }
         break;
 

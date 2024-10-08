@@ -142,9 +142,9 @@ void BAROMETER_Setup(void)
   bmp.setSampling(
                   //Adafruit_BMP280::MODE_FORCED,     /* Operating Mode. */
                   Adafruit_BMP280::MODE_NORMAL,
-                  Adafruit_BMP280::SAMPLING_X1,     /* Temp. oversampling */
-                  Adafruit_BMP280::SAMPLING_X2,    /* Pressure oversampling */
-                  Adafruit_BMP280::FILTER_OFF,      /* Filtering. */
+                  Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
+                  Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
+                  Adafruit_BMP280::FILTER_X16,      /* Filtering. */
                   //Adafruit_BMP280::STANDBY_MS_500   /* Standby time. */
                   Adafruit_BMP280::STANDBY_MS_1   /* Standby time. */
                   );
@@ -225,9 +225,10 @@ void setup() {
     Serial2.begin(SERIAL2_BAUD); //RS485
 
     Wire.begin(I2C_SDA_1_PIN, I2C_SCL_1_PIN, 100000);
-    Wire1.begin(I2C_SDA_2_PIN, I2C_SCL_2_PIN);
+    Wire1.begin(I2C_SDA_2_PIN, I2C_SCL_2_PIN, 400000);
 
-    //SPI.begin();
+    SPI.begin();
+    SPI.setFrequency(400000000);
     
     preferences.begin("config", false);
 
@@ -248,20 +249,27 @@ void setup() {
     //printf("Last state %u\n", last_state);
     //printf("Restart_count %u\n", restart_count);
 
-    if((last_state == LAUNCH || last_state == FLIGHT || last_state == ABORT)  
+    if((last_state == LAUNCH || last_state == FLIGHT || last_state == ABORT)
         && restart_count < MAX_RESTART_ALLOWED)
     {
         state = last_state;
         preferences.putUInt("restart_count", restart_count + 1);
         //start_log();
         fast_reboot = 1;
+        
+        DragDeployed = preferences.getUChar("drag_state", 0);
+        MainDeployed = preferences.getUChar("main_state", 0);
     }
     else
     {
         preferences.putUInt("restart_count", 0);
         preferences.putUInt("last_state", 0);
+
+        preferences.putChar("drag_state", 0);
+        preferences.putChar("main_state", 0);
     }
 
+    state = FLIGHT;
 
     GPS_Setup();
     IMU_Setup();

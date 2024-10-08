@@ -36,12 +36,12 @@ void write_command(command_t* cmd, interface_t interface)
             LoRa.beginPacket();
             int sz = LoRa.write(buff, size);
             LoRa.endPacket(true);
-            Serial.printf("Lora sent %d packets\n");
+            //Serial.printf("Lora sent %d packets\n");
             
-            for(int i = 0; i < size; i++)
-                Serial.printf("%d ", buff[i]);
+            //for(int i = 0; i < size; i++)
+                //Serial.printf("%d ", buff[i]);
             
-            Serial.printf("\n");
+            //Serial.printf("\n");
         }
         break;
         case RS485_INTERFACE:

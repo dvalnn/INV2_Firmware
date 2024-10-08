@@ -25,7 +25,7 @@ rocket_state_t comm_transition[rocket_state_size][cmd_size] = {
     /* Armed           */ {    -1,  -1, IDLE,  -1,  READY,    -1,     -1,     -1,    -1,    -1, LAUNCH,  -1,     -1,},
     /* Launch          */ {    -1,  -1, ABORT, -1,  IDLE,     -1,     -1,     -1,    -1,    -1,  -1,     -1,     -1,},
     /* Abort           */ {    -1,  -1,  -1,   -1,   -1,      -1,     -1,     -1,    IDLE,  -1,  -1,     -1,     -1,},
-    /* IMU PID         */ {    -1,  -1, IDLE,  -1,   -1,      -1,     -1,     -1,    -1,    -1,  -1,     -1,     -1,}};
+    /* Flight          */ {    -1,  -1, IDLE,  -1,   -1,      -1,     -1,     -1,    -1,    -1,  -1,     -1,     -1,}};
 
 #define TANK_TEMPERATURE_SENSORS(val) \
     {.channel = read_temperature_tank_top, .sample = val}, \
@@ -41,8 +41,8 @@ rocket_state_t comm_transition[rocket_state_size][cmd_size] = {
     {.channel = V_Engine_close, .sample = 100 }
 
 #define RUN_KALMAN \
-    {.channel = read_barometer, .sample = 10}, \
-    {.channel = read_imu, .sample = 10}, \
+    {.channel = read_barometer, .sample = BMP_READ_TIME}, \
+    {.channel = read_imu, .sample = IMU_READ_TIME}, \
     {.channel = read_gps, .sample = 100}, \
     {.channel = kalman, .sample = 10}
 

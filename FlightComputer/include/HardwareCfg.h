@@ -53,8 +53,8 @@
 
 #define BMP_ADDR 0x76
 //---------------SENSORS-------------------
-#define IMU_READ_TIME 1 //ms
-#define BMP_READ_TIME 1 //ms
+#define IMU_READ_TIME 10 //ms
+#define BMP_READ_TIME 10 //ms
 
 #define FREEFALL_ALTITUDE_THRESHOLD 2 //free-fall considered if altitude decreases by more than this
 #define FREEFALL_THRESHOLD 3 //free-fall considered if global acceleration is smaller than it 

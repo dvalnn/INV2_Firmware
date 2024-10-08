@@ -18,7 +18,7 @@
 #include <ADS1115_WE.h>
 #include <Crc.h>
 
-#define KALMAN_DEBBUG
+//#define KALMAN_DEBBUG
 float imu_ax;
 float imu_ay;
 float imu_az;
@@ -84,6 +84,22 @@ void V_Engine_open(void)
     Chamber_Module.valve_state = 1;
 }
 
+void main_ematch_high(void) { 
+    digitalWrite(MAIN_CHUTE_DEPLOY_PIN, HIGH); 
+}
+
+void main_ematch_low(void) { 
+    digitalWrite(MAIN_CHUTE_DEPLOY_PIN, LOW); 
+}
+
+void drag_ematch_high(void) { 
+    digitalWrite(DRAG_CHUTE_DEPLOY_PIN, HIGH); 
+}
+
+void drag_ematch_low(void) { 
+    digitalWrite(DRAG_CHUTE_DEPLOY_PIN, LOW); 
+}
+
 void barometer_calibrate(void)
 {
     // read barometer every 10ms for 5 seconds to avg the ground pha
@@ -105,33 +121,11 @@ void imu_calibrate(void)
     IMU.calibrateAccelGyro();
 }
 
-void imu_pid_calibration(void)
+void kalman_calibrate(void)
 {
-
-    /*A tidbit on how PID (PI actually) tuning works.
-      When we change the offset in the MPU6050 we can get instant results. This allows us to use Proportional and
-      integral of the PID to discover the ideal offsets. Integral is the key to discovering these offsets, Integral
-      uses the error from set-point (set-point is zero), it takes a fraction of this error (error * ki) and adds it
-      to the integral value. Each reading narrows the error down to the desired offset. The greater the error from
-      set-point, the more we adjust the integral value. The proportional does its part by hiding the noise from the
-      integral math. The Derivative is not used because of the noise and because the sensor is stationary. With the
-      noise removed the integral value lands on a solid offset after just 600 readings. At the end of each set of 100
-      readings, the integral value is used for the actual offsets and the last proportional reading is ignored due to
-      the fact it reacts to any noise.
-    */
-    // if (!accelgyro.testConnection())
-    // return;
-
-    // accelgyro.CalibrateAccel(10);
-    // accelgyro.CalibrateGyro(10);
-
-    // Serial.println("1000 Total Readings");
-    // accelgyro.PrintActiveOffsets();
-    //// Serial.println("\n\n Any of the above offsets will work nice \n\n");
-    //// Serial.println("\n\n Any of the above offsets will work nice \n\n Lets proof the PID tuning using another method:");
-
-    // accelgyro.setFullScaleAccelRange(2);
+    //reset kalman position
 }
+
 
 void read_imu(void)
 {
@@ -161,8 +155,7 @@ void read_barometer(void)
     lpf_alt = bmp.readAltitude(ground_hPa);
     altitude += (lpf_alt - altitude) * betha_alt;
 
-
-    //Serial.printf("Altitude barometer %f\n", altitude);
+    Serial.printf("Altitude barometer %f\n", altitude);
 }
 
 void read_gps(void)
@@ -181,6 +174,7 @@ void read_gps(void)
 
 void kalman(void)
 {
+    digitalWrite(V3_PIN, HIGH);
     const Vector3f norm_g(0.0, 0.0, 1.0);
     static float angles[3];
 
@@ -267,6 +261,28 @@ void kalman(void)
     if (Launch)
         maxAltitude = max(maxAltitude, alt_kalman_state(6));
 
+    //Serial.print(" |pos_X:");
+    //Serial.print(alt_kalman_state(0));
+    //Serial.print(" |vel_X:");
+    //Serial.print(alt_kalman_state(1));
+    //Serial.print(" |Acc_X:");
+    //Serial.print(alt_kalman_state(2));
+    //Serial.print(" |pos_Y:");
+    //Serial.print(alt_kalman_state(3));
+    //Serial.print(" |vel_Y:");
+    //Serial.print(alt_kalman_state(4));
+    //Serial.print(" |Acc_Y:");
+    //Serial.print(alt_kalman_state(5));
+    //Serial.print(" |altitude:");
+    //Serial.print(alt_kalman_state(6));
+    //Serial.print(" |vel_Z:");
+    //Serial.print(alt_kalman_state(7));
+    //Serial.print(" |Acc_Z:");
+    //Serial.print(alt_kalman_state(8));
+    //Serial.println();
+    //Serial.flush();
+
+    digitalWrite(V3_PIN, LOW);
 #ifdef KALMAN_DEBBUG
     Serial.println("altitude done");
 #endif
@@ -296,13 +312,114 @@ void logger(void)
 void telemetry(void)
 {
     command_t command;
-    command.cmd = CMD_STATUS;
-    command.size = 2; 
     uint16_t ask_bits = (ROCKET_STATE_BIT | ROCKET_PRESSURE_BIT | ROCKET_GPS_BIT | ROCKET_KALMAN_BIT | ROCKET_CHUTE_EMATCH_BIT);
-    command.data[0] = ((ask_bits >> 8) & 0xff);
-    command.data[1] = ((ask_bits) & 0xff);
+    uint16_t index = 0;
 
-    run_command(&command, -1, DEFAULT_CMD_INTERFACE);    
+    // union used to get bit representation of float
+    union ufloat
+    {
+        float f;
+        uint32_t i;
+    };
+    union ufloat f;
+
+    command.cmd = CMD_LOG;
+    command.id = GROUND_ID;
+    command.data[index++] = ((ask_bits >> 8) & 0xff);
+    command.data[index++] = ((ask_bits) & 0xff);
+
+//-----------flags
+    command.data[index++] = state;
+    command.data[index++] = (uint8_t)((log_running << 7) |
+                                      (Tank_Top_Module.valve_state << 6) |
+                                      (Tank_Bot_Module.valve_state << 5) |
+                                      (Chamber_Module.valve_state << 4) |
+                                      (DragDeployed << 3) |
+                                      (MainDeployed << 2));
+
+//------------pressure
+    int16_t ipressure;
+    ipressure = (int16_t)(Tank_Top_Module.pressure * 100);
+    command.data[index++] = (ipressure >> 8) & 0xff;
+    command.data[index++] = (ipressure) & 0xff;
+
+    ipressure = (int16_t)(Tank_Bot_Module.pressure * 100);
+    command.data[index++] = (ipressure >> 8) & 0xff;
+    command.data[index++] = (ipressure) & 0xff;
+
+    ipressure = (int16_t)(Chamber_Module.pressure * 100);
+    command.data[index++] = (ipressure >> 8) & 0xff;
+    command.data[index++] = (ipressure) & 0xff;
+//------------gps
+    float gps_lat = gps.location.lat();
+    float gps_lon = gps.location.lng();
+    uint16_t gps_altitude = (uint16_t)(gps.altitude.meters());
+
+    command.data[index++] = (uint8_t)(gps.satellites.value());
+
+    command.data[index++] = (uint8_t)((gps_altitude >> 8) & 0xff);
+    command.data[index++] = (uint8_t)((gps_altitude) & 0xff);
+
+    f.f = gps_lat;
+    command.data[index++] = (uint8_t)((f.i >> 24) & 0xff);
+    command.data[index++] = (uint8_t)((f.i >> 16) & 0xff);
+    command.data[index++] = (uint8_t)((f.i >> 8) & 0xff);
+    command.data[index++] = (uint8_t)((f.i) & 0xff);
+
+    f.f = gps_lon;
+    command.data[index++] = (uint8_t)((f.i >> 24) & 0xff);
+    command.data[index++] = (uint8_t)((f.i >> 16) & 0xff);
+    command.data[index++] = (uint8_t)((f.i >> 8) & 0xff);
+    command.data[index++] = (uint8_t)((f.i) & 0xff);
+
+    uint16_t horizontal_vel = (gps.speed.kmph() * 10);
+    command.data[index++] = (uint8_t)((horizontal_vel >> 8) & 0xff);
+    command.data[index++] = (uint8_t)((horizontal_vel) & 0xff);
+
+//---------------kalman
+
+    uint16_t u_z = alt_kalman_state(6) * 10;
+    uint16_t u_vz = alt_kalman_state(7) * 10;
+    uint16_t u_az = alt_kalman_state(8) * 10;
+
+    command.data[index++] = (uint8_t)((u_z >> 8) & 0xff);
+    command.data[index++] = (uint8_t)((u_z) & 0xff);
+
+    command.data[index++] = (uint8_t)((u_vz >> 8) & 0xff);
+    command.data[index++] = (uint8_t)((u_vz) & 0xff);
+
+    command.data[index++] = (uint8_t)((u_az >> 8) & 0xff);
+    command.data[index++] = (uint8_t)((u_az) & 0xff);
+
+    // convert quaternion [0:1] to uint16 [0, 2^16 - 1]
+    uint16_t u_quat1 = q[0] * (0xFFFF);
+    uint16_t u_quat2 = q[1] * (0xFFFF);
+    uint16_t u_quat3 = q[2] * (0xFFFF);
+    uint16_t u_quat4 = q[3] * (0xFFFF);
+
+    command.data[index++] = (uint8_t)((u_quat1 >> 8) & 0xff);
+    command.data[index++] = (uint8_t)((u_quat1) & 0xff);
+
+    command.data[index++] = (uint8_t)((u_quat2 >> 8) & 0xff);
+    command.data[index++] = (uint8_t)((u_quat2) & 0xff);
+
+    command.data[index++] = (uint8_t)((u_quat3 >> 8) & 0xff);
+    command.data[index++] = (uint8_t)((u_quat3) & 0xff);
+
+    command.data[index++] = (uint8_t)((u_quat4 >> 8) & 0xff);
+    command.data[index++] = (uint8_t)((u_quat4) & 0xff);
+
+//-------------- ematchs
+
+    command.data[index++] = ((ematch_drag_reading >> 8) & 0xff);
+    command.data[index++] = ((ematch_drag_reading) & 0xff);
+
+    command.data[index++] = ((ematch_main_reading >> 8) & 0xff);
+    command.data[index++] = ((ematch_main_reading) & 0xff);
+
+    command.size = index; 
+    command.crc = crc((unsigned char *)&command, command.size + 3);
+    write_command(&command, DEFAULT_CMD_INTERFACE);
 }
 
 void read_temperature_tank_top(void)
@@ -323,13 +440,6 @@ void read_temperature_tank_bot(void)
     Tank_Bot_Module.temperature = (int16_t)(temp * 10.0);
 }
 
-void main_ematch_high(void) { digitalWrite(MAIN_CHUTE_DEPLOY_PIN, HIGH); }
-
-void main_ematch_low(void) { digitalWrite(MAIN_CHUTE_DEPLOY_PIN, LOW); }
-
-void drag_ematch_high(void) { digitalWrite(DRAG_CHUTE_DEPLOY_PIN, HIGH); }
-
-void drag_ematch_low(void) { digitalWrite(DRAG_CHUTE_DEPLOY_PIN, LOW); }
 
 void read_main_ematch(void)
 {
