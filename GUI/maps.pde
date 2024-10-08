@@ -26,7 +26,7 @@ void maps() {
   state_map_rocket.put(8, "ARMED");
   state_map_rocket.put(9, "LAUNCH");
   state_map_rocket.put(10, "ABORT");
-  state_map_rocket.put(11, "IMU_CALIB");
+  state_map_rocket.put(11, "FLIGHT");
 
   state_map_filling.put(0, "IDLE");
   state_map_filling.put(1, "FUELING");

@@ -179,7 +179,7 @@ void updateData(dataPacket packet) {
       case tank_pressures:
         rocket_data.tank.pressure_top = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         rocket_data.tank.pressure_bot = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
-        rocket_data.chamber_pressure = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
+        rocket_data.chamber_pressure = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
         index += 6;
         break;
       case tank_temps:
@@ -190,8 +190,8 @@ void updateData(dataPacket packet) {
       case gps_data:
         rocket_data.gps.satellite_count = packet.payload[index];
         rocket_data.gps.altitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 1, index + 3)).getShort();
-        rocket_data.gps.latitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 3, index + 7)).getInt();
-        rocket_data.gps.longitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 7, index + 11)).getInt();
+        rocket_data.gps.latitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 3, index + 7)).getFloat();
+        rocket_data.gps.longitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 7, index + 11)).getFloat();
         rocket_data.gps.horizontal_velocity = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 11, index + 13)).getShort();
         index += 13;
         break;
@@ -228,7 +228,12 @@ void updateData(dataPacket packet) {
         break;
       case fill_station_state:
         filling_data.state = packet.payload[index];
-        index += 1;
+        byte filling_flags = packet.payload[index + 1];
+        filling_data.flash_running = (filling_flags & (0x01 << 7)) != 0 ? true : false;
+        filling_data.he.valve = (filling_flags & (0x01 << 6)) != 0 ? true : false;
+        filling_data.n2o.valve = (filling_flags & (0x01 << 5)) != 0 ? true : false;
+        filling_data.line.valve = (filling_flags & (0x01 << 4)) != 0 ? true : false;
+        index += 2;
         break;
       case fill_pressures:
         filling_data.he.pressure = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
@@ -356,6 +361,7 @@ void send(byte command, byte[] payload) {
     //println(hex(b));
     //}
     //println();
+    println(tx_packet.getPacket());
     tx_queue.add(tx_packet);
   } else {
     println("No serial port selected!");
@@ -378,22 +384,84 @@ short createAskDataMask(AskData[] asks) {
   return mask;
 }
 
-void request_status() {
-  if (millis() - last_status_request > status_interval && status_toggle_state == 1) {
+void auto_status() {
+  if (millis() - last_status_time > status_interval && status_toggle_state == 1) {
     byte oldID = targetID;
-    if (last_status_id == 1) {
-      targetID = 2;
-      last_status_id = 2;
-    } else {
-      targetID = 1;
-      last_status_id = 1;
+    if(cp5.getTab("default").isActive()) {
+      if (last_status_id == 1) {
+        targetID = 2;
+        last_status_id = 2;
+      } else if (last_status_id == 2) {
+        targetID = 3;
+        last_status_id = 3;
+      } else {
+        targetID = 1;
+        last_status_id = 1;
+      }
     }
-    AskData[] asks = {AskData.rocket_flags_state};
+    else if (cp5.getTab("filling").isActive()) {
+      if (last_status_id == 1) {
+        targetID = 2;
+        last_status_id = 2;
+      } else {
+        targetID = 1;
+        last_status_id = 1;
+      }
+    } else if (cp5.getTab("launch").isActive()) {
+      if (last_status_id == 1) {
+        targetID = 3;
+        last_status_id = 3;
+      } else {
+        targetID = 1;
+        last_status_id = 1;
+      }
+    }
+    request_status();
+    last_status_time = millis();
+    targetID = oldID;
+  }
+}
+
+void request_status() {
+    AskData[] asks = {};
+    if(targetID == 1) { // roket
+      if(cp5.getTab("default").isActive()) {
+        asks = rocket_data.man_ask;
+      }
+      else if(cp5.getTab("filling").isActive()) {
+        asks = rocket_data.fill_ask;
+      }
+      else if(cp5.getTab("launch").isActive()) {
+        asks = rocket_data.launch_ask;
+      }
+     }
+    else if(targetID == 2) { // filing
+      if(cp5.getTab("default").isActive()) {
+        asks = filling_data.man_ask;
+      }
+      else if(cp5.getTab("filling").isActive()) {
+        asks = filling_data.fill_ask;
+      }
+      else if(cp5.getTab("launch").isActive()) {
+        asks = filling_data.launch_ask;
+      }
+    }
+    else if(targetID == 3) { // ignixon
+      if(cp5.getTab("default").isActive()) {
+        asks = ignition_data.man_ask;
+      }
+      else if(cp5.getTab("filling").isActive()) {
+        asks = ignition_data.fill_ask;
+      }
+      else if(cp5.getTab("launch").isActive()) {
+        asks = ignition_data.launch_ask;
+      }
+    }
+    if(asks.length == 0) {
+      print("No Asks");
+      return;
+    }
     short askShort = createAskDataMask(asks);
     byte[] asksBytes = ByteBuffer.allocate(2).putShort(askShort).array();
-    //byte[] asksBytes = {(byte)0xff, (byte)0xff};
     send((byte)0x00, asksBytes);
-    targetID = oldID;
-    last_status_request = millis();
-  }
 }

@@ -124,7 +124,7 @@ void setupDiagrams() {
 
 void updateDiagrams() {
   background(bgColor);
-  if (!cp5.getTab("launch").isActive()) {
+  if (cp5.getTab("filling").isActive()) {
     image(fill_diagram, width*.23, height*.38, fill_diagram.width* 1.2 * width/1920, fill_diagram.height * 1.2 * height/1080); // scale image with display size
   }
 
@@ -207,10 +207,18 @@ void updateDiagrams() {
 }
 
 void multi_tab_controllers(String tab) {
-  if (tab == "default") {
-    chamber_temps_label.hide();
+  if (tab == "filling") {
+    ematch_label.hide();
+    gps_label.hide();
+    bar_label.hide();
+    imu_label.hide();
+    kalman_label.hide();
   } else {
-    chamber_temps_label.show();
+    ematch_label.show();
+    gps_label.show();
+    bar_label.show();
+    imu_label.show();
+    kalman_label.show();
   }
 
   if (tab == "launch") {
