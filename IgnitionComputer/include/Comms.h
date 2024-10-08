@@ -220,7 +220,7 @@ typedef enum
 #define IGNITION_ID 3
 #define BROADCAST_ID 0xFF
 
-#define DEFAULT_ID FILL_STATION_ID
+#define DEFAULT_ID IGNITION_ID
 
 
 void write_command(command_t* cmd, interface_t interface);

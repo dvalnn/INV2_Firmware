@@ -44,8 +44,10 @@ int run_command(command_t* cmd, rocket_state_t state, interface_t interface)
                 command_rep.data[index++] = (ematch_v_reading >> 8) & 0xff;
                 command_rep.data[index++] = (ematch_v_reading) & 0xff;;
             }
-
             
+            command_rep.size = index;
+            command_rep.crc = crc((unsigned char *)&command_rep, command_rep.size + 3);
+            write_command(&command_rep, interface);
 
             return CMD_RUN_OK;
         }
