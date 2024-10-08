@@ -52,8 +52,7 @@ HashMap<Byte, String> command_names = new HashMap<Byte, String>();
 
 // controllers
 Textfield[] textfields = new Textfield[3];
-Textlabel log_display_rocket;
-Textlabel log_display_filling;
+Textlabel log_display_rocket, log_display_filling, log_display_ignition;
 Textlabel ack_display;
 Textlabel log_stats;
 Textlabel history;
@@ -61,10 +60,11 @@ ArrayDeque<String> history_deque;
 Chart fillingChart, launchChart;
 Textlabel pressureLabel, temperatureLabel, weightLabel;
 Textlabel weight1Label, weight2Label, weight3Label, tankPressureLabel, chamberPressureLabel;
-Textlabel ematch_label, chamber_temps_label, chamber_threshold_temp;
+Textlabel ematch_label, chamber_temps_label, chamber_label;
 Textlabel he_label, n2o_label, line_label, tt_label, tb_label;
 Toggle he_toggle, n2o_toggle, line_toggle, tt_toggle, tb_toggle, chamber_toggle;
 Toggle status_toggle;
+Textlabel gps_label, bar_label, imu_label, kalman_label;
 
 // status toggle
 int status_toggle_state = 0;
@@ -98,7 +98,7 @@ void setup() {
   frameRate(60);
   fullScreen();
   background(bgColor);
-
+  
   logDir = sketchPath() + "/logs/";
   String logFolder = "logs";
   String currentDirectory = sketchPath();
@@ -126,16 +126,17 @@ void setup() {
   init_log(); // log initialization
   setupDiagrams(); // in diagrams tab
   maps(); // in maps tab
+  updateControllersPos("default");
 }
 
 void draw() {
   updateDiagrams(); // diagrams tab
-  updateControllers(); // update controllers tab
+  updateControllersData(); // update controllers tab
   if (millis() - last_chart_time > chart_interval) {
     updateCharts();
     last_chart_time = millis();
   }
-  request_status(); // comms tab
+  auto_status(); // comms tab
   if (last_cmd_sent != (byte)0xff) {
     if (millis() - last_cmd_sent_time > packet_loss_timeout) {
       ack_packet_loss++;
@@ -157,7 +158,7 @@ void draw() {
   } else {
     fill(255, 0, 0);
   }
-  circle(width*.79, height*.81, height*.018);
+  circle(width*.79, height*.77, height*.018);
 
   
 }
@@ -217,10 +218,7 @@ public void controlEvent(ControlEvent event) {
   } else if (event.isFrom("Resume")) {
     send((byte)0x0b, empty_payload);
   } else if (event.isFrom("Status")) {
-    AskData[] asks = {AskData.rocket_flags_state, AskData.kalman_data};
-    short askShort = createAskDataMask(asks);
-    byte[] asksBytes = ByteBuffer.allocate(2).putShort(askShort).array();
-    send((byte)0x00, asksBytes);
+    request_status();
   } else if (event.isFrom("Select ID")) {
     targetID = (byte) (event.getValue() + 1);
   } else if (event.isFrom("Abort")) {
@@ -262,21 +260,6 @@ public void controlEvent(ControlEvent event) {
   } else if (event.isFrom("Start Manual")) {
     byte[] payload = {};
     send((byte)0x06, payload);
-  } else if (event.isFrom("Change Valve State")) {
-    if (valve_selected > -1) {
-      byte lastID = targetID;
-      targetID = 4;
-      byte[] man_payload = {(byte) 0x04, (byte) valve_selected, (byte) valve_toggle_state};
-      send((byte)0x07, man_payload);
-      targetID = lastID;
-    }
-  }
-
-  for (int i = 0; i < man_commands.size(); i++) {
-    if (event.isFrom(man_commands.get(i))) {
-      byte[] man_payload = {man_commands_map.get(man_commands.get(i))};
-      send((byte)0x07, man_payload);
-    }
   }
   if (valve_toggles != null) {
     for (Toggle toggle : valve_toggles) {
@@ -299,15 +282,17 @@ public void controlEvent(ControlEvent event) {
       }
     }
   }
-  if (event.isFrom("Select Valve")) {
-    valve_selected = (int)event.getValue();
-    print(valve_selected);
+  if (event.isFrom("Select Command")) {
+      byte cmd_index = (byte) event.getValue();
+      byte[] man_payload = {man_commands_map.get(man_commands.get(cmd_index))};
+      send((byte)0x07, man_payload);
   } else if (event.isFrom("Reset Chart")) {
     fillingChart.setData("Pressure", new float[0]);
     fillingChart.setData("Temperature", new float[0]);
     fillingChart.setData("Weight", new float[0]);
   } else if (event.isTab()) {
     multi_tab_controllers(event.getTab().getName());
+    updateControllersPos(event.getTab().getName());
   } else if (event.isFrom("Reset")) {
     launchChart.setData("Altitude", new float[0]);
     launchChart.setData("Velocity", new float[0]);

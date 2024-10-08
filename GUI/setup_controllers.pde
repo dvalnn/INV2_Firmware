@@ -166,14 +166,14 @@ void setupControllers() {
     .setText("E-Match value goes here")
     .setColor(labelColor)
     .setPosition(displayWidth*.4, displayHeight*.05)
-    .moveTo("launch")
+    .moveTo("global")
     .setFont(font);
 
   List<String> portNames = Arrays.asList(Serial.list());   // List available serial ports and add them to a new ScrollableList
 
   cp5.addScrollableList("serialPort")
-    .setPosition(displayWidth*.02, displayHeight*.65)
-    .setSize((int)(displayWidth*.15), (int)(displayHeight*.46))
+    .setPosition(displayWidth*.02, displayHeight*.6)
+    .setSize((int)(displayWidth*.15), (int)(displayHeight*.12))
     .setBarHeight((int)(displayHeight*.05))
     .setItemHeight((int)(displayHeight*.05))
     .addItems(portNames)
@@ -194,16 +194,23 @@ void setupControllers() {
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
 
   log_display_rocket = cp5.addTextlabel("Rocket Log")
-    .setText("Rocket logs go here")
+    .setText("Rocket state")
     .setColor(labelColor)
     .setPosition(displayWidth*button_x1, displayHeight*.71)
     .moveTo("global")
     .setFont(font);
 
   log_display_filling = cp5.addTextlabel("Filling Log")
-    .setText("Filling logs go here")
+    .setText("Filling state")
     .setColor(labelColor)
-    .setPosition(displayWidth*button_x1, displayHeight*.8)
+    .setPosition(displayWidth*button_x1, displayHeight*.76)
+    .moveTo("global")
+    .setFont(font);
+
+  log_display_ignition = cp5.addTextlabel("Ignition Log")
+    .setText("Ignition state")
+    .setColor(labelColor)
+    .setPosition(displayWidth*button_x1, displayHeight*.81)
     .moveTo("global")
     .setFont(font);
 
@@ -229,7 +236,7 @@ void setupControllers() {
     .setFont(font);
 
   status_toggle = cp5.addToggle("Status Toggle")
-    .setPosition(width*.02, height*.55)
+    .setPosition(width*.02, height*.5)
     .setSize((int)(width*.05), (int)(width*.02))
     .setValue(false)
     .setMode(ControlP5.SWITCH)
@@ -249,40 +256,18 @@ void setupControllers() {
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
-  cp5.addScrollableList("Select Valve")
+  cp5.addScrollableList("Select Command")
     .setPosition(width*.02, height*.05)
-    .setSize((int)(width*.17), (int)(height*.5))
-    .setBarHeight((int)(height*.05))
+    .setSize((int)(width*.17), (int)(height*.3))
+    .setBarHeight((int)(height*.04))
     .setItemHeight((int)(height*.05))
-    .addItems(valves)
+    .addItems(man_commands)
     .setFont(font)
     .setColor(defaultColor)
     .moveTo("default")
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
 
-  cp5.addButton("Change Valve State")
-    .setPosition(width*.12, height*.45)
-    .setSize((int)(width*.05), (int)(height*.04))
-    .setLabel("Set")
-    .moveTo("default")
-    .setColor(defaultColor)
-    .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
-    .setColor(labelColorDark)
-    .setFont(font);
-
-  valve_toggle = cp5.addToggle("Valve Toggle")
-    .setPosition(width*.02, height*.45)
-    .setSize((int)(width*.05), (int)(width*.02))
-    .setValue(false)
-    .setMode(ControlP5.SWITCH)
-    .setLabel("Valve State")
-    .setFont(font)
-    .setColorForeground(color(255, 0, 0))  // Red when off
-    .setColorBackground(color(100, 0, 0))
-    .setColorActive(color(255, 0, 0))
-    .moveTo("default");
-    
-    cp5.addToggle("Mode Toggle")
+  cp5.addToggle("Mode Toggle")
     .setPosition(width*.94, height*.01)
     .setSize((int)(width*.05), (int)(width*.02))
     .setValue(false)
@@ -294,47 +279,11 @@ void setupControllers() {
     .setColorActive(color(0))
     .moveTo("default");
 
-  for (int i = 0; i < man_commands.size(); i++) {
-    cp5.addButton(man_commands.get(i))
-      .setPosition(width*.6, height*.05 + height*.05*i)
-      .setSize((int)(width*.17), (int)(height*.04))
-      .moveTo("default")
-      .setColor(defaultColor)
-      .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
-      .setFont(font);
-  }
-
-  valve_ms = cp5.addTextfield("Valve open time")
-    .setAutoClear(false)
-    .setColor(defaultColor)
-    .setPosition(displayWidth*.25, displayHeight*.05)
-    .setSize((int)(displayWidth*.13), (int)(displayHeight*.05))
-    .setFont(font)
-    .setInputFilter(ControlP5.FLOAT)
-    .moveTo("default");
-  ;
-
-  cp5.addButton("Open valve")
-    .setPosition(width*.4, height*.05)
-    .setSize((int)(width*.1), (int)(height*.05))
-    .moveTo("default")
-    .setColor(defaultColor)
-    .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
-    .setFont(font);
-
-  chamber_temps_label = cp5.addTextlabel("Chamber Temps")
-    .setText("Chamber temps")
-    .setColor(labelColor)
-    .setPosition(displayWidth*.63, displayHeight*.34)
-    .moveTo("global")
-    .setFont(font)
-    .hide();
-    
-  chamber_threshold_temp = cp5.addTextlabel("Chamber Threshold Temp")
+  chamber_label = cp5.addTextlabel("Chamber Threshold Temp")
     .setText("Chamber threshold temp")
     .setColor(labelColor)
     .setPosition(displayWidth*.02, displayHeight*.05)
-    .moveTo("launch")
+    .moveTo("global")
     .setFont(font)
     ;
 }
@@ -377,8 +326,37 @@ void manual_setup() {
     .setColorForeground(blue)
     .setColorBackground(dark_blue)
     .setHeight((int)(displayHeight*.03))
-    .setWidth((int)(displayWidth*.06))
-    .setLabel("manual")
+    .setWidth((int)(displayWidth*.05))
+    .setLabel("debug")
     .getCaptionLabel()
     .setFont(font);
+
+  gps_label = cp5.addTextlabel("GPS")
+    .setText("GPS goes here")
+    .setColor(labelColor)
+    .setPosition(displayWidth*.5, displayHeight*.5)
+    .moveTo("global")
+    .setFont(font);
+
+  bar_label = cp5.addTextlabel("Barometer")
+    .setText("Bar altitude here")
+    .setColor(labelColor)
+    .setPosition(displayWidth*.5, displayHeight*.5)
+    .moveTo("global")
+    .setFont(font);
+    
+  imu_label = cp5.addTextlabel("IMU")
+    .setText("IMU hoes here")
+    .setColor(labelColor)
+    .setPosition(displayWidth*.5, displayHeight*.5)
+    .moveTo("global")
+    .setFont(font);
+  
+  kalman_label = cp5.addTextlabel("Kalman")
+    .setText("Kalman goes here")
+    .setColor(labelColor)
+    .setPosition(displayWidth*.5, displayHeight*.5)
+    .moveTo("global")
+    .setFont(font);
+    
 }
