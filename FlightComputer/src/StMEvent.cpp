@@ -72,6 +72,7 @@ bool apogee_event(void)
     if(Launch && ((maxAltitude-alt_kalman_state(6))>0.5) &&(abs(alt_kalman_state(7))<0.1))
     {
       DragDeployed = true;
+      preferences.putChar("drag_state", 1);
       return true;
     }
     return false;
@@ -82,6 +83,7 @@ bool main_deployment_condition(void)
     if(DragDeployed && !MainDeployed && alt_kalman_state(6) < 400)
     {
         MainDeployed = true;
+        preferences.putChar("main_state", 1);
         return true;
     }
     return false;
