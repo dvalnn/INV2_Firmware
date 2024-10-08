@@ -56,7 +56,7 @@ State_t state_machine[rocket_state_size] =
     // IDLE
     {
         .work = {
-            //TANK_TEMPERATURE_SENSORS(1000),
+            TANK_TEMPERATURE_SENSORS(1000),
             
             CLOSE_VALVES,
             //{.channel = read_barometer, .sample = 1000},
@@ -100,7 +100,7 @@ State_t state_machine[rocket_state_size] =
     // MANUAL
     {
         .work = {
-            //TANK_TEMPERATURE_SENSORS(100),
+            TANK_TEMPERATURE_SENSORS(100),
 
             {.channel = ADS_handler_fast, .sample = 1},
 
@@ -216,7 +216,7 @@ State_t state_machine[rocket_state_size] =
     // ARMED
     {
         .work = {
-            TANK_TEMPERATURE_SENSORS(1000),
+            //TANK_TEMPERATURE_SENSORS(1000),
             
             RUN_KALMAN,
 
