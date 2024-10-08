@@ -269,7 +269,7 @@ void setup() {
         preferences.putChar("main_state", 0);
     }
 
-    state = FLIGHT;
+    //state = FLIGHT;
 
     GPS_Setup();
     IMU_Setup();

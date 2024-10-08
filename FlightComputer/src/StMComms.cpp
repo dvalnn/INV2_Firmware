@@ -15,7 +15,7 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
     // Serial.printf("run command %d\n", cmd->cmd);
     command_t command_rep;
     command_rep.id = GROUND_ID;
-    Serial.printf("State: %d\n", state);
+    //Serial.printf("State: %d\n", state);
     switch (cmd->cmd)
     {
     case CMD_STATUS:
@@ -71,6 +71,7 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
         {
             command_rep.data[index++] = (Tank_Top_Module.temperature >> 8) & 0xff;
             command_rep.data[index++] = (Tank_Top_Module.temperature) & 0xff;
+
             command_rep.data[index++] = (Tank_Bot_Module.temperature >> 8) & 0xff;
             command_rep.data[index++] = (Tank_Bot_Module.temperature) & 0xff;
         }

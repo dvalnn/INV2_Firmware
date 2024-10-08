@@ -174,7 +174,6 @@ void read_gps(void)
 
 void kalman(void)
 {
-    digitalWrite(V3_PIN, HIGH);
     const Vector3f norm_g(0.0, 0.0, 1.0);
     static float angles[3];
 
@@ -282,7 +281,6 @@ void kalman(void)
     //Serial.println();
     //Serial.flush();
 
-    digitalWrite(V3_PIN, LOW);
 #ifdef KALMAN_DEBBUG
     Serial.println("altitude done");
 #endif
