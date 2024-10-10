@@ -26,8 +26,8 @@ void updateControllersData() {
 
   log_display_ignition.setText("Ignition: " + ignition_data.getState());
   String chamber_data = "Chamber\n" +
-    "P: " + df.format(float(rocket_data.chamber_pressure) * .1) + " bar\n" +
-    "T: " + df.format(float(ignition_data.chamber_trigger_temp) * .01) + " ºC";
+    "P: " + df.format(float(rocket_data.chamber_pressure) * .01) + " bar\n" +
+    "T: " + df.format(float(ignition_data.chamber_trigger_temp) * .1) + " ºC";
   chamber_label.setText(chamber_data);
 
   // other

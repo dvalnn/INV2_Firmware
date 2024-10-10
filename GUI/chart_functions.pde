@@ -63,8 +63,8 @@ void setupCharts() {
 
 void updateCharts() {
   // filling chart
-  float fp = float(filling_data.n2o.pressure),
-    ft = float(filling_data.n2o.temperature),
+  float fp = float(rocket_data.tank.pressure_top) * .01,
+    ft = float(rocket_data.tank.temp_bot) * .1,
     fw = float(filling_data.n2o.loadcell);
 
   fillingChart.addData("Pressure", fp);
