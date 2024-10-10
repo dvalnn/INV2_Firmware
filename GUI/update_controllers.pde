@@ -87,9 +87,9 @@ void updateControllersPos(String tab) {
     n2o_toggle.setPosition(width*.39, height*.05);
     line_toggle.setPosition(width*.49, height*.05);
     // rocket
-    tt_toggle.setPosition(width*.25, height*.27);
-    tb_toggle.setPosition(width*.35, height*.27);
-    chamber_toggle.setPosition(width*.45, height*.27);
+    tt_toggle.setPosition(width*.25, height*.29);
+    tb_toggle.setPosition(width*.35, height*.29);
+    chamber_toggle.setPosition(width*.45, height*.29);
 
     //other
     ematch_label.setPosition(width*.55, height*.05);
