@@ -2,7 +2,7 @@ List<String> man_commands = Arrays.asList("Flash Log Start", "Flash Log Stop", "
 List<String> valves = Arrays.asList("VPU Valve", "Engine Valve", "Chamber Valve", "He Valve", "N2O Valve", "Line Valve");
 
 void maps() {
-    boolean[] _bl1 = {true, true, false};
+  boolean[] _bl1 = {true, true, false};
   prog_args.put("Safety Pressure", _bl1);
   boolean[] _bl2 = {true, true, false};
   prog_args.put("Purge Pressure", _bl2);

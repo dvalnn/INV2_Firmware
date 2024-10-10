@@ -38,21 +38,21 @@ void setupCharts() {
     .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
     ;
 
-  weight1Label = cp5.addLabel("Weight 1: ")
+  altitudeLabel = cp5.addLabel("Altitude: ")
     .setColor(color(0, 255, 0))
     .setFont(font)
     .moveTo("launch")
     .setPosition(displayWidth*.63, displayHeight*.16)
     .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
     ;
-  weight2Label = cp5.addLabel("Weight 2: ")
+  velocityLabel = cp5.addLabel("Velocity: ")
     .setColor(color(255, 255, 0))
     .setFont(font)
     .moveTo("launch")
     .setPosition(displayWidth*.63, displayHeight*.19)
     .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
     ;
-  weight3Label = cp5.addLabel("Weight 3: ")
+  accelerationLabel = cp5.addLabel("Acceleration: ")
     .setColor(color(255, 150, 150))
     .setFont(font)
     .moveTo("launch")
@@ -64,8 +64,8 @@ void setupCharts() {
 void updateCharts() {
   // filling chart
   float fp = float(filling_data.n2o.pressure),
-        ft = float(filling_data.n2o.temperature),
-        fw = float(filling_data.n2o.loadcell);
+    ft = float(filling_data.n2o.temperature),
+    fw = float(filling_data.n2o.loadcell);
 
   fillingChart.addData("Pressure", fp);
   fillingChart.addData("Temperature", ft);
@@ -83,8 +83,8 @@ void updateCharts() {
 
   // launch chart
   float lalt = float(rocket_data.kalman.altitude) * .1,
-        lvel = float(rocket_data.kalman.vel_z) * .1,
-        lacel = float(rocket_data.kalman.acel_z) * .1;
+    lvel = float(rocket_data.kalman.vel_z) * .1,
+    lacel = float(rocket_data.kalman.acel_z) * .1;
 
   launchChart.addData("Altitude", lalt);
   launchChart.addData("Velocity", lvel);
@@ -94,9 +94,9 @@ void updateCharts() {
   max_l = max(max_l, lvel);
   max_l = max(max_l, lacel);
 
-  weight1Label.setText("Altitude: " + df.format(lalt));
-  weight2Label.setText("Velocity: " + df.format(lvel));
-  weight3Label.setText("Acceleration: " + df.format(lacel));
+  altitudeLabel.setText("Altitude: " + df.format(lalt));
+  velocityLabel.setText("Velocity: " + df.format(lvel));
+  accelerationLabel.setText("Acceleration: " + df.format(lacel));
 
   launchChart.setRange(0, max_l*1.3);
 }

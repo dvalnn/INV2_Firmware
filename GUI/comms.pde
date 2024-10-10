@@ -387,7 +387,7 @@ short createAskDataMask(AskData[] asks) {
 void auto_status() {
   if (millis() - last_status_time > status_interval && status_toggle_state == 1) {
     byte oldID = targetID;
-    if(cp5.getTab("default").isActive()) {
+    if (cp5.getTab("default").isActive()) {
       if (last_status_id == 1) {
         targetID = 2;
         last_status_id = 2;
@@ -398,8 +398,7 @@ void auto_status() {
         targetID = 1;
         last_status_id = 1;
       }
-    }
-    else if (cp5.getTab("filling").isActive()) {
+    } else if (cp5.getTab("filling").isActive()) {
       if (last_status_id == 1) {
         targetID = 2;
         last_status_id = 2;
@@ -423,45 +422,37 @@ void auto_status() {
 }
 
 void request_status() {
-    AskData[] asks = {};
-    if(targetID == 1) { // roket
-      if(cp5.getTab("default").isActive()) {
-        asks = rocket_data.man_ask;
-      }
-      else if(cp5.getTab("filling").isActive()) {
-        asks = rocket_data.fill_ask;
-      }
-      else if(cp5.getTab("launch").isActive()) {
-        asks = rocket_data.launch_ask;
-      }
-     }
-    else if(targetID == 2) { // filing
-      if(cp5.getTab("default").isActive()) {
-        asks = filling_data.man_ask;
-      }
-      else if(cp5.getTab("filling").isActive()) {
-        asks = filling_data.fill_ask;
-      }
-      else if(cp5.getTab("launch").isActive()) {
-        asks = filling_data.launch_ask;
-      }
+  AskData[] asks = {};
+  if (targetID == 1) { // roket
+    if (cp5.getTab("default").isActive()) {
+      asks = rocket_data.man_ask;
+    } else if (cp5.getTab("filling").isActive()) {
+      asks = rocket_data.fill_ask;
+    } else if (cp5.getTab("launch").isActive()) {
+      asks = rocket_data.launch_ask;
     }
-    else if(targetID == 3) { // ignixon
-      if(cp5.getTab("default").isActive()) {
-        asks = ignition_data.man_ask;
-      }
-      else if(cp5.getTab("filling").isActive()) {
-        asks = ignition_data.fill_ask;
-      }
-      else if(cp5.getTab("launch").isActive()) {
-        asks = ignition_data.launch_ask;
-      }
+  } else if (targetID == 2) { // filing
+    if (cp5.getTab("default").isActive()) {
+      asks = filling_data.man_ask;
+    } else if (cp5.getTab("filling").isActive()) {
+      asks = filling_data.fill_ask;
+    } else if (cp5.getTab("launch").isActive()) {
+      asks = filling_data.launch_ask;
     }
-    if(asks.length == 0) {
-      print("No Asks");
-      return;
+  } else if (targetID == 3) { // ignixon
+    if (cp5.getTab("default").isActive()) {
+      asks = ignition_data.man_ask;
+    } else if (cp5.getTab("filling").isActive()) {
+      asks = ignition_data.fill_ask;
+    } else if (cp5.getTab("launch").isActive()) {
+      asks = ignition_data.launch_ask;
     }
-    short askShort = createAskDataMask(asks);
-    byte[] asksBytes = ByteBuffer.allocate(2).putShort(askShort).array();
-    send((byte)0x00, asksBytes);
+  }
+  if (asks.length == 0) {
+    print("No Asks");
+    return;
+  }
+  short askShort = createAskDataMask(asks);
+  byte[] asksBytes = ByteBuffer.allocate(2).putShort(askShort).array();
+  send((byte)0x00, asksBytes);
 }

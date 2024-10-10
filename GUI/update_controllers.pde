@@ -29,19 +29,20 @@ void updateControllersData() {
     "P: " + df.format(float(rocket_data.chamber_pressure) * .1) + " bar\n" +
     "T: " + df.format(float(ignition_data.chamber_trigger_temp) * .01) + " ºC";
   chamber_label.setText(chamber_data);
-  
+
   // other
   ematch_label.setText("Launch e-Match: " + df.format(ignition_data.main_ematch)
-                      + "\nDrogue e-Match: " + df.format(rocket_data.parachute.drogue_ematch)
-                      + "\nMain e-Match: " + df.format(rocket_data.parachute.main_ematch));
-  String gps_data = "GPS\n" +
-    "Lat: " + df.format(rocket_data.gps.latitude) + "\n" +
-    "Lon: " + df.format(rocket_data.gps.longitude) + "\n" +
+    + "\nDrogue e-Match: " + df.format(rocket_data.parachute.drogue_ematch)
+    + "\nMain e-Match: " + df.format(rocket_data.parachute.main_ematch));
+  String gps_data = "GPS          " +
+    "Sat: " + str(int(rocket_data.gps.satellite_count)) +
+    "\nLat: " + rocket_data.gps.latitude + "    " +
     "Alt: " + df.format(float(rocket_data.gps.altitude)) + "\n" +
-    "hVel: " + df.format(float(rocket_data.gps.horizontal_velocity)) + "\n" +
-    "Sat: " + str(int(rocket_data.gps.satellite_count));
+    "Lon: " + rocket_data.gps.longitude + "    " +
+    "hVel: " + df.format(float(rocket_data.gps.horizontal_velocity)) + "\n";
+
   gps_label.setText(gps_data);
-  
+
   String bar_data = "Barometer\n\n" +
     "Alt: " + df.format(float(rocket_data.barometer_altitude));
   bar_label.setText(bar_data);
@@ -96,7 +97,6 @@ void updateControllersPos(String tab) {
     bar_label.setPosition(width*.45, height*.32);
     imu_label.setPosition(width*.25, height*.32);
     kalman_label.setPosition(width*.35, height*.32);
-    
   } else if (tab == "filling") {
     he_label.setPosition(displayWidth*.5, displayHeight*.47);
     n2o_label.setPosition(displayWidth*.5, displayHeight*.69);
@@ -113,10 +113,8 @@ void updateControllersPos(String tab) {
     chamber_toggle.setPosition(width*.345, height*.85);
   } else if (tab == "launch") {
     ematch_label.setPosition(displayWidth*.4, displayHeight*.05);
-    chamber_label.setPosition(displayWidth*.02, displayHeight*.05);
-    gps_label.setPosition(width*.45, height*.5);
-    bar_label.setPosition(width*.55, height*.5);
-    imu_label.setPosition(width*.25, height*.5);
-    kalman_label.setPosition(width*.35, height*.5);
+    chamber_label.setPosition(displayWidth*.55, displayHeight*.05);
+    gps_label.setPosition(width*.23, height*.4);
+    kalman_label.setPosition(width*.25, height*.5);
   }
 }

@@ -1,8 +1,11 @@
 PImage fill_diagram;
+PImage map_image;
 Icon testIcon;
 
 void setupDiagrams() {
   fill_diagram = loadImage(fill_img);
+  setupGPSMap();
+  setup3D();
   he_label = cp5.addLabel("He\nT : ####\nP : ####")
     .setColor(labelColor)
     .setFont(font)
@@ -124,10 +127,13 @@ void setupDiagrams() {
 
 void updateDiagrams() {
   background(bgColor);
+  updateGPSMap();
+  if (cp5.getTab("launch").isActive()) {
+    update3D();
+  }
   if (cp5.getTab("filling").isActive()) {
     image(fill_diagram, width*.23, height*.38, fill_diagram.width* 1.2 * width/1920, fill_diagram.height * 1.2 * height/1080); // scale image with display size
   }
-
   for ( Toggle toggle : valve_toggles) {
     toggle.setBroadcast(false);
   }
@@ -207,18 +213,22 @@ void updateDiagrams() {
 }
 
 void multi_tab_controllers(String tab) {
-  if (tab == "filling") {
-    ematch_label.hide();
-    gps_label.hide();
-    bar_label.hide();
-    imu_label.hide();
-    kalman_label.hide();
-  } else {
+  if (tab == "default") {
     ematch_label.show();
     gps_label.show();
     bar_label.show();
     imu_label.show();
     kalman_label.show();
+  } else if (tab == "launch") {
+    imu_label.hide();
+    bar_label.hide();
+    kalman_label.hide();
+  } else {
+    ematch_label.hide();
+    gps_label.hide();
+    bar_label.hide();
+    imu_label.hide();
+    kalman_label.hide();
   }
 
   if (tab == "launch") {
