@@ -29,7 +29,6 @@ extern MPU9250 IMU;
 
 extern float imu_ax,imu_ay,imu_az; //accel
 extern float imu_gx,imu_gy,imu_gz; //gyro
-extern float imu_mx,imu_my,imu_mz; //magnetometer
 
 extern const float betha_imu;
 
@@ -43,8 +42,14 @@ extern float ground_hPa;
 
 //------------- GPS ----------------
 extern TinyGPSPlus gps;
+extern float gps_lat, gps_lon;
+extern float gps_altitude;
+extern float gps_horizontal_vel;
+extern uint16_t gps_satalites;
 
 //------------ Kalman -------------
+
+extern SemaphoreHandle_t kalman_mutex;
 
 extern bool Launch;
 extern bool DragDeployed;
@@ -55,6 +60,12 @@ extern alt_kalman alt_kal;
 extern QuaternionFilter att;
 extern float q[4];
 
+extern float kalman_altitude;
+extern float kalman_velocity;
+extern float kalman_accel;
+extern float kalman_q[4];
+
+extern bool debug_flag;
 //-----------Pressure AMP--------------
 extern ADS1115_WE ADS;
 

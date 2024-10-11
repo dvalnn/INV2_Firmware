@@ -28,6 +28,8 @@
 #include "StMWork.h"
 #include "FlashLog.h"
 
+#include "Control_Work.h"
+
 // I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
 // for both classes must be in the include path of your project
 #include <I2Cdev.h>
@@ -47,11 +49,15 @@
 
 #include <Preferences.h>
 
+#include <LittleFS.h>
+
 // Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
 // is used in I2Cdev.h
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     #include "Wire.h"
 #endif
+
+#define FORMAT_LITTLEFS_IF_FAILED true
 
 // class default I2C address is 0x68
 // specific I2C addresses may be passed as a parameter here
@@ -63,6 +69,11 @@ Preferences preferences;
 bool fast_reboot = 0;
 
 bool Launch = false;
+
+TaskHandle_t Core0Task;
+TaskHandle_t Core1Task;
+
+void software_work(void* paramms);
 
 void pressure_Setup(void)
 {
@@ -145,8 +156,8 @@ void BAROMETER_Setup(void)
                   Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
                   Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
                   Adafruit_BMP280::FILTER_X16,      /* Filtering. */
-                  //Adafruit_BMP280::STANDBY_MS_500   /* Standby time. */
                   Adafruit_BMP280::STANDBY_MS_1   /* Standby time. */
+                  //Adafruit_BMP280::STANDBY_MS_250   /* Standby time. */
                   );
     
     if(fast_reboot)
@@ -191,12 +202,19 @@ void Pyro_Setup(void)
 
 void Flash_Setup()
 {
-    if (!SD.begin(Flash_SS_PIN)) {
-        printf("Unable to access SPI Flash chip\n");
-        //return;
+    //if (!SD.begin(Flash_SS_PIN)) {
+        //printf("Unable to access SPI Flash chip\n");
+        ////return;
+    //}
+
+    //current_id = get_last_id() + 1;
+    
+    if(!LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED)){
+        Serial.println("LittleFS Mount Failed");
+        return;
     }
 
-    current_id = get_last_id() + 1;
+
 }
 
 
@@ -216,8 +234,11 @@ void LoRa_Setup(void)
   }
 }
 
+void dummy_func(void* parameters) {}
 
 void setup() {
+
+    kalman_mutex = xSemaphoreCreateMutex();
 
     Serial.begin(SERIAL_BAUD); //USBC serial
     Serial1.begin(SERIAL1_BAUD, 134217756U, GPS_TX_PIN, GPS_RX_PIN); //GPS
@@ -227,7 +248,7 @@ void setup() {
     Wire1.begin(I2C_SDA_2_PIN, I2C_SCL_2_PIN, 400000);
 
     SPI.begin();
-    SPI.setFrequency(400000000);
+    SPI.setFrequency(800000000);
     
     preferences.begin("config", false);
 
@@ -244,7 +265,7 @@ void setup() {
     digitalWrite(Flash_SS_PIN, HIGH);
 
     LoRa_Setup();
-    //Flash_Setup();
+    Flash_Setup();
     //printf("Last state %u\n", last_state);
     //printf("Restart_count %u\n", restart_count);
 
@@ -268,7 +289,7 @@ void setup() {
         preferences.putChar("main_state", 0);
     }
 
-    //state = FLIGHT;
+    state = FLIGHT;
 
     GPS_Setup();
     IMU_Setup();
@@ -283,103 +304,128 @@ void setup() {
 
     //delay(2000);
     //while(1){}
+     // Set up Core 1 task handler
+    xTaskCreatePinnedToCore(
+        software_work,
+        "Core 0 task",
+        102400,
+        NULL,
+        1,
+        NULL,
+        1);
+        
+    xTaskCreatePinnedToCore(
+        control_work,
+        "Core 1 task",
+        102400,
+        NULL,
+        1,
+        NULL,
+        0);
+
+    
 }
 
-void loop() {
-    static bool init_flag = false;
-    if(!init_flag)
+void loop() { vTaskDelay(1000); }
+
+void software_work(void* paramms) {
+    while(true)
     {
-        state_machine[state].entry_time = millis();
-        for(int i = 0; i < MAX_WORK_SIZE; i++)
-            state_machine[state].work[i].begin = 
-                state_machine[state].work[i].delay;
-        init_flag = true;
-    }
-
-    rocket_state_t command_state = state, \
-                   event_state   = state; 
-
-    /*
-        Execute the state function 
-     */
-    bool work_performed = WORK_HANDLER();
-
-    /*
-     Event handling
-     */
-    //if (work_performed) event_state = EVENT_HANDLER();
-    event_state = EVENT_HANDLER();
-    if(event_state == -1) event_state = state;
-
-    /*
-     Comms
-     */
-    int error;
-
-    //check if we have new data
-    //if we get a valid message, execute the command associated to it
-    command_t* cmd = read_command(&error, DEFAULT_CMD_INTERFACE);
-    if( cmd != NULL && error == CMD_READ_OK) 
-    {
-        int error = run_command(cmd, state, DEFAULT_CMD_INTERFACE); 
-
-        //make transition to new state on the state machine
-        if(error == CMD_RUN_OK && 
-           state_machine[state].comms[cmd->cmd] != -1)
+        static bool init_flag = false;
+        if(!init_flag)
         {
-            //we have new state, use lookup table
-            command_state = (rocket_state_t)comm_transition[state][cmd->cmd];
-            //Serial2.printf("change state to %d\n", state_machine[state].comms[cmd->cmd]);
+            state_machine[state].entry_time = millis();
+            for(int i = 0; i < MAX_WORK_SIZE; i++)
+                state_machine[state].work[i].begin = 
+                    state_machine[state].work[i].delay;
+            init_flag = true;
         }
-        else if (error != CMD_RUN_OK)
+
+        rocket_state_t command_state = state, \
+                    event_state   = state; 
+
+        /*
+            Execute the state function 
+        */
+        bool work_performed = WORK_HANDLER();
+
+        /*
+        Event handling
+        */
+        //if (work_performed) event_state = EVENT_HANDLER();
+        event_state = EVENT_HANDLER();
+        if(event_state == -1) event_state = state;
+
+        /*
+        Comms
+        */
+        int error;
+
+        //check if we have new data
+        //if we get a valid message, execute the command associated to it
+        command_t* cmd = read_command(&error, DEFAULT_CMD_INTERFACE);
+        if( cmd != NULL && error == CMD_READ_OK) 
         {
-            //log cmd execution error
-            //Serial2.printf("EXECUTING MESSAGE ERROR %d\n", error);
+            int error = run_command(cmd, state, DEFAULT_CMD_INTERFACE); 
+
+            //make transition to new state on the state machine
+            if(error == CMD_RUN_OK && 
+            state_machine[state].comms[cmd->cmd] != -1)
+            {
+                //we have new state, use lookup table
+                command_state = (rocket_state_t)comm_transition[state][cmd->cmd];
+                //Serial2.printf("change state to %d\n", state_machine[state].comms[cmd->cmd]);
+            }
+            else if (error != CMD_RUN_OK)
+            {
+                //log cmd execution error
+                //Serial2.printf("EXECUTING MESSAGE ERROR %d\n", error);
+            }
         }
-    }
-    else if(error != CMD_READ_OK && 
-            error != CMD_READ_NO_CMD)
-    {
-        //log cmd read error
-        //Serial.printf("READING MESSAGE ERROR %d\n", error);
-    }
+        else if(error != CMD_READ_OK && 
+                error != CMD_READ_NO_CMD)
+        {
+            //log cmd read error
+            //Serial.printf("READING MESSAGE ERROR %d\n", error);
+        }
 
-    /*
-     * Do state transition
-     */
-    if(command_state != state) 
-    {
-        //command change of state as priority over
-        //internal events changes of state
-        state = command_state;
-        state_machine[state].entry_time = millis();
-        
-        //reset sensor timer
-        for(int i = 0; i < MAX_WORK_SIZE; i++)
-            state_machine[state].work[i].begin = 
-                state_machine[state].work[i].delay;
-        
-        log(&state, 0, STATE_CHANGE);
-    }
-
-    //used as the time base when dealing with sensor sampling rate and delays
-    else if(event_state != state)
-    {
-        //only if comms haven't changed the state we can
-        //acept a new state from internal events
-        state = event_state;
-        state_machine[state].entry_time = millis();
-        
-        //reset sensor timer
-        for(int i = 0; i < MAX_WORK_SIZE; i++)
-            state_machine[state].work[i].begin = 
-                state_machine[state].work[i].delay;
+        /*
+        * Do state transition
+        */
+        if(command_state != state) 
+        {
+            //command change of state as priority over
+            //internal events changes of state
+            state = command_state;
+            state_machine[state].entry_time = millis();
             
-        log(&state, 0, STATE_CHANGE);
+            //reset sensor timer
+            for(int i = 0; i < MAX_WORK_SIZE; i++)
+                state_machine[state].work[i].begin = 
+                    state_machine[state].work[i].delay;
+            
+            log(&state, 0, STATE_CHANGE);
+        }
+
+        //used as the time base when dealing with sensor sampling rate and delays
+        else if(event_state != state)
+        {
+            //only if comms haven't changed the state we can
+            //acept a new state from internal events
+            state = event_state;
+            state_machine[state].entry_time = millis();
+            
+            //reset sensor timer
+            for(int i = 0; i < MAX_WORK_SIZE; i++)
+                state_machine[state].work[i].begin = 
+                    state_machine[state].work[i].delay;
+                
+            log(&state, 0, STATE_CHANGE);
+        }
+
+        //save last state
+        preferences.putUInt("last_state", state);
+
+        vTaskDelay(1);
     }
-
-    //save last state
-    preferences.putUInt("last_state", state);
-
-    //delay(1);
 }

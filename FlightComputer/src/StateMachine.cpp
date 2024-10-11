@@ -44,8 +44,8 @@ rocket_state_t comm_transition[rocket_state_size][cmd_size] = {
 #define RUN_KALMAN \
     {.channel = read_barometer, .sample = BMP_READ_TIME}, \
     {.channel = read_imu, .sample = IMU_READ_TIME}, \
-    {.channel = read_gps, .sample = 100}, \
-    {.channel = kalman, .sample = 10}
+    {.channel = kalman, .sample = 15}
+    //{.channel = read_gps, .sample = 100}, \
 
 #define KALMAN_EVENTS \
     {.condition = apogee_event, .reaction = drag_ematch_high, .next_state = -1}, \
@@ -63,7 +63,7 @@ State_t state_machine[rocket_state_size] =
             //{.channel = read_gps, .sample = 100},
             //{.channel = read_imu, .sample = 1000},
 
-            RUN_KALMAN,
+            //RUN_KALMAN,
 
             //{.channel = ADS_handler_slow, .sample = 1},
             {.channel = logger, .sample = 1000},
@@ -100,7 +100,7 @@ State_t state_machine[rocket_state_size] =
     // MANUAL
     {
         .work = {
-            //TANK_TEMPERATURE_SENSORS(100),
+            TANK_TEMPERATURE_SENSORS(100),
 
             {.channel = ADS_handler_fast, .sample = 1},
 
@@ -194,9 +194,9 @@ State_t state_machine[rocket_state_size] =
     // READY
     {
         .work = {
-            TANK_TEMPERATURE_SENSORS(1000),
+            //TANK_TEMPERATURE_SENSORS(1000),
 
-            RUN_KALMAN,
+            //RUN_KALMAN,
 
             {.channel = ADS_handler_all_slow, .sample = 1},
 
@@ -216,9 +216,9 @@ State_t state_machine[rocket_state_size] =
     // ARMED
     {
         .work = {
-            TANK_TEMPERATURE_SENSORS(1000),
+            //TANK_TEMPERATURE_SENSORS(1000),
             
-            RUN_KALMAN,
+            //RUN_KALMAN,
 
             {.channel = ADS_handler_all_fast, .sample = 1},
 
@@ -242,7 +242,7 @@ State_t state_machine[rocket_state_size] =
             {.channel = V_Engine_open, .sample = 5},
 
             //TANK_TEMPERATURE_SENSORS(1000),
-            RUN_KALMAN,
+            //RUN_KALMAN,
 
             {.channel = burn_timer_tick, .sample = 1000},
 
@@ -267,9 +267,9 @@ State_t state_machine[rocket_state_size] =
             {.channel = V_Engine_close, .sample = 5},
             {.channel = V_Purge_open, .sample = 5},
 
-            TANK_TEMPERATURE_SENSORS(250),
+            //TANK_TEMPERATURE_SENSORS(250),
             
-            RUN_KALMAN,
+            //RUN_KALMAN,
 
             {.channel = ADS_handler_all_fast, .sample = 1},
 
@@ -291,9 +291,9 @@ State_t state_machine[rocket_state_size] =
         .work = {
             {.channel = V_Engine_close, .sample = 5},
             
-            {.channel = telemetry, .sample = 1000},
+            {.channel = telemetry, .sample = 2000},
             {.channel = flash_log_sensors, .sample = 100},
-            RUN_KALMAN,
+            //RUN_KALMAN,
         },
 
         .events = {
