@@ -53,8 +53,8 @@ class RocketData {
   class Kalman {
     short altitude,
       vel_z,
-      acel_z,
-      q1,
+      acel_z;
+    int q1,
       q2,
       q3,
       q4;

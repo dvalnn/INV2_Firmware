@@ -72,7 +72,7 @@ int status_toggle_state = 0;
 int last_status_request = 0;
 int last_status_id = 1;
 
-float max_f = .01, max_l = .01;
+float max_f = .01, max_l = .01, min_l = -.01;
 int max_size = 100000;
 int[] prog_inputs = new int[3];
 int selected_index = -1;
@@ -179,7 +179,6 @@ public void controlEvent(ControlEvent event) {
       String input = textfields[i].getText();
       try {
         prog_inputs[i] = Integer.parseInt(input);
-        println(input);
       }
       catch (NumberFormatException e) {
         prog_inputs[i] = -1;
@@ -193,8 +192,8 @@ public void controlEvent(ControlEvent event) {
         (byte)((prog_inputs[1] >> 8) & 0xff),
         (byte) (prog_inputs[1] & 0xff),
         (byte)((prog_inputs[2] >> 8) & 0xff),
-        (byte) (prog_inputs[2] & 0xff)};
-      println(payload);
+        (byte) (prog_inputs[2] & 0xff)
+      };
       send((byte) 0x03, payload);
     } else {
       println("No program selected");
@@ -231,10 +230,6 @@ public void controlEvent(ControlEvent event) {
   } else if (event.isFrom("Ready")) {
     send((byte)0x08, empty_payload);
     status_toggle.setState(true);
-  } else if (event.isFrom("Fire")) {
-    send((byte)0x0c, empty_payload);
-  } else if (event.isFrom("Allow Launch")) {
-    send((byte)0x0a, empty_payload);
   } else if (event.isFrom(status_toggle)) {
     status_toggle_state = (int) event.getController().getValue();
     if (status_toggle_state == 1) {

@@ -27,8 +27,9 @@ String fill_img;
 String fill_img_light = "diagrams/fillingBlack.png";
 String fill_img_dark = "diagrams/fillingWhite.png";
 String map_img = "diagrams/map.png";
+String map_pimg = "diagrams/padock_map.png";
 final float MIN_LAT = 39.335159, MAX_LAT = 39.397242, MIN_LONG = -8.331430, MAX_LONG = -8.176142;
-
+final float pMIN_LAT = 39.204760, pMAX_LAT = 39.219381, pMIN_LONG = -8.073767, pMAX_LONG = -8.043232;
 int history_capacity = 10;
 
 int cmd_size = 14; // 13 comandos + 1

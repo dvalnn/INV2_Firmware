@@ -39,7 +39,7 @@ void updateControllersData() {
     "\nLat: " + rocket_data.gps.latitude + "    " +
     "Alt: " + df.format(float(rocket_data.gps.altitude)) + "\n" +
     "Lon: " + rocket_data.gps.longitude + "    " +
-    "hVel: " + df.format(float(rocket_data.gps.horizontal_velocity)) + "\n";
+    "hVel: " + df.format(float(rocket_data.gps.horizontal_velocity) * .1) + "\n";
 
   gps_label.setText(gps_data);
 
@@ -48,21 +48,18 @@ void updateControllersData() {
   bar_label.setText(bar_data);
 
   String imu_data = "IMU\n" +
-    "\nAx: " + df.format(float(rocket_data.imu.accel_x)) + "\n" +
-    "Ay: " + df.format(float(rocket_data.imu.accel_y)) + "\n" +
-    "Az: " + df.format(float(rocket_data.imu.accel_z)) + "\n" +
-    "\nGx: " + df.format(float(rocket_data.imu.gyro_x)) + "\n" +
-    "Gy: " + df.format(float(rocket_data.imu.gyro_y)) + "\n" +
-    "Gz: " + df.format(float(rocket_data.imu.gyro_z)) + "\n" +
-    "\nMx: " + df.format(float(rocket_data.imu.mag_x)) + "\n" +
-    "My: " + df.format(float(rocket_data.imu.mag_y)) + "\n" +
-    "Mz: " + df.format(float(rocket_data.imu.mag_z));
+    "\nAx: " + df.format(float(rocket_data.imu.accel_x) * .1) + "\n" +
+    "Ay: " + df.format(float(rocket_data.imu.accel_y) * .1) + "\n" +
+    "Az: " + df.format(float(rocket_data.imu.accel_z) * .1) + "\n" +
+    "\nGx: " + df.format(float(rocket_data.imu.gyro_x) * .1) + "\n" +
+    "Gy: " + df.format(float(rocket_data.imu.gyro_y) * .1) + "\n" +
+    "Gz: " + df.format(float(rocket_data.imu.gyro_z) * .1);
   imu_label.setText(imu_data);
 
   String kalman_data = "Kalman\n\n" +
-    "Alt: " + df.format(float(rocket_data.kalman.altitude)) + "\n" +
-    "Vel: " + df.format(float(rocket_data.kalman.vel_z)) + "\n" +
-    "Acel: " + df.format(float(rocket_data.kalman.acel_z)) + "\n" +
+    "Alt: " + df.format(float(rocket_data.kalman.altitude)*.1) + "\n" +
+    "Vel: " + df.format(float(rocket_data.kalman.vel_z)*.1) + "\n" +
+    "Acel: " + df.format(float(rocket_data.kalman.acel_z)*.1) + "\n" +
     "q1: " + df.format(float(rocket_data.kalman.q1)) + "\n" +
     "q2: " + df.format(float(rocket_data.kalman.q2)) + "\n" +
     "q3: " + df.format(float(rocket_data.kalman.q3)) + "\n" +
@@ -109,12 +106,16 @@ void updateControllersPos(String tab) {
     n2o_toggle.setPosition(width*.495, height*.65);
     line_toggle.setPosition(width*.394, height*.566);
     tt_toggle.setPosition(width*.275, height*.405);
-    tb_toggle.setPosition(width*.275, height*.83);
-    chamber_toggle.setPosition(width*.345, height*.85);
+    tb_toggle.setPosition(width*.345, height*.85);
+    chamber_toggle.setPosition(width*.275, height*.83);
   } else if (tab == "launch") {
     ematch_label.setPosition(displayWidth*.4, displayHeight*.05);
     chamber_label.setPosition(displayWidth*.55, displayHeight*.05);
     gps_label.setPosition(width*.23, height*.4);
     kalman_label.setPosition(width*.25, height*.5);
+    
+    tt_toggle.setPosition(width*.095, height*.075);
+    tb_toggle.setPosition(width*.12, height*.35);
+    chamber_toggle.setPosition(width*.095, height*.46);
   }
 }

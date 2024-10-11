@@ -108,22 +108,6 @@ void setupControllers() {
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
-  cp5.addButton("Fire")
-    .setPosition(displayWidth*button_x1, displayHeight*.42)
-    .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
-    .moveTo("launch")
-    .setColor(defaultColor)
-    .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
-    .setFont(font);
-
-  cp5.addButton("Allow Launch")
-    .setPosition(displayWidth*button_x1, displayHeight*.47)
-    .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
-    .moveTo("launch")
-    .setColor(defaultColor)
-    .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
-    .setFont(font);
-
   fillingChart = cp5.addChart("Filling Chart")
     .setPosition(displayWidth*.23, displayHeight*.16)
     .setSize((int)(displayWidth*.39), (int)(displayHeight*.15))

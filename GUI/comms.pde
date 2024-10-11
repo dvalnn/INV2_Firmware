@@ -56,7 +56,7 @@ void serialThread() {
 }
 
 void parseIncomingByte(byte rx_byte) {
-
+  print((char)rx_byte);
   if (last_read_time == 0 || millis() - last_read_time > packet_read_timeout) {
     currentParseState = ParseState.START;
   }
@@ -111,7 +111,7 @@ void processPacket() {
   dataPacket new_packet = new dataPacket(CMD, ID, rx_payload);
   rx_packet = new_packet;
   //println();
-  println(rx_packet.getPacket());
+  //println(rx_packet.getPacket());
   rx_packet.logPacket(LogEvent.MSG_RECEIVED);
   if (rx_packet.command == (byte) 0x00) {
     if (rx_packet.id == (byte) 0x02) {
@@ -236,7 +236,7 @@ void updateData(dataPacket packet) {
         rocket_data.kalman.altitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         rocket_data.kalman.vel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
         rocket_data.kalman.acel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
-        rocket_data.kalman.q1 = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 6, index + 8)).getShort();
+        rocket_data.kalman.q1 = Short.toUnsignedInt(ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 6, index + 8)).getShort());
         rocket_data.kalman.q2 = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 8, index + 10)).getShort();
         rocket_data.kalman.q3 = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 10, index + 12)).getShort();
         rocket_data.kalman.q4 = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 12, index + 14)).getShort();
@@ -357,8 +357,8 @@ void displayAck(int ackValue) {
     ackName = "Manual Exec";
     if (rx_packet.payload[0] == (byte) 0x0d) { // flash ids cmd (2) + man command size (10) + 1
       int file_count = (int) rx_packet.payloadLength - 1;
-      println(file_count);
-      println(rx_packet.getPacket());
+      //println(file_count);
+      //println(rx_packet.getPacket());
 
       String id = str((ByteBuffer.wrap(Arrays.copyOfRange(rx_packet.payload, file_count - 1, file_count + 1))).getShort());
       ackName = "Flash Log ID: " + id;
@@ -414,7 +414,7 @@ void send(byte command, byte[] payload) {
     //println(hex(b));
     //}
     //println();
-    println(tx_packet.getPacket());
+    //println(tx_packet.getPacket());
     tx_queue.add(tx_packet);
   } else {
     println("No serial port selected!");

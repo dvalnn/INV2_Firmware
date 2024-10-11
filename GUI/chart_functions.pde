@@ -6,7 +6,7 @@ void setupCharts() {
   launchChart.addDataSet("Altitude");
   launchChart.addDataSet("Velocity");
   launchChart.addDataSet("Acceleration");
-
+  launchChart.addDataSet("zero");
 
   fillingChart.setColors("Pressure", color(0, 255, 0));
   fillingChart.setColors("Temperature", color(255, 150, 255));
@@ -15,7 +15,8 @@ void setupCharts() {
   launchChart.setColors("Altitude", color(0, 255, 0));
   launchChart.setColors("Velocity", color(255, 255, 0));
   launchChart.setColors("Acceleration", color(255, 150, 150));
-
+  launchChart.setColors("zero", color(255, 255, 255));
+  
   pressureLabel = cp5.addLabel("Pressure: ")
     .setColor(color(0, 255, 0))
     .setFont(font)
@@ -89,14 +90,19 @@ void updateCharts() {
   launchChart.addData("Altitude", lalt);
   launchChart.addData("Velocity", lvel);
   launchChart.addData("Acceleration", lacel);
+  launchChart.addData("zero", 0);
 
   max_l = max(max_l, lalt);
   max_l = max(max_l, lvel);
   max_l = max(max_l, lacel);
 
+  min_l = min(min_l, lalt);
+  min_l = min(min_l, lvel);
+  min_l = min(min_l, lacel);
+
   altitudeLabel.setText("Altitude: " + df.format(lalt));
   velocityLabel.setText("Velocity: " + df.format(lvel));
   accelerationLabel.setText("Acceleration: " + df.format(lacel));
 
-  launchChart.setRange(0, max_l*1.3);
+  launchChart.setRange(min_l*1.3, max_l*1.3);
 }

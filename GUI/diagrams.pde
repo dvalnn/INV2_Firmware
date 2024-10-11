@@ -232,18 +232,18 @@ void multi_tab_controllers(String tab) {
   }
 
   if (tab == "launch") {
-    for (Toggle toggle : valve_toggles) {
-      toggle.hide();
-    }
     for (Textlabel label : diagram_labels) {
       label.hide();
     }
+    line_toggle.hide();
+    he_toggle.hide();
+    n2o_toggle.hide();
   } else {
-    for (Toggle toggle : valve_toggles) {
-      toggle.show();
-    }
     for (Textlabel label : diagram_labels) {
       label.show();
     }
+    line_toggle.show();
+    he_toggle.show();
+    n2o_toggle.show();
   }
 }
