@@ -32,6 +32,7 @@ int quaternion_to_euler(MyQuaternion Q,  float *euler){
         t4 = +1.0 - 2.0 * (Q.qy * Q.qy + Q.qz * Q.qz);
         euler[2] = atan2Fast(t3, t4) * 180 / M_PI;
 
+        //Serial.printf("%f %f %f\n", euler[0], euler[1], euler[2]);
 
         return 1;
 }

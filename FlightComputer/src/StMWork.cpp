@@ -19,27 +19,6 @@
 #include <Crc.h>
 
 //#define KALMAN_DEBBUG
-float imu_ax;
-float imu_ay;
-float imu_az;
-
-float imu_gx;
-float imu_gy;
-float imu_gz;
-
-float imu_mx;
-float imu_my;
-float imu_mz;
-
-float altitude = 0;
-float maxAltitude = 0;
-
-float ground_hPa = 0;
-
-alt_kalman alt_kal;
-QuaternionFilter att;
-Eigen::Matrix<float, 9, 1> alt_kalman_state; // altitude | vertical velocity | vertical acceleration
-float q[4];
 
 int16_t tank_pressure = 0;
 float tank_liquid = 0;
@@ -145,147 +124,6 @@ void kalman_calibrate(void)
     //reset kalman position
 }
 
-
-void read_imu(void)
-{
-    // if(accelgyro.testConnection())
-    // accelgyro.getMotion6(&imu_ax, &imu_ay, &imu_az,
-    //&imu_gx, &imu_gy, &imu_gz);
-
-    IMU.update_accel_gyro();
-
-    imu_ax = IMU.getAccX() * 9.8;
-    imu_ay = IMU.getAccY() * 9.8;
-    imu_az = IMU.getAccZ() * 9.8;
-
-    imu_gx = IMU.getGyroX();
-    imu_gy = IMU.getGyroY();
-    imu_gz = IMU.getGyroZ();
-
-    //Serial.printf("%f %f %f %f %f %f\n", imu_ax, imu_ay, imu_az, imu_gx, imu_gy, imu_gz);
-
-    return;
-}
-
-void read_barometer(void)
-{
-    static float lpf_alt = 0.0f;
-    // LOW PASS altitude
-    lpf_alt = bmp.readAltitude(ground_hPa);
-    altitude += (lpf_alt - altitude) * betha_alt;
-
-    //Serial.printf("Altitude barometer %f\n", altitude);
-}
-
-void read_gps(void)
-{
-    bool reading = false;
-    while (Serial1.available() && reading == false)
-        reading = gps.encode(Serial1.read());
-
-    if (reading)
-    {
-        // Serial.printf("N satalites %d\n", gps.satellites.value());
-        // Serial.printf("Lat %f Lon %f\n", gps.location.lat(), gps.location.lng());
-        // Serial.printf("GPS altitude %f\n", gps.altitude.meters());
-    }
-}
-
-void kalman(void)
-{
-    const Vector3f norm_g(0.0, 0.0, 1.0);
-    static float angles[3];
-
-    static MyQuaternion Q;
-    static Matrix<float, 7, 1> Z;
-    static Matrix<float, 3, 1> U, Acc;
-    static Matrix<float, 9, 1> Z_2, U_2;
-    static Vector3f norm_acc, axis, acc;
-    static float last_alt = altitude;
-    static float gps_alt_offset, alt_offset, last_lat, last_long;
-    static bool first = true;
-
-    static unsigned int start;
-
-    if (first)
-    {
-        acc << imu_ax, imu_ay, imu_az;
-        norm_acc = acc / acc.norm();
-        axis = norm_acc.cross(norm_g);
-        axis = axis / axis.norm();
-
-        float t = iacos(norm_acc.dot(norm_g));
-
-        q[0] = icos(t / 2.0);
-        q[1] = axis(0) * isin(t / 2);
-        q[2] = axis(1) * isin(t / 2);
-        q[3] = axis(2) * isin(t / 2);
-        first = false;
-        Z_2 << 0, 0, 0, 0, 0, 0, 0, 0, 0;
-        
-        start = millis();
-    }
-
-    att.update(imu_ax, imu_ay, imu_az, imu_gx, imu_gy, imu_gz, 0, 0, 0, q);
-
-    Q.qw = q[0];
-    Q.qx = q[1];
-    Q.qy = q[2];
-    Q.qz = q[3];
-
-#ifdef KALMAN_DEBBUG
-    Serial.println("Orientation done");
-    Serial.print(" |qw:");
-    Serial.print(Q.qw);
-    Serial.print(" |qx:");
-    Serial.print(Q.qx);
-    Serial.print(" |qy:");
-    Serial.print(Q.qy);
-    Serial.print(" |qz:");
-    Serial.print(Q.qz);
-    Serial.println("Starting altitude");
-#endif
-    Acc << imu_ax, imu_ay, imu_az;
-
-    U_2 << 0, 0, Acc(0), 0, 0, Acc(1), 0, 0, Acc(2);
-    Z_2 << 0, 0, Acc(0), 0, 0, Acc(1), altitude, 0, Acc(2); 
-
-    last_alt = altitude;
-#ifdef KALMAN_DEBBUG
-    Serial.println("measurements done");
-    Serial.println("Starting kalman");
-#endif
-    alt_kalman_state = alt_kal.cicle(Q, Z_2, U_2);
-
-    if (Launch)
-        maxAltitude = max(maxAltitude, alt_kalman_state(6));
-
-    //Serial.print(" |pos_X:");
-    //Serial.print(alt_kalman_state(0));
-    //Serial.print(" |vel_X:");
-    //Serial.print(alt_kalman_state(1));
-    //Serial.print(" |Acc_X:");
-    //Serial.print(alt_kalman_state(2));
-    //Serial.print(" |pos_Y:");
-    //Serial.print(alt_kalman_state(3));
-    //Serial.print(" |vel_Y:");
-    //Serial.print(alt_kalman_state(4));
-    //Serial.print(" |Acc_Y:");
-    //Serial.print(alt_kalman_state(5));
-
-    //Serial.print(" |altitude:");
-    //Serial.print(alt_kalman_state(6));
-    //Serial.print(" |vel_Z:");
-    //Serial.print(alt_kalman_state(7));
-    //Serial.print(" |Acc_Z:");
-    //Serial.print(alt_kalman_state(8));
-    //Serial.println();
-    //Serial.flush();
-
-#ifdef KALMAN_DEBBUG
-    Serial.println("altitude done");
-#endif
-}
 
 void flash_log_sensors(void)
 {
@@ -419,6 +257,8 @@ void telemetry(void)
     command.size = index; 
     command.crc = crc((unsigned char *)&command, command.size + 3);
     write_command(&command, DEFAULT_CMD_INTERFACE);
+
+    Serial.printf("telemetry\n");
 }
 
 void read_temperature_tank_top(void)

@@ -178,6 +178,7 @@ public:
 
         // Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation)
         tmp = ax * ax + ay * ay + az * az;
+        //tmp = ax + ay + az;
         if (tmp > 0.0) {
             // Normalise accelerometer (assumed to measure the direction of gravity in body frame)
             recipNorm = 1.0 / sqrt(tmp);

@@ -40,6 +40,8 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 
         uint16_t log_bits = (cmd->data[0] << 8) + cmd->data[1];
 
+        xSemaphoreTake(kalman_mutex, portMAX_DELAY);
+
         if ((log_bits & ROCKET_STATE_BIT))
         {
             command_rep.data[index++] = state;
@@ -79,14 +81,12 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
         if ((log_bits & ROCKET_GPS_BIT))
         {
 
-            float gps_lat = gps.location.lat();
-            float gps_lon = gps.location.lng();
-            uint16_t gps_altitude = (uint16_t)(gps.altitude.meters());
+            uint16_t gps_alt = (uint16_t)(gps_altitude);
 
-            command_rep.data[index++] = (uint8_t)(gps.satellites.value());
+            command_rep.data[index++] = (uint8_t)(gps_satalites);
 
-            command_rep.data[index++] = (uint8_t)((gps_altitude >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((gps_altitude) & 0xff);
+            command_rep.data[index++] = (uint8_t)((gps_alt >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((gps_alt) & 0xff);
 
             f.f = gps_lat;
             command_rep.data[index++] = (uint8_t)((f.i >> 24) & 0xff);
@@ -100,7 +100,7 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
             command_rep.data[index++] = (uint8_t)((f.i >> 8) & 0xff);
             command_rep.data[index++] = (uint8_t)((f.i) & 0xff);
 
-            uint16_t horizontal_vel = (gps.speed.kmph() * 10);
+            uint16_t horizontal_vel = (gps_horizontal_vel * 10);
             command_rep.data[index++] = (uint8_t)((horizontal_vel >> 8) & 0xff);
             command_rep.data[index++] = (uint8_t)((horizontal_vel) & 0xff);
         }
@@ -137,25 +137,13 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
             uint16_t u_gz = imu_gz * 10;
             command_rep.data[index++] = (uint8_t)((u_gz >> 8) & 0xff);
             command_rep.data[index++] = (uint8_t)((u_gz) & 0xff);
-
-            uint16_t u_mx = imu_mx * 10;
-            command_rep.data[index++] = (uint8_t)((u_mx >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_mx) & 0xff);
-
-            uint16_t u_my = imu_my * 10;
-            command_rep.data[index++] = (uint8_t)((u_my >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_my) & 0xff);
-
-            uint16_t u_mz = imu_mz * 10;
-            command_rep.data[index++] = (uint8_t)((u_mz >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_mz) & 0xff);
         }
 
         if ((log_bits & ROCKET_KALMAN_BIT))
         {
-            uint16_t u_z = alt_kalman_state(6) * 10;
-            uint16_t u_vz = alt_kalman_state(7) * 10;
-            uint16_t u_az = alt_kalman_state(8) * 10;
+            uint16_t u_z = kalman_altitude * 10;
+            uint16_t u_vz = kalman_velocity * 10;
+            uint16_t u_az = kalman_accel * 10;
 
             command_rep.data[index++] = (uint8_t)((u_z >> 8) & 0xff);
             command_rep.data[index++] = (uint8_t)((u_z) & 0xff);
@@ -167,10 +155,10 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
             command_rep.data[index++] = (uint8_t)((u_az) & 0xff);
 
             // convert quaternion [0:1] to uint16 [0, 2^16 - 1]
-            uint16_t u_quat1 = q[0] * (0xFFFF);
-            uint16_t u_quat2 = q[1] * (0xFFFF);
-            uint16_t u_quat3 = q[2] * (0xFFFF);
-            uint16_t u_quat4 = q[3] * (0xFFFF);
+            uint16_t u_quat1 = kalman_q[0] * (0xFFFF);
+            uint16_t u_quat2 = kalman_q[1] * (0xFFFF);
+            uint16_t u_quat3 = kalman_q[2] * (0xFFFF);
+            uint16_t u_quat4 = kalman_q[3] * (0xFFFF);
 
             command_rep.data[index++] = (uint8_t)((u_quat1 >> 8) & 0xff);
             command_rep.data[index++] = (uint8_t)((u_quat1) & 0xff);
@@ -193,6 +181,8 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
             command_rep.data[index++] = ((ematch_main_reading >> 8) & 0xff);
             command_rep.data[index++] = ((ematch_main_reading) & 0xff);
         }
+
+        xSemaphoreGive(kalman_mutex);
 
         command_rep.size = index;
         command_rep.crc = crc((unsigned char *)&command_rep, command_rep.size + 3);

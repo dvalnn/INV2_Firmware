@@ -2,6 +2,7 @@
 
 #include "HardwareCfg.h"
 #include "GlobalVars.h"
+#include "StateMachine.h"
 
 bool log_running = false;
 File file;
@@ -97,28 +98,34 @@ void log(void *data, uint16_t size, log_event_t event)
     {
     case SENSOR_READING:
     {
-        buff[index++] = (Tank_Top_Module.temperature >> 8) & 0xff;
-        buff[index++] = (Tank_Top_Module.temperature) & 0xff;
-        buff[index++] = (Tank_Bot_Module.temperature >> 8) & 0xff;
-        buff[index++] = (Tank_Bot_Module.temperature) & 0xff;
 
-        int16_t ipressure = (int16_t)(Tank_Top_Module.pressure * 100);
-        buff[index++] = (ipressure >> 8) & 0xff;
-        buff[index++] = (ipressure) & 0xff;
-
-        ipressure = (int16_t)(Tank_Bot_Module.pressure * 100);
-        ipressure = Tank_Bot_Module.pressure * 100;
-        buff[index++] = (ipressure >> 8) & 0xff;
-        buff[index++] = (ipressure) & 0xff;
-
+        buff[index++] = state;
         buff[index++] = (uint8_t)((log_running << 7) |
-                                  (Tank_Top_Module.valve_state << 6) |
-                                  (Tank_Bot_Module.valve_state << 5));
+                                        (Tank_Top_Module.valve_state << 6) |
+                                        (Tank_Bot_Module.valve_state << 5) |
+                                        (Chamber_Module.valve_state << 4) |
+                                        (DragDeployed << 3) |
+                                        (MainDeployed << 2));
+ 
+        uint16_t gps_altitude = (uint16_t)(gps.altitude.meters());
+        buff[index++] = (uint8_t)((gps_altitude >> 8) & 0xff);
+        buff[index++] = (uint8_t)((gps_altitude) & 0xff);
 
-        ipressure = (int16_t)(Chamber_Module.pressure * 100);
-        buff[index++] = (ipressure >> 8) & 0xff;
-        buff[index++] = (ipressure) & 0xff;
+        uint16_t ualtitude = altitude;
+        buff[index++] = (uint8_t)((ualtitude >> 8) & 0xff);
+        buff[index++] = (uint8_t)((ualtitude) & 0xff);
 
+        uint16_t u_ax = imu_ax * 10;
+        buff[index++] = (uint8_t)((u_ax >> 8) & 0xff);
+        buff[index++] = (uint8_t)((u_ax) & 0xff);
+
+        uint16_t u_ay = imu_ay * 10;
+        buff[index++] = (uint8_t)((u_ay >> 8) & 0xff);
+        buff[index++] = (uint8_t)((u_ay) & 0xff);
+
+        uint16_t u_az = imu_az * 10;
+        buff[index++] = (uint8_t)((u_az >> 8) & 0xff);
+        buff[index++] = (uint8_t)((u_az) & 0xff);
     }
     break;
 

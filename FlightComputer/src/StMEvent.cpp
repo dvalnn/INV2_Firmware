@@ -69,22 +69,35 @@ bool motor_timer_event(void)
 //---------Kalman------------
 bool apogee_event(void)
 {
-    if(Launch && ((maxAltitude-alt_kalman_state(6))>0.5) &&(abs(alt_kalman_state(7))<0.1))
+    bool return_val = false;
+
+    xSemaphoreTake(kalman_mutex, portMAX_DELAY);
+    
+    if(Launch && ((maxAltitude-kalman_altitude)>0.5) &&(abs(kalman_velocity)<0.1))
     {
       DragDeployed = true;
       preferences.putChar("drag_state", 1);
-      return true;
+      return_val = true;
     }
-    return false;
+
+    xSemaphoreGive(kalman_mutex);
+
+    return return_val;
 }
 
 bool main_deployment_condition(void)
 {
+    bool return_val = false;
+
+    xSemaphoreTake(kalman_mutex, portMAX_DELAY);
+    
     if(DragDeployed && !MainDeployed && alt_kalman_state(6) < 400)
     {
         MainDeployed = true;
         preferences.putChar("main_state", 1);
-        return true;
+        return_val = true;
     }
-    return false;
+    
+    xSemaphoreGive(kalman_mutex);
+    return return_val;
 }

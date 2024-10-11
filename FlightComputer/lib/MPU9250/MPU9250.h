@@ -69,7 +69,7 @@ struct MPU9250Setting {
     uint8_t gyro_fchoice {0x03};
     GYRO_DLPF_CFG gyro_dlpf_cfg {GYRO_DLPF_CFG::DLPF_41HZ};
     uint8_t accel_fchoice {0x01};
-    ACCEL_DLPF_CFG accel_dlpf_cfg {ACCEL_DLPF_CFG::DLPF_45HZ};
+    ACCEL_DLPF_CFG accel_dlpf_cfg {ACCEL_DLPF_CFG::DLPF_99HZ};
 };
 
 template <typename WireType>
@@ -220,10 +220,13 @@ public:
     }
 
     bool update() {
-        if (!available()) return false;
+        //if (!available()) 
+        //{
+            //return false;
+        //}
 
         update_accel_gyro();
-        update_mag();
+        //update_mag();
 
         // Madgwick function needs to be fed North, East, and Down direction like
         // (AN, AE, AD, GN, GE, GD, MN, ME, MD)
@@ -245,9 +248,13 @@ public:
         float gn = +g[0] * DEG_TO_RAD;
         float ge = -g[1] * DEG_TO_RAD;
         float gd = -g[2] * DEG_TO_RAD;
-        float mn = +m[1];
-        float me = -m[0];
-        float md = +m[2];
+        //float mn = +m[1];
+        //float me = -m[0];
+        //float md = +m[2];
+
+        float mn = 0;
+        float me = 0;
+        float md = 0;
 
         for (size_t i = 0; i < n_filter_iter; ++i) {
             quat_filter.update(an, ae, ad, gn, ge, gd, mn, me, md, q);
