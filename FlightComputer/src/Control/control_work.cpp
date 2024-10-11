@@ -113,6 +113,8 @@ void read_imu(void)
     imu_gy_local = IMU.getGyroY();
     imu_gz_local = IMU.getGyroZ();
 
+    //Serial.printf("%f %f %f\n", imu_ax_local, imu_ay_local, imu_az_local);
+
     return;
 }
 
@@ -121,9 +123,11 @@ void read_barometer(void)
     static float lpf_alt = 0.0f;
     // LOW PASS altitude
     lpf_alt = bmp.readAltitude(ground_hPa);
-    altitude += (lpf_alt - altitude) * betha_alt;
+    altitude_local += (lpf_alt - altitude_local) * betha_alt;
 
-    //Serial.printf("Altitude barometer %f\n", altitude);
+    Serial.printf("Altitude barometer %f\n", lpf_alt);
+
+    Serial.printf("Pressure %f Temp %d\n", bmp.readPressure(), bmp.readTemperature());
 }
 
 void read_gps(void)
@@ -161,9 +165,15 @@ void kalman(void)
     static float gps_alt_offset, alt_offset, last_lat, last_long;
     static bool first = true;
 
+    static unsigned long last = millis();
+
+    Serial.printf("dt: %d\n", millis() - last);
+    last = millis();
+    Serial.flush();
+
     if (first)
     {
-        acc << imu_ax, imu_ay, imu_az;
+        acc << imu_ax_local, imu_ay_local, imu_az_local;
         norm_acc = acc / acc.norm();
         axis = norm_acc.cross(norm_g);
         axis = axis / axis.norm();
@@ -210,13 +220,13 @@ void kalman(void)
     Serial.print(Q.qz);
     Serial.println("Starting altitude");
 #endif
-    Acc << imu_ax, imu_ay, imu_az;
+    Acc << imu_ax_local, imu_ay_local, imu_az_local;
 
     U_2 << 0, 0, Acc(0), 0, 0, Acc(1), 0, 0, Acc(2);
-    Z_2 << 0, 0, Acc(0), 0, 0, Acc(1), altitude, 0, Acc(2); 
+    Z_2 << 0, 0, Acc(0), 0, 0, Acc(1), altitude_local, 0, Acc(2); 
     //Z_2 << 0, 0, 0, 0, 0, 0, altitude, 0, 0; 
 
-    last_alt = altitude;
+    last_alt = altitude_local;
 #ifdef KALMAN_DEBBUG
     Serial.println("measurements done");
     Serial.println("Starting kalman");
@@ -279,16 +289,19 @@ void control_work(void* parameters)
     Work_t control_tasks[] = { 
       {.channel = read_barometer, .sample = BMP_READ_TIME}, 
       {.channel = read_imu, .sample = IMU_READ_TIME}, 
-      {.channel = read_gps, .sample = 100},
-      {.channel = kalman, .sample = 10},
-      {.channel = write_values, .sample = 10},
+      //{.channel = read_gps, .sample = 100},
+      {.channel = kalman, .sample = 20},
+      {.channel = write_values, .sample = 20},
     };
 
     unsigned long entry_time = 0;
 
+    for(int i = 0; i < 4; i++)
+        control_tasks[i].begin = control_tasks[i].delay;
+
     while(true)
     {
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 4; i++)
         {
             unsigned long end = millis() - entry_time;
 

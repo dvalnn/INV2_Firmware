@@ -22,6 +22,10 @@
 extern Preferences preferences;
 extern bool fast_reboot;
 
+//------------Mutexs-----------------
+
+extern SemaphoreHandle_t kalman_mutex;
+extern SemaphoreHandle_t transmit_mutex;
 
 //----------- IMU vars ------------
 extern MPU9250 IMU;
@@ -40,6 +44,8 @@ extern const float betha_alt;
 
 extern float ground_hPa;
 
+extern unsigned long transmit_time;
+
 //------------- GPS ----------------
 extern TinyGPSPlus gps;
 extern float gps_lat, gps_lon;
@@ -49,7 +55,6 @@ extern uint16_t gps_satalites;
 
 //------------ Kalman -------------
 
-extern SemaphoreHandle_t kalman_mutex;
 
 extern bool Launch;
 extern bool DragDeployed;
