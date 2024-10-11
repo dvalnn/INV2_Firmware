@@ -153,22 +153,25 @@ void BAROMETER_Setup(void)
   bmp.setSampling(
                   //Adafruit_BMP280::MODE_FORCED,     /* Operating Mode. */
                   Adafruit_BMP280::MODE_NORMAL,
-                  Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
+                  Adafruit_BMP280::SAMPLING_X16,     /* Temp. oversampling */
                   Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
-                  Adafruit_BMP280::FILTER_X16,      /* Filtering. */
+                  Adafruit_BMP280::FILTER_OFF,      /* Filtering. */
                   Adafruit_BMP280::STANDBY_MS_1   /* Standby time. */
                   //Adafruit_BMP280::STANDBY_MS_250   /* Standby time. */
                   );
-    
-    if(fast_reboot)
-    {
-        ground_hPa = preferences.getFloat("ground_hpa", 1015.6);
-    }
-    else
-    {
-        ground_hPa = bmp.readPressure(); // in Si units for Pascal
-        ground_hPa /= 100;
-    }
+
+    //TODO add back in 
+    //if(fast_reboot)
+    //{
+        //ground_hPa = preferences.getFloat("ground_hpa", 1015.6);
+    //}
+    //else
+    //{
+        //ground_hPa = bmp.readPressure(); // in Si units for Pascal
+        //ground_hPa /= 100;
+    //}
+
+    barometer_calibrate();
 }
 
 void Valves_Setup(void)
@@ -221,11 +224,11 @@ void Flash_Setup()
 void LoRa_Setup(void)
 {
   LoRa.setPins(LORA_SS_PIN, LORA_RESET_PIN, LORA_DIO0_PIN);
-  LoRa.setSignalBandwidth(300E3);
-  //LoRa.setSignalBandwidth(500E3);
-  //LoRa.setCodingRate4(5);
-  //LoRa.setSpreadingFactor(7);
-  //LoRa.setGain(1);
+  //LoRa.setSignalBandwidth(300E3);
+  LoRa.setSignalBandwidth(500E3);
+  LoRa.setCodingRate4(5);
+  LoRa.setSpreadingFactor(6);
+  LoRa.setGain(1);
 
   Serial.println("Lora starting");
   if (!LoRa.begin(868E6)) {
@@ -298,7 +301,7 @@ void setup() {
     kalman_Setup();
 
     pressure_Setup();
-    if(! fast_reboot) temp_i2c_Setup();
+    //if(! fast_reboot) temp_i2c_Setup();
 
     printf("Setup done\n");
 
@@ -308,20 +311,23 @@ void setup() {
     xTaskCreatePinnedToCore(
         software_work,
         "Core 0 task",
-        102400,
+        10240,
         NULL,
         1,
         NULL,
         1);
-        
-    xTaskCreatePinnedToCore(
+
+    if(xTaskCreatePinnedToCore(
         control_work,
         "Core 1 task",
         102400,
         NULL,
         1,
         NULL,
-        0);
+        0) != pdPASS)
+        {
+            Serial.printf("cannot create control work\n");
+        }
 
     
 }

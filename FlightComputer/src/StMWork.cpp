@@ -90,6 +90,7 @@ void barometer_calibrate(void)
     }
 
     pressure /= 500;
+    pressure /= 100;
     ground_hPa = pressure;
 
     preferences.putFloat("ground_hpa", ground_hPa);
@@ -165,6 +166,8 @@ void telemetry(void)
     command.data[index++] = ((ask_bits >> 8) & 0xff);
     command.data[index++] = ((ask_bits) & 0xff);
 
+    xSemaphoreTake(kalman_mutex, portMAX_DELAY);
+
 //-----------flags
     command.data[index++] = state;
     command.data[index++] = (uint8_t)((log_running << 7) |
@@ -188,14 +191,14 @@ void telemetry(void)
     command.data[index++] = (ipressure >> 8) & 0xff;
     command.data[index++] = (ipressure) & 0xff;
 //------------gps
-    float gps_lat = gps.location.lat();
-    float gps_lon = gps.location.lng();
-    uint16_t gps_altitude = (uint16_t)(gps.altitude.meters());
 
-    command.data[index++] = (uint8_t)(gps.satellites.value());
+    
+    uint16_t gps_alt = (uint16_t)(gps_altitude);
 
-    command.data[index++] = (uint8_t)((gps_altitude >> 8) & 0xff);
-    command.data[index++] = (uint8_t)((gps_altitude) & 0xff);
+    command.data[index++] = (uint8_t)(gps_satalites);
+
+    command.data[index++] = (uint8_t)((gps_alt >> 8) & 0xff);
+    command.data[index++] = (uint8_t)((gps_alt) & 0xff);
 
     f.f = gps_lat;
     command.data[index++] = (uint8_t)((f.i >> 24) & 0xff);
@@ -209,15 +212,14 @@ void telemetry(void)
     command.data[index++] = (uint8_t)((f.i >> 8) & 0xff);
     command.data[index++] = (uint8_t)((f.i) & 0xff);
 
-    uint16_t horizontal_vel = (gps.speed.kmph() * 10);
+    uint16_t horizontal_vel = (gps_horizontal_vel * 10);
     command.data[index++] = (uint8_t)((horizontal_vel >> 8) & 0xff);
     command.data[index++] = (uint8_t)((horizontal_vel) & 0xff);
-
 //---------------kalman
 
-    uint16_t u_z = alt_kalman_state(6) * 10;
-    uint16_t u_vz = alt_kalman_state(7) * 10;
-    uint16_t u_az = alt_kalman_state(8) * 10;
+    uint16_t u_z = kalman_altitude * 10;
+    uint16_t u_vz = kalman_velocity * 10;
+    uint16_t u_az = kalman_accel * 10;
 
     command.data[index++] = (uint8_t)((u_z >> 8) & 0xff);
     command.data[index++] = (uint8_t)((u_z) & 0xff);
@@ -229,10 +231,10 @@ void telemetry(void)
     command.data[index++] = (uint8_t)((u_az) & 0xff);
 
     // convert quaternion [0:1] to uint16 [0, 2^16 - 1]
-    uint16_t u_quat1 = q[0] * (0xFFFF);
-    uint16_t u_quat2 = q[1] * (0xFFFF);
-    uint16_t u_quat3 = q[2] * (0xFFFF);
-    uint16_t u_quat4 = q[3] * (0xFFFF);
+    uint16_t u_quat1 = kalman_q[0] * (0xFFFF);
+    uint16_t u_quat2 = kalman_q[1] * (0xFFFF);
+    uint16_t u_quat3 = kalman_q[2] * (0xFFFF);
+    uint16_t u_quat4 = kalman_q[3] * (0xFFFF);
 
     command.data[index++] = (uint8_t)((u_quat1 >> 8) & 0xff);
     command.data[index++] = (uint8_t)((u_quat1) & 0xff);
@@ -245,7 +247,6 @@ void telemetry(void)
 
     command.data[index++] = (uint8_t)((u_quat4 >> 8) & 0xff);
     command.data[index++] = (uint8_t)((u_quat4) & 0xff);
-
 //-------------- ematchs
 
     command.data[index++] = ((ematch_drag_reading >> 8) & 0xff);
@@ -254,6 +255,8 @@ void telemetry(void)
     command.data[index++] = ((ematch_main_reading >> 8) & 0xff);
     command.data[index++] = ((ematch_main_reading) & 0xff);
 
+    xSemaphoreGive(kalman_mutex);
+    
     command.size = index; 
     command.crc = crc((unsigned char *)&command, command.size + 3);
     write_command(&command, DEFAULT_CMD_INTERFACE);
