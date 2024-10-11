@@ -344,19 +344,18 @@ void manual_setup() {
     .setPosition(displayWidth*.5, displayHeight*.5)
     .moveTo("global")
     .setFont(font);
-    
+
   imu_label = cp5.addTextlabel("IMU")
     .setText("IMU hoes here")
     .setColor(labelColor)
     .setPosition(displayWidth*.5, displayHeight*.5)
     .moveTo("global")
     .setFont(font);
-  
+
   kalman_label = cp5.addTextlabel("Kalman")
     .setText("Kalman goes here")
     .setColor(labelColor)
     .setPosition(displayWidth*.5, displayHeight*.5)
     .moveTo("global")
     .setFont(font);
-    
 }

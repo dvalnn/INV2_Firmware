@@ -162,12 +162,12 @@ void updateData(dataPacket packet) {
   for (int i = 0; i < 16; i++) {
     if (bits.get(i)) {
       AskData ask = AskData.values()[i];
-      if (packet.payloadLength < index) {
-        println(ask + "? nao ha mais payload filho");
-        return;
-      }
       switch (ask) {
       case rocket_flags_state:
+        if (packet.payloadLength < index + 2) {
+          print("Index out of bounds: " + ask);
+          return;
+        }
         rocket_data.state = packet.payload[index];
         byte rocket_flags = packet.payload[index + 1];
         rocket_data.flash_running = (rocket_flags & (0x01 << 7)) != 0 ? true : false;
@@ -177,17 +177,29 @@ void updateData(dataPacket packet) {
         index += 2;
         break;
       case tank_pressures:
+        if (packet.payloadLength < index + 6) {
+          print("Index out of bounds: " + ask);
+          return;
+        }
         rocket_data.tank.pressure_top = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         rocket_data.tank.pressure_bot = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
         rocket_data.chamber_pressure = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
         index += 6;
         break;
       case tank_temps:
+        if (packet.payloadLength < index + 4) {
+          print("Index out of bounds: " + ask);
+          return;
+        }
         rocket_data.tank.temp_top = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         rocket_data.tank.temp_bot = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
         index += 4;
         break;
       case gps_data:
+        if (packet.payloadLength < index + 13) {
+          print("Index out of bounds: " + ask);
+          return;
+        }
         rocket_data.gps.satellite_count = packet.payload[index];
         rocket_data.gps.altitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 1, index + 3)).getShort();
         rocket_data.gps.latitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 3, index + 7)).getFloat();
@@ -196,22 +208,31 @@ void updateData(dataPacket packet) {
         index += 13;
         break;
       case barometer_altitude:
+        if (packet.payloadLength < index + 2) {
+          print("Index out of bounds: " + ask);
+          return;
+        }
         rocket_data.barometer_altitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         index += 2;
         break;
       case imu_data:
+        if (packet.payloadLength < index + 12) {
+          print("Index out of bounds: " + ask);
+          return;
+        }
         rocket_data.imu.accel_x = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         rocket_data.imu.accel_y = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
         rocket_data.imu.accel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
         rocket_data.imu.gyro_x = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 6, index + 8)).getShort();
         rocket_data.imu.gyro_y = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 8, index + 10)).getShort();
         rocket_data.imu.gyro_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 10, index + 12)).getShort();
-        rocket_data.imu.mag_x = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 12, index + 14)).getShort();
-        rocket_data.imu.mag_y = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 14, index + 16)).getShort();
-        rocket_data.imu.mag_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 16, index + 18)).getShort();
-        index += 18;
+        index += 12;
         break;
       case kalman_data:
+        if (packet.payloadLength < index + 14) {
+          print("Index out of bounds: " + ask);
+          return;
+        }
         rocket_data.kalman.altitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         rocket_data.kalman.vel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
         rocket_data.kalman.acel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
@@ -222,11 +243,19 @@ void updateData(dataPacket packet) {
         index += 14;
         break;
       case parachutes_ematches:
+        if (packet.payloadLength < index + 2) {
+          print("Index out of bounds: " + ask);
+          return;
+        }
         rocket_data.parachute.main_ematch = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         rocket_data.parachute.drogue_ematch = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
         index += 2;
         break;
       case fill_station_state:
+        if (packet.payloadLength < index + 2) {
+          print("Index out of bounds: " + ask);
+          return;
+        }
         filling_data.state = packet.payload[index];
         byte filling_flags = packet.payload[index + 1];
         filling_data.flash_running = (filling_flags & (0x01 << 7)) != 0 ? true : false;
@@ -236,30 +265,54 @@ void updateData(dataPacket packet) {
         index += 2;
         break;
       case fill_pressures:
+        if (packet.payloadLength < index + 6) {
+          print("Index out of bounds: " + ask);
+          return;
+        }
         filling_data.he.pressure = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         filling_data.n2o.pressure = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
         filling_data.line.pressure = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
         index += 6;
         break;
       case fill_temps:
+        if (packet.payloadLength < index + 6) {
+          print("Index out of bounds: " + ask);
+          return;
+        }
         filling_data.he.temperature = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         filling_data.n2o.temperature = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
         filling_data.line.temperature = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
         index += 6;
         break;
       case nitro_loadcell:
+        if (packet.payloadLength < index + 2) {
+          print("Index out of bounds: " + ask);
+          return;
+        }
         filling_data.n2o.loadcell = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         index += 2;
         break;
       case ignition_station_state:
+        if (packet.payloadLength < index + 1) {
+          print("Index out of bounds: " + ask);
+          return;
+        }
         ignition_data.state = packet.payload[index];
         index += 1;
         break;
       case chamber_trigger_temp:
+        if (packet.payloadLength < index + 2) {
+          print("Index out of bounds: " + ask);
+          return;
+        }
         ignition_data.chamber_trigger_temp = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         index += 2;
         break;
       case main_ematch:
+        if (packet.payloadLength < index + 1) {
+          print("Index out of bounds: " + ask);
+          return;
+        }
         ignition_data.main_ematch = packet.payload[index];
         index += 1;
         break;
@@ -387,7 +440,7 @@ short createAskDataMask(AskData[] asks) {
 void auto_status() {
   if (millis() - last_status_time > status_interval && status_toggle_state == 1) {
     byte oldID = targetID;
-    if(cp5.getTab("default").isActive()) {
+    if (cp5.getTab("default").isActive()) {
       if (last_status_id == 1) {
         targetID = 2;
         last_status_id = 2;
@@ -398,8 +451,7 @@ void auto_status() {
         targetID = 1;
         last_status_id = 1;
       }
-    }
-    else if (cp5.getTab("filling").isActive()) {
+    } else if (cp5.getTab("filling").isActive()) {
       if (last_status_id == 1) {
         targetID = 2;
         last_status_id = 2;
@@ -423,45 +475,37 @@ void auto_status() {
 }
 
 void request_status() {
-    AskData[] asks = {};
-    if(targetID == 1) { // roket
-      if(cp5.getTab("default").isActive()) {
-        asks = rocket_data.man_ask;
-      }
-      else if(cp5.getTab("filling").isActive()) {
-        asks = rocket_data.fill_ask;
-      }
-      else if(cp5.getTab("launch").isActive()) {
-        asks = rocket_data.launch_ask;
-      }
-     }
-    else if(targetID == 2) { // filing
-      if(cp5.getTab("default").isActive()) {
-        asks = filling_data.man_ask;
-      }
-      else if(cp5.getTab("filling").isActive()) {
-        asks = filling_data.fill_ask;
-      }
-      else if(cp5.getTab("launch").isActive()) {
-        asks = filling_data.launch_ask;
-      }
+  AskData[] asks = {};
+  if (targetID == 1) { // roket
+    if (cp5.getTab("default").isActive()) {
+      asks = rocket_data.man_ask;
+    } else if (cp5.getTab("filling").isActive()) {
+      asks = rocket_data.fill_ask;
+    } else if (cp5.getTab("launch").isActive()) {
+      asks = rocket_data.launch_ask;
     }
-    else if(targetID == 3) { // ignixon
-      if(cp5.getTab("default").isActive()) {
-        asks = ignition_data.man_ask;
-      }
-      else if(cp5.getTab("filling").isActive()) {
-        asks = ignition_data.fill_ask;
-      }
-      else if(cp5.getTab("launch").isActive()) {
-        asks = ignition_data.launch_ask;
-      }
+  } else if (targetID == 2) { // filing
+    if (cp5.getTab("default").isActive()) {
+      asks = filling_data.man_ask;
+    } else if (cp5.getTab("filling").isActive()) {
+      asks = filling_data.fill_ask;
+    } else if (cp5.getTab("launch").isActive()) {
+      asks = filling_data.launch_ask;
     }
-    if(asks.length == 0) {
-      print("No Asks");
-      return;
+  } else if (targetID == 3) { // ignixon
+    if (cp5.getTab("default").isActive()) {
+      asks = ignition_data.man_ask;
+    } else if (cp5.getTab("filling").isActive()) {
+      asks = ignition_data.fill_ask;
+    } else if (cp5.getTab("launch").isActive()) {
+      asks = ignition_data.launch_ask;
     }
-    short askShort = createAskDataMask(asks);
-    byte[] asksBytes = ByteBuffer.allocate(2).putShort(askShort).array();
-    send((byte)0x00, asksBytes);
+  }
+  if (asks.length == 0) {
+    print("No Asks");
+    return;
+  }
+  short askShort = createAskDataMask(asks);
+  byte[] asksBytes = ByteBuffer.allocate(2).putShort(askShort).array();
+  send((byte)0x00, asksBytes);
 }

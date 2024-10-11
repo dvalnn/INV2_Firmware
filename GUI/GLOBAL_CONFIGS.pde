@@ -26,6 +26,8 @@ String logFileName = "log.txt";
 String fill_img;
 String fill_img_light = "diagrams/fillingBlack.png";
 String fill_img_dark = "diagrams/fillingWhite.png";
+String map_img = "diagrams/map.png";
+final float MIN_LAT = 39.335159, MAX_LAT = 39.397242, MIN_LONG = -8.331430, MAX_LONG = -8.176142;
 
 int history_capacity = 10;
 
@@ -91,14 +93,14 @@ void setupColors() {
   stopColorLight.setForeground(light_orange)
     .setBackground(orange)
     .setActive(blue);
-    
-    // choose mode
-    abortColor = abortColorDark;
-    stopColor = stopColorDark;
-    unactiveColor = unactiveColorDark;
-    defaultColor = defaultColorDark;
-    bgColor = bgColorDark;
-    fill_img = fill_img_dark;
-    labelColor = labelColorDark;
-    labelColor2 = labelColor2Dark;
-  }
+
+  // choose mode
+  abortColor = abortColorDark;
+  stopColor = stopColorDark;
+  unactiveColor = unactiveColorDark;
+  defaultColor = defaultColorDark;
+  bgColor = bgColorDark;
+  fill_img = fill_img_dark;
+  labelColor = labelColorDark;
+  labelColor2 = labelColor2Dark;
+}

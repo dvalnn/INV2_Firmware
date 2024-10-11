@@ -298,7 +298,7 @@ void setup() {
     kalman_Setup();
 
     pressure_Setup();
-    //if(! fast_reboot) temp_i2c_Setup();
+    if(! fast_reboot) temp_i2c_Setup();
 
     printf("Setup done\n");
 

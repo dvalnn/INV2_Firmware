@@ -29,6 +29,7 @@ int last_cmd_sent_time = 0;
 int last_chart_time = 0;
 int last_status_time = 0;
 int last_r_ping = 0, last_f_ping = 0;
+float map_width, map_height, map_x1, map_y1;
 
 byte targetID;
 
@@ -59,7 +60,7 @@ Textlabel history;
 ArrayDeque<String> history_deque;
 Chart fillingChart, launchChart;
 Textlabel pressureLabel, temperatureLabel, weightLabel;
-Textlabel weight1Label, weight2Label, weight3Label, tankPressureLabel, chamberPressureLabel;
+Textlabel altitudeLabel, velocityLabel, accelerationLabel;
 Textlabel ematch_label, chamber_temps_label, chamber_label;
 Textlabel he_label, n2o_label, line_label, tt_label, tb_label;
 Toggle he_toggle, n2o_toggle, line_toggle, tt_toggle, tb_toggle, chamber_toggle;
@@ -96,9 +97,9 @@ int valve_selected = -1;
 
 void setup() {
   frameRate(60);
-  fullScreen();
+  fullScreen(P3D);
   background(bgColor);
-  
+
   logDir = sketchPath() + "/logs/";
   String logFolder = "logs";
   String currentDirectory = sketchPath();
@@ -118,7 +119,7 @@ void setup() {
 
   font = createFont("arial", displayWidth*.013);
   cp5 = new ControlP5(this);
-  
+
   init_data_objects(); // in data models tab
   setupColors(); // in global configs tab
   setupControllers(); // in setup controllers tab
@@ -132,6 +133,7 @@ void setup() {
 void draw() {
   updateDiagrams(); // diagrams tab
   updateControllersData(); // update controllers tab
+
   if (millis() - last_chart_time > chart_interval) {
     updateCharts();
     last_chart_time = millis();
@@ -159,8 +161,6 @@ void draw() {
     fill(255, 0, 0);
   }
   circle(width*.79, height*.77, height*.018);
-
-  
 }
 
 public void controlEvent(ControlEvent event) {
@@ -283,9 +283,9 @@ public void controlEvent(ControlEvent event) {
     }
   }
   if (event.isFrom("Select Command")) {
-      byte cmd_index = (byte) event.getValue();
-      byte[] man_payload = {man_commands_map.get(man_commands.get(cmd_index))};
-      send((byte)0x07, man_payload);
+    byte cmd_index = (byte) event.getValue();
+    byte[] man_payload = {man_commands_map.get(man_commands.get(cmd_index))};
+    send((byte)0x07, man_payload);
   } else if (event.isFrom("Reset Chart")) {
     fillingChart.setData("Pressure", new float[0]);
     fillingChart.setData("Temperature", new float[0]);

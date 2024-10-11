@@ -56,7 +56,7 @@ State_t state_machine[rocket_state_size] =
     // IDLE
     {
         .work = {
-            //TANK_TEMPERATURE_SENSORS(1000),
+            TANK_TEMPERATURE_SENSORS(1000),
             
             CLOSE_VALVES,
             //{.channel = read_barometer, .sample = 1000},
