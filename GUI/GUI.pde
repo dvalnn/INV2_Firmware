@@ -28,7 +28,7 @@ byte last_cmd_sent = (byte) 0xff;
 int last_cmd_sent_time = 0;
 int last_chart_time = 0;
 int last_status_time = 0;
-int last_r_ping = 0, last_f_ping = 0;
+int last_r_ping = 0, last_f_ping = 0, last_i_ping = 0;
 float map_width, map_height, map_x1, map_y1;
 
 byte targetID;

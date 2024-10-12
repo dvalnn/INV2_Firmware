@@ -1,4 +1,4 @@
-List<String> man_commands = Arrays.asList("Flash Log Start", "Flash Log Stop", "Flash IDs", "Loadcell Calibrate", "Loadcell Tare", "Tank Tare", "IMU Calibrate", "Barometer Calibrate", "Kalman Calibrate");
+List<String> man_commands = Arrays.asList("Loadcell Tare", "IMU Calibrate", "Barometer Calibrate", "Kalman Calibrate");
 List<String> valves = Arrays.asList("VPU Valve", "Engine Valve", "Chamber Valve", "He Valve", "N2O Valve", "Line Valve");
 
 void maps() {

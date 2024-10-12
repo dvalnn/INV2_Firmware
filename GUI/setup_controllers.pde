@@ -61,8 +61,8 @@ void setupControllers() {
     .setFont(font);
 
   cp5.addButton("Stop")
-    .setPosition(displayWidth*button_x1, displayHeight*.1)
-    .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
+    .setPosition(displayWidth*button_x1, displayHeight*.13)
+    .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height_big))
     .moveTo("global")
     .setColor(stopColor)
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
@@ -77,8 +77,8 @@ void setupControllers() {
     .setFont(font);
 
   cp5.addButton("Status")
-    .setPosition(displayWidth*button_x1, displayHeight*.15)
-    .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
+    .setPosition(displayWidth*button_x1, displayHeight*.21)
+    .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height_big))
     .moveTo("global")
     .setColor(defaultColor)
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
@@ -86,14 +86,14 @@ void setupControllers() {
 
   cp5.addButton("Abort")
     .setPosition(displayWidth*button_x1, displayHeight*.05)
-    .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
+    .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height_big))
     .setColor(abortColor)
     .moveTo("global")
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
   cp5.addButton("Arm")
-    .setPosition(displayWidth*button_x1, displayHeight*.27)
+    .setPosition(displayWidth*button_x1, displayHeight*.3)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
     .moveTo("launch")
     .setColor(defaultColor)
@@ -101,7 +101,7 @@ void setupControllers() {
     .setFont(font);
 
   cp5.addButton("Ready")
-    .setPosition(displayWidth*button_x1, displayHeight*.32)
+    .setPosition(displayWidth*button_x1, displayHeight*.35)
     .setSize((int)(displayWidth*button_width), (int)(displayHeight*button_height))
     .moveTo("launch")
     .setColor(defaultColor)
@@ -240,6 +240,7 @@ void setupControllers() {
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
     .setFont(font);
 
+  /*
   cp5.addScrollableList("Select Command")
     .setPosition(width*.02, height*.05)
     .setSize((int)(width*.17), (int)(height*.3))
@@ -250,6 +251,17 @@ void setupControllers() {
     .setColor(defaultColor)
     .moveTo("default")
     .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER);
+  */
+  
+  for (int i = 0; i < man_commands.size(); i++) {
+    cp5.addButton(man_commands.get(i))
+      .setPosition(displayWidth*.02, displayHeight*(.05 + i * .1))
+      .setSize((int)(width*.2), (int)(height*.08))
+      .moveTo("default")
+      .setColor(defaultColor)
+      .getCaptionLabel().align(ControlP5.CENTER, ControlP5.CENTER)
+      .setFont(font);
+  }
 
   cp5.addToggle("Mode Toggle")
     .setPosition(width*.94, height*.01)

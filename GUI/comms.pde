@@ -229,18 +229,19 @@ void updateData(dataPacket packet) {
         index += 12;
         break;
       case kalman_data:
-        if (packet.payloadLength < index + 14) {
+        if (packet.payloadLength < index + 16) {
           print("Index out of bounds: " + ask);
           return;
         }
         rocket_data.kalman.altitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
-        rocket_data.kalman.vel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
-        rocket_data.kalman.acel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
-        rocket_data.kalman.q1 = Short.toUnsignedInt(ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 6, index + 8)).getShort());
-        rocket_data.kalman.q2 = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 8, index + 10)).getShort();
-        rocket_data.kalman.q3 = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 10, index + 12)).getShort();
-        rocket_data.kalman.q4 = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 12, index + 14)).getShort();
-        index += 14;
+        rocket_data.kalman.max_altitude = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
+        rocket_data.kalman.vel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
+        rocket_data.kalman.acel_z = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 6, index + 8)).getShort();
+        rocket_data.kalman.q1 = Short.toUnsignedInt(ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 8, index + 10)).getShort());
+        rocket_data.kalman.q2 = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 10, index + 12)).getShort();
+        rocket_data.kalman.q3 = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 12, index + 14)).getShort();
+        rocket_data.kalman.q4 = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 14, index + 16)).getShort();
+        index += 16;
         break;
       case parachutes_ematches:
         if (packet.payloadLength < index + 2) {

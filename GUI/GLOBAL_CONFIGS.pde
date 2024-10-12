@@ -2,6 +2,7 @@ int status_interval = 500; // ms
 int packet_read_timeout = 250; // ms
 int packet_loss_timeout = 250;
 int heartbeat_timeout = 1000;
+int doubt_timeout = 10000;
 
 int chart_interval = 200; // ms
 
@@ -9,7 +10,10 @@ int chart_interval = 200; // ms
 float button_x1 = .8; // * displayWidth
 float button_x2 = .89;
 float button_height = .04; // * displayHeight
+float button_height_big = .07;
 float button_width = .13; // * displayWidth
+float toggle_height = .04;
+float toggle_width = .04;
 
 int baudRate = 115200;
 

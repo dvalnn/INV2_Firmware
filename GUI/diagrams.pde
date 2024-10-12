@@ -17,7 +17,7 @@ void setupDiagrams() {
 
   he_toggle = cp5.addToggle("He Toggle")
     .setPosition(width*.495, height*.553)
-    .setSize((int)(width*.02), (int)(height*.02))
+    .setSize((int)(width*toggle_width), (int)(height*toggle_height))
     .setValue(false)
     .setMode(ControlP5.SWITCH)
     .setLabel("")
@@ -38,7 +38,7 @@ void setupDiagrams() {
     ;
   n2o_toggle = cp5.addToggle("N2O Toggle")
     .setPosition(width*.495, height*.65)
-    .setSize((int)(width*.02), (int)(width*.01))
+    .setSize((int)(width*toggle_width), (int)(height*toggle_height))
     .setValue(false)
     .setMode(ControlP5.SWITCH)
     .setLabel("")
@@ -58,7 +58,7 @@ void setupDiagrams() {
     ;
   line_toggle = cp5.addToggle("Line Toggle")
     .setPosition(width*.394, height*.566)
-    .setSize((int)(width*.02), (int)(width*.01))
+    .setSize((int)(width*toggle_width), (int)(height*toggle_height))
     .setValue(false)
     .setMode(ControlP5.SWITCH)
     .setLabel("")
@@ -78,7 +78,7 @@ void setupDiagrams() {
     ;
   tt_toggle = cp5.addToggle("VPU Toggle")
     .setPosition(width*.275, height*.405)
-    .setSize((int)(width*.02), (int)(width*.01))
+    .setSize((int)(width*toggle_width), (int)(height*toggle_height))
     .setValue(false)
     .setMode(ControlP5.SWITCH)
     .setLabel("")
@@ -98,7 +98,7 @@ void setupDiagrams() {
     ;
   tb_toggle = cp5.addToggle("Tank Bot Toggle")
     .setPosition(width*.275, height*.83)
-    .setSize((int)(width*.02), (int)(width*.01))
+    .setSize((int)(width*toggle_width), (int)(height*toggle_height))
     .setValue(false)
     .setMode(ControlP5.SWITCH)
     .setLabel("")
@@ -110,7 +110,7 @@ void setupDiagrams() {
 
   chamber_toggle = cp5.addToggle("Chamber Toggle")
     .setPosition(width*.345, height*.85)
-    .setSize((int)(width*.02), (int)(width*.01))
+    .setSize((int)(width*toggle_width), (int)(height*toggle_height))
     .setValue(false)
     .setMode(ControlP5.SWITCH)
     .setLabel("")

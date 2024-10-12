@@ -17,7 +17,7 @@ enum AskData {
 };
 
 class RocketData {
-  byte state;
+  byte state = -1;
   boolean flash_running;
   class Valves {
     boolean purge_top,
@@ -52,6 +52,7 @@ class RocketData {
   }
   class Kalman {
     short altitude,
+      max_altitude,
       vel_z,
       acel_z;
     int q1,
@@ -100,7 +101,7 @@ class RocketData {
 }
 
 class FillingData {
-  byte state;
+  byte state = -1;
   boolean flash_running;
   class He {
     short pressure,
@@ -146,7 +147,7 @@ class FillingData {
 }
 
 class IgnitionData {
-  byte state;
+  byte state = -1;
   short chamber_trigger_temp;
   short main_ematch;
 

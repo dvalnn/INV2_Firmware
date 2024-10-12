@@ -1,5 +1,9 @@
 void updateControllersData() {
-  log_display_filling.setText("Filling: " + filling_data.getState());
+  if (millis() - last_f_ping > doubt_timeout) {
+    log_display_filling.setText("Filling: " + filling_data.getState() + "?");
+  } else {
+    log_display_filling.setText("Filling: " + filling_data.getState());
+  }
   String he_data = "He\n" +
     "P: " + df.format(float(filling_data.he.pressure) * .01) + " bar\n" +
     "T: " + df.format(float(filling_data.he.temperature) * .1) + " ºC";
@@ -14,7 +18,11 @@ void updateControllersData() {
     "T: " + df.format(float(filling_data.line.temperature) * .1) + " ºC";
   line_label.setText(line_data);
 
-  log_display_rocket.setText("Rocket: " + rocket_data.getState());
+  if (millis() - last_r_ping > doubt_timeout) {
+    log_display_rocket.setText("Rocket: " + rocket_data.getState() + "?");
+  } else {
+    log_display_rocket.setText("Rocket: " + rocket_data.getState());
+  }
   String tt_data = "Tank Top\n" +
     "P: " + df.format(float(rocket_data.tank.pressure_top) * .01) + " bar\n" +
     "T: " + df.format(float(rocket_data.tank.temp_top) * .1) + " ºC";
@@ -24,7 +32,11 @@ void updateControllersData() {
     "T: " + df.format(float(rocket_data.tank.temp_bot) * .1) + " ºC";
   tb_label.setText(tb_data);
 
-  log_display_ignition.setText("Ignition: " + ignition_data.getState());
+  if (millis() - last_i_ping > doubt_timeout) {
+    log_display_ignition.setText("Ignition: " + ignition_data.getState() + "?");
+  } else {
+    log_display_ignition.setText("Ignition: " + ignition_data.getState());
+  }
   String chamber_data = "Chamber\n" +
     "P: " + df.format(float(rocket_data.chamber_pressure) * .01) + " bar\n" +
     "T: " + df.format(float(ignition_data.chamber_trigger_temp) * .1) + " ºC";
@@ -34,6 +46,7 @@ void updateControllersData() {
   ematch_label.setText("Launch e-Match: " + df.format(ignition_data.main_ematch)
     + "\nDrogue e-Match: " + df.format(rocket_data.parachute.drogue_ematch)
     + "\nMain e-Match: " + df.format(rocket_data.parachute.main_ematch));
+
   String gps_data = "GPS          " +
     "Sat: " + str(int(rocket_data.gps.satellite_count)) +
     "\nLat: " + rocket_data.gps.latitude + "    " +
@@ -58,6 +71,7 @@ void updateControllersData() {
 
   String kalman_data = "Kalman\n\n" +
     "Alt: " + df.format(float(rocket_data.kalman.altitude)*.1) + "\n" +
+    "Max Alt: " + df.format(float(rocket_data.kalman.altitude)*.1) + "\n" +
     "Vel: " + df.format(float(rocket_data.kalman.vel_z)*.1) + "\n" +
     "Acel: " + df.format(float(rocket_data.kalman.acel_z)*.1) + "\n" +
     "q1: " + df.format(float(rocket_data.kalman.q1)) + "\n" +
@@ -80,10 +94,13 @@ void updateControllersPos(String tab) {
     chamber_label.setPosition(width*.45, height*.2);
 
     //fill
-    he_toggle.setPosition(width*.29, height*.05);
-    n2o_toggle.setPosition(width*.39, height*.05);
-    line_toggle.setPosition(width*.49, height*.05);
+    he_toggle.setPosition(width*.25, height*.15);
+    n2o_toggle.setPosition(width*.35, height*.15);
+    line_toggle.setPosition(width*.45, height*.15);
     // rocket
+    tt_toggle.setSize((int)(width*toggle_width), (int)(height*toggle_height));
+    tb_toggle.setSize((int)(width*toggle_width), (int)(height*toggle_height));
+    chamber_toggle.setSize((int)(width*toggle_width), (int)(height*toggle_height));
     tt_toggle.setPosition(width*.25, height*.28);
     tb_toggle.setPosition(width*.35, height*.28);
     chamber_toggle.setPosition(width*.45, height*.28);
@@ -102,20 +119,24 @@ void updateControllersPos(String tab) {
     tb_label.setPosition(displayWidth*.39, displayHeight*.83);
     chamber_label.setPosition(width*.25, height*.89);
 
-    he_toggle.setPosition(width*.495, height*.553);
-    n2o_toggle.setPosition(width*.495, height*.65);
-    line_toggle.setPosition(width*.394, height*.566);
-    tt_toggle.setPosition(width*.275, height*.405);
-    tb_toggle.setPosition(width*.345, height*.85);
-    chamber_toggle.setPosition(width*.275, height*.83);
+    he_toggle.setPosition(width*.5, height*.55);
+    n2o_toggle.setPosition(width*.5, height*.65);
+    line_toggle.setPosition(width*.385, height*.62);
+    tt_toggle.setPosition(width*.265, height*.41);
+    tb_toggle.setPosition(width*.32, height*.84);
+    chamber_toggle.setPosition(width*.265, height*.8);
   } else if (tab == "launch") {
     ematch_label.setPosition(displayWidth*.4, displayHeight*.05);
     chamber_label.setPosition(displayWidth*.55, displayHeight*.05);
     gps_label.setPosition(width*.23, height*.4);
     kalman_label.setPosition(width*.25, height*.5);
-    
-    tt_toggle.setPosition(width*.095, height*.075);
-    tb_toggle.setPosition(width*.12, height*.35);
-    chamber_toggle.setPosition(width*.095, height*.46);
+
+    tt_toggle.setPosition(width*.095, height*.07);
+    tb_toggle.setPosition(width*.125, height*.45);
+    chamber_toggle.setPosition(width*.095, height*.45);
+
+    tt_toggle.setSize((int)(width*.02), (int)(height*.02));
+    tb_toggle.setSize((int)(width*.02), (int)(height*.02));
+    chamber_toggle.setSize((int)(width*.02), (int)(height*.02));
   }
 }
