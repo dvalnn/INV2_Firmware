@@ -122,6 +122,10 @@ void updateControllersPos(String tab) {
     he_toggle.setPosition(width*.5, height*.55);
     n2o_toggle.setPosition(width*.5, height*.65);
     line_toggle.setPosition(width*.385, height*.62);
+    
+    tt_toggle.setSize((int)(width*toggle_width), (int)(height*toggle_height));
+    tb_toggle.setSize((int)(width*toggle_width), (int)(height*toggle_height));
+    chamber_toggle.setSize((int)(width*toggle_width), (int)(height*toggle_height));
     tt_toggle.setPosition(width*.265, height*.41);
     tb_toggle.setPosition(width*.32, height*.84);
     chamber_toggle.setPosition(width*.265, height*.8);
@@ -132,7 +136,7 @@ void updateControllersPos(String tab) {
     kalman_label.setPosition(width*.25, height*.5);
 
     tt_toggle.setPosition(width*.095, height*.07);
-    tb_toggle.setPosition(width*.125, height*.45);
+    tb_toggle.setPosition(width*.14, height*.3);
     chamber_toggle.setPosition(width*.095, height*.45);
 
     tt_toggle.setSize((int)(width*.02), (int)(height*.02));

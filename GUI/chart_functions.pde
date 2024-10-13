@@ -6,29 +6,32 @@ void setupCharts() {
   launchChart.addDataSet("Altitude");
   launchChart.addDataSet("Velocity");
   launchChart.addDataSet("Acceleration");
+  launchChart.addDataSet("Pressure");
   launchChart.addDataSet("zero");
 
   fillingChart.setColors("Pressure", color(0, 255, 0));
   fillingChart.setColors("Temperature", color(255, 150, 255));
   fillingChart.setColors("Weight", color(0, 255, 255));
 
-  launchChart.setColors("Altitude", color(0, 255, 0));
+  launchChart.setColors("Altitude", color(255, 0, 255));
   launchChart.setColors("Velocity", color(255, 255, 0));
   launchChart.setColors("Acceleration", color(255, 150, 150));
+  launchChart.setColors("Pressure", color(0, 255, 0));
   launchChart.setColors("zero", color(255, 255, 255));
   
   pressureLabel = cp5.addLabel("Pressure: ")
     .setColor(color(0, 255, 0))
     .setFont(font)
-    .moveTo("filling")
+    .moveTo("global")
     .setPosition(displayWidth*.63, displayHeight*.16)
     .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
+    .hide()
     ;
   temperatureLabel = cp5.addLabel("Temperature: ")
     .setColor(color(255, 150, 255))
     .setFont(font)
     .moveTo("filling")
-    .setPosition(displayWidth*.63, displayHeight*.24)
+    .setPosition(displayWidth*.63, displayHeight*.20)
     .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
     ;
   weightLabel = cp5.addLabel("Weight: ")
@@ -40,10 +43,10 @@ void setupCharts() {
     ;
 
   altitudeLabel = cp5.addLabel("Altitude: ")
-    .setColor(color(0, 255, 0))
+    .setColor(color(255, 0, 255))
     .setFont(font)
     .moveTo("launch")
-    .setPosition(displayWidth*.63, displayHeight*.16)
+    .setPosition(displayWidth*.63, displayHeight*.25)
     .setSize((int)(displayWidth*.1), (int)(displayHeight*.1))
     ;
   velocityLabel = cp5.addLabel("Velocity: ")
@@ -90,15 +93,18 @@ void updateCharts() {
   launchChart.addData("Altitude", lalt);
   launchChart.addData("Velocity", lvel);
   launchChart.addData("Acceleration", lacel);
+  launchChart.addData("Pressure", fp);
   launchChart.addData("zero", 0);
 
   max_l = max(max_l, lalt);
   max_l = max(max_l, lvel);
   max_l = max(max_l, lacel);
+  max_l = max(max_l, fp);
 
   min_l = min(min_l, lalt);
   min_l = min(min_l, lvel);
   min_l = min(min_l, lacel);
+  min_l = min(min_l, fp);
 
   altitudeLabel.setText("Altitude: " + df.format(lalt));
   velocityLabel.setText("Velocity: " + df.format(lvel));

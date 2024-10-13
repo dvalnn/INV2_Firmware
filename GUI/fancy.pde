@@ -38,16 +38,20 @@ void update3D() {
   float q2 = (float)rocket_data.kalman.q2 / (int)0xffff;
   float q3 = (float)rocket_data.kalman.q3 / (int)0xffff;
   float q4 = (float)rocket_data.kalman.q4 / (int)0xffff;
-
+  //println(q1,q2, q3, q4);
   float q[] = {q1, q2, q3, q4};
   float g[] = quaternionToEuler(q);
-
-  print(g[0], g[1], g[2]);
-
+  println(g[0], g[1], g[2]);
   gyroX = g[0];
   gyroY = g[1];
   gyroZ = g[2];
+  
+  //gyroX += (float)rocket_data.imu.gyro_x / 360.0 * 2 * PI;
+  //gyroY += (float)rocket_data.imu.gyro_y / 360.0 * 2 * PI;;
+  //gyroZ += (float)rocket_data.imu.gyro_z / 360.0 * 2 * PI;;
 
+  //println(gyroX, gyroY, gyroZ);
+  
   // Apply rotations based on gyroscopic data
   rocket3D.rotateX(gyroX);
   rocket3D.rotateY(gyroY);
