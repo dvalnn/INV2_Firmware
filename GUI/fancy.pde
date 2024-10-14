@@ -8,18 +8,18 @@ void setupGPSMap() {
     println("Error: map_img is not initialized.");
     return;
   }
-  /*
   map_image = loadImage(map_img);
-   map_width = map_image.width * .59 * width/1920;
+  map_width = map_image.width * .59 * width/1920;
+  map_x1 = width * .23;
+  map_height = map_image.height * .59 * height/1080;
+  map_y1 = height * .5;
+  /*
+  map_image = loadImage(map_pimg);
+   map_width = map_image.width * .8 * width/1920;
    map_x1 = width * .23;
-   map_height = map_image.height * .59 * height/1080;
+   map_height = map_image.height * .8 * height/1080;
    map_y1 = height * .5;
    */
-  map_image = loadImage(map_pimg);
-  map_width = map_image.width * .8 * width/1920;
-  map_x1 = width * .23;
-  map_height = map_image.height * .8 * height/1080;
-  map_y1 = height * .5;
 }
 
 void setup3D() {
@@ -45,13 +45,13 @@ void update3D() {
   gyroX = g[0];
   gyroY = g[1];
   gyroZ = g[2];
-  
+
   //gyroX += (float)rocket_data.imu.gyro_x / 360.0 * 2 * PI;
   //gyroY += (float)rocket_data.imu.gyro_y / 360.0 * 2 * PI;;
   //gyroZ += (float)rocket_data.imu.gyro_z / 360.0 * 2 * PI;;
 
   //println(gyroX, gyroY, gyroZ);
-  
+
   // Apply rotations based on gyroscopic data
   rocket3D.rotateX(gyroX);
   rocket3D.rotateY(gyroY);
@@ -72,20 +72,21 @@ void updateGPSMap() {
     fill(255, 0, 0); // Red color for the position marker
     float longitude = rocket_data.gps.longitude;
     float latitude = rocket_data.gps.latitude;
-    /*
+ 
     if (longitude < MIN_LONG) longitude = MIN_LONG;
      if (longitude > MAX_LONG) longitude = MAX_LONG;
      if (latitude < MIN_LAT) latitude = MIN_LAT;
      if (latitude > MAX_LAT) latitude = MAX_LAT;
      float miniMapX = map(longitude, MIN_LONG, MAX_LONG, map_x1, map_x1 + map_width); // Map the x coordinate to mini map
      float miniMapY = map(latitude, MAX_LAT, MIN_LAT, map_y1, map_y1 + map_height); // Map the y coordinate to mini map
-     */
+     /*
     if (longitude < pMIN_LONG) longitude = pMIN_LONG;
     if (longitude > pMAX_LONG) longitude = pMAX_LONG;
     if (latitude < pMIN_LAT) latitude = pMIN_LAT;
     if (latitude > pMAX_LAT) latitude = pMAX_LAT;
     float miniMapX = map(longitude, pMIN_LONG, pMAX_LONG, map_x1, map_x1 + map_width); // Map the x coordinate to mini map
     float miniMapY = map(latitude, pMAX_LAT, pMIN_LAT, map_y1, map_y1 + map_height); // Map the y coordinate to mini map
+    */
     //print(miniMapX, miniMapY);
     ellipse(miniMapX, miniMapY, 7, 7); // Draw the position marker as a small circle
   }

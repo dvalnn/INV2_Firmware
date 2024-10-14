@@ -119,7 +119,7 @@ class FillingData {
       temperature;
     boolean valve;
   }
-
+  short rs_press;
   String getState() {
     return state_map_filling.get((int)state);
   }
