@@ -7,11 +7,21 @@
 #define MAX_EVENT_SIZE 10
 
 #define ARM_TIMER_TRIGGER 60
-#define MOTOR_BURN_TIMER_TRIGGER 7
+
+#define MOTOR_BURN_TIMER_TRIGGER 82 //0.1sec 
+
+#define MIN_TANK_PRESSURE 30.0
 
 #define CHAMBER_TEMP_THREASHOLD 6000 // 0.1c units
 
+#define MAIN_OPENING_ALTITUDE 450
+
+#define MAX_DELTA_ALTITUDE 1 
+
 #define MAX_RESTART_ALLOWED 6
+
+#define DEPRESSUR_TIMEOUT 10
+#define DEPRESSUR_GLOBAL_TIMEOUT 35
 
 //use the enum below as the values of rocket_state_t
 //use -1 for default behavior
@@ -36,6 +46,8 @@ enum
     ABORT,
 
     FLIGHT,
+
+    RECOVERY,
 
     rocket_state_size, //this needs to be the last state for size to work
 } rocket_state;

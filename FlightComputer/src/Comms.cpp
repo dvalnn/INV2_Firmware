@@ -7,6 +7,7 @@
 #include "Comms.h"
 
 #include "FlashLog.h"
+#include "GlobalVars.h"
 
 #include <Crc.h>
 #include <LoRa.h>
@@ -33,9 +34,15 @@ void write_command(command_t* cmd, interface_t interface)
     {
         case LoRa_INTERFACE:
         {
+
             LoRa.beginPacket();
             int sz = LoRa.write(buff, size);
             LoRa.endPacket(true);
+
+            xSemaphoreTake(transmit_mutex, portMAX_DELAY);
+            transmit_time = millis();
+            xSemaphoreGive(transmit_mutex);
+
             //Serial.printf("Lora sent %d packets\n");
             
             //for(int i = 0; i < size; i++)
@@ -63,6 +70,8 @@ static COMMAND_STATE parse_input(uint8_t read_byte, command_t* command, COMMAND_
     switch(state)
     {
         case SYNC:
+        {
+            Serial.printf("Sync byte %x\n\r", read_byte);
             if(read_byte == 0x55)
             {
                 //start timeout timer
@@ -71,39 +80,58 @@ static COMMAND_STATE parse_input(uint8_t read_byte, command_t* command, COMMAND_
                 memset(command, 0, sizeof(command_t));
                 command->begin = clock();
             }
+        }        
         break;
 
         case CMD:
+        {
+            Serial.printf("CMD byte %x\n\r", read_byte);
             command->cmd = (cmd_type_t)read_byte;
             state = ID;
+        }
         break;
 
         case ID:
+        {
+            Serial.printf("ID byte %x\n\r", read_byte);
             command->id = read_byte;
             state = SIZE;
+        }
         break;
 
         case SIZE:                
+        {
+            Serial.printf("SIZE byte %x %d\n\r", read_byte, read_byte);
             command->size = read_byte;
             if(command->size == 0)
                 state = CRC1;
             else state = DATA;
+        }
         break;
 
         case DATA:
+        {
+            Serial.printf("DATA byte %x\n\r", read_byte);
             command->data[command->data_recv++] = read_byte;
             if(command->data_recv == command->size)
                 state = CRC1;
+        }
         break;
 
         case CRC1:
+        {
+            Serial.printf("CRC1 byte %x\n\r", read_byte);
             command->crc = read_byte << 8;
             state = CRC2;
+        }
         break;
 
         case CRC2:
+        {
+            Serial.printf("CRC2 byte %x\n\r", read_byte);
             command->crc += read_byte;
             state = END;
+        }
         break;
 
         default:
@@ -138,7 +166,7 @@ command_t* read_command(int* error, interface_t interface)
             begin = end;
             
             int packetSize = LoRa.parsePacket();
-            //if(packetSize > 0) Serial.printf("packet recived %d\n", packetSize);
+            if(packetSize > 0) Serial.printf("packet recived %d\n", packetSize);
             while(packetSize != 0 && LoRa.available() && *state != END)
             {
                 read_byte = LoRa.read();
@@ -178,7 +206,7 @@ command_t* read_command(int* error, interface_t interface)
     //if timeout reset state
     if(*state != SYNC && msec > RS485_TIMEOUT_TIME_MS) //timeout
     {
-        //Serial.printf("TIMEOUT\n"); //debug
+        Serial.printf("TIMEOUT\n\r"); //debug
         *state = SYNC;
         
         *error = CMD_READ_TIMEOUT;
@@ -191,7 +219,7 @@ command_t* read_command(int* error, interface_t interface)
              command->id == BROADCAST_ID )
              && (check_crc(command) || ! CRC_ENABLED) )
     {
-        //Serial.printf("got message %d %d\n", command->cmd, command->id);
+        Serial.printf("got message %d %d\n\r", command->cmd, command->id);
         *state = SYNC;
 
         *error = CMD_READ_OK;
@@ -203,7 +231,7 @@ command_t* read_command(int* error, interface_t interface)
     }
     else if(*state == END)
     {
-        //Serial.printf("crc error %d %d %d\n", command->id, command->crc, (uint16_t)crc((unsigned char*)command, command->size + 3));
+        Serial.printf("crc error %d %d %d\n\r", command->id, command->crc, (uint16_t)crc((unsigned char*)command, command->size + 3));
         //uint8_t* ptr = (uint8_t*)command;
         //printf("%x %x %x\n", command->cmd, command->id, command->size);
         //for(int i = 0; i < command->size + 3; i++)

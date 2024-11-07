@@ -61,9 +61,9 @@ bool arm_timer_event(void)
     return (arm_reset_timer > ARM_TIMER_TRIGGER);
 }
 
-bool motor_timer_event(void)
+bool motor_shutdown_event(void)
 {
-    return (burn_timer > MOTOR_BURN_TIMER_TRIGGER);
+    return (burn_timer > MOTOR_BURN_TIMER_TRIGGER) || (Tank_Top_Module.pressure < MIN_TANK_PRESSURE) ;
 }
 
 //---------Kalman------------
@@ -73,7 +73,9 @@ bool apogee_event(void)
 
     xSemaphoreTake(kalman_mutex, portMAX_DELAY);
     
-    if(Launch && ((maxAltitude-kalman_altitude)>0.5) &&(abs(kalman_velocity)<0.1))
+    //if(Launch && ((maxAltitude-kalman_altitude)>2) && (kalman_accel < -2.0))
+    //if(Launch && ((maxAltitude-kalman_altitude)>10) && (kalman_accel < -2.0))
+    if(Launch && ((maxAltitude-kalman_altitude)>2))
     {
       DragDeployed = true;
       preferences.putChar("drag_state", 1);
@@ -85,13 +87,13 @@ bool apogee_event(void)
     return return_val;
 }
 
-bool main_deployment_condition(void)
+bool main_deployment_event(void)
 {
     bool return_val = false;
 
     xSemaphoreTake(kalman_mutex, portMAX_DELAY);
     
-    if(DragDeployed && !MainDeployed && alt_kalman_state(6) < 400)
+    if(DragDeployed && !MainDeployed && kalman_altitude < MAIN_OPENING_ALTITUDE)
     {
         MainDeployed = true;
         preferences.putChar("main_state", 1);
@@ -100,4 +102,57 @@ bool main_deployment_condition(void)
     
     xSemaphoreGive(kalman_mutex);
     return return_val;
+}
+bool touchdown_event(void)
+{
+    static float last_altitude = 0;
+    static uint8_t tick = 0;
+    static unsigned long last_read = 0;
+
+    if(millis() - last_read < 100) //read every 100 ms
+        return false;
+
+    if(abs(last_altitude - kalman_altitude) > MAX_DELTA_ALTITUDE)
+    {
+        last_altitude = kalman_altitude;
+        last_read = millis();
+        tick = 0;
+    }
+    else
+    {
+        tick++;
+    }
+
+    if(tick > 100) //5 seconds of readings 
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+    
+}
+
+//---------recovery events-----------
+
+bool depressur_started = false;
+bool tank_depressure_start_event(void)
+{
+    static bool first = true;
+    if((depressur_timer > DEPRESSUR_TIMEOUT ||
+        depressur_global_timer > DEPRESSUR_GLOBAL_TIMEOUT) &&
+        first)
+    {
+        first = false;
+        depressur_started = true;
+        return true;
+    }
+
+    return false;
+}
+
+bool tank_depressure_end_event(void)
+{
+    return false;
 }

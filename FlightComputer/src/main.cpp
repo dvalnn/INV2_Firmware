@@ -121,9 +121,47 @@ void temp_i2c_Setup(void)
     }
 }
 
+void sendPacket(byte *packet, byte len) {
+    for (byte i = 0; i < len; i++)
+    {
+        Serial1.write(packet[i]);
+    }
+}
+
+void changeBaudrate() {
+    byte packet115200[] = {
+      0xB5, 0x62, 0x06, 0x00, 0x14, 0x00, 0x01, 0x00, 0x00, 
+      0x00, 0xD0, 0x08, 0x00, 0x00, 0x00, 0xC2, 0x01, 0x00, 
+      0x07, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x7E,
+    };
+    sendPacket(packet115200, sizeof(packet115200));
+}
+
+void changeFrequency() {
+    byte packet[] = {
+      0xB5,0x62,0x06,0x08,0x06,0x00,0xC8,0x00,0x01,0x00,0x01,0x00,0xDE,0x6A,
+    };
+    sendPacket(packet, sizeof(packet));
+}
+
 void GPS_Setup(void)
 {
-    return;
+    Serial1.begin(9600, 134217756U, GPS_TX_PIN, GPS_RX_PIN); //GPS
+
+    changeFrequency();
+    delay(200);
+
+    Serial1.flush();
+
+    changeBaudrate();
+    
+    delay(200);
+
+    Serial1.flush();
+
+    Serial1.end();
+    
+    Serial1.begin(115200, 134217756U, GPS_TX_PIN, GPS_RX_PIN); //GPS
 }
 
 void IMU_Setup(void)
@@ -141,7 +179,7 @@ void IMU_Setup(void)
     //Serial.println("Testing device connections...");
     //Serial.println(accelgyro.testConnection() ? "MPu6050 connection successful" : "MPu6050 connection failed");
 
-    IMU.calibrateAccelGyro();
+    //IMU.calibrateAccelGyro();
 
 }
 
@@ -160,18 +198,17 @@ void BAROMETER_Setup(void)
                   //Adafruit_BMP280::STANDBY_MS_250   /* Standby time. */
                   );
 
-    //TODO add back in 
-    //if(fast_reboot)
-    //{
-        //ground_hPa = preferences.getFloat("ground_hpa", 1015.6);
-    //}
-    //else
-    //{
-        //ground_hPa = bmp.readPressure(); // in Si units for Pascal
-        //ground_hPa /= 100;
-    //}
+    if(fast_reboot)
+    {
+        ground_hPa = preferences.getFloat("ground_hpa", 1015.6);
+    }
+    else
+    {
+        ground_hPa = bmp.readPressure(); // in Si units for Pascal
+        ground_hPa /= 100;
+    }
 
-    barometer_calibrate();
+    //barometer_calibrate();
 }
 
 void Valves_Setup(void)
@@ -212,10 +249,10 @@ void Flash_Setup()
 
     //current_id = get_last_id() + 1;
     
-    if(!LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED)){
-        Serial.println("LittleFS Mount Failed");
-        return;
-    }
+    //if(!LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED)){
+        //Serial.println("LittleFS Mount Failed");
+        //return;
+    //}
 
 
 }
@@ -224,11 +261,11 @@ void Flash_Setup()
 void LoRa_Setup(void)
 {
   LoRa.setPins(LORA_SS_PIN, LORA_RESET_PIN, LORA_DIO0_PIN);
-  //LoRa.setSignalBandwidth(300E3);
-  LoRa.setSignalBandwidth(500E3);
-  LoRa.setCodingRate4(5);
-  LoRa.setSpreadingFactor(6);
-  LoRa.setGain(1);
+  LoRa.setSignalBandwidth(300E3);
+  //LoRa.setSignalBandwidth(500E3);
+  LoRa.setCodingRate4(8);
+  LoRa.setSpreadingFactor(12);
+  LoRa.setGain(6);
 
   Serial.println("Lora starting");
   if (!LoRa.begin(868E6)) {
@@ -242,16 +279,17 @@ void dummy_func(void* parameters) {}
 void setup() {
 
     kalman_mutex = xSemaphoreCreateMutex();
+    transmit_mutex = xSemaphoreCreateMutex();
+    control_mutex = xSemaphoreCreateMutex();
 
     Serial.begin(SERIAL_BAUD); //USBC serial
-    Serial1.begin(SERIAL1_BAUD, 134217756U, GPS_TX_PIN, GPS_RX_PIN); //GPS
     Serial2.begin(SERIAL2_BAUD); //RS485
 
-    Wire.begin(I2C_SDA_1_PIN, I2C_SCL_1_PIN, 100000);
+    Wire.begin(I2C_SDA_1_PIN, I2C_SCL_1_PIN);
     Wire1.begin(I2C_SDA_2_PIN, I2C_SCL_2_PIN, 400000);
 
     SPI.begin();
-    SPI.setFrequency(800000000);
+    //SPI.setFrequency(800000000);
     
     preferences.begin("config", false);
 
@@ -268,11 +306,11 @@ void setup() {
     digitalWrite(Flash_SS_PIN, HIGH);
 
     LoRa_Setup();
-    Flash_Setup();
+    //Flash_Setup();
     //printf("Last state %u\n", last_state);
     //printf("Restart_count %u\n", restart_count);
 
-    if((last_state == LAUNCH || last_state == FLIGHT || last_state == ABORT)
+    if((last_state == LAUNCH || last_state == FLIGHT || last_state == ABORT || last_state == RECOVERY)
         && restart_count < MAX_RESTART_ALLOWED)
     {
         state = last_state;
@@ -292,42 +330,50 @@ void setup() {
         preferences.putChar("main_state", 0);
     }
 
-    state = FLIGHT;
+    //todo remove
+    //state = LAUNCH;
 
     GPS_Setup();
-    IMU_Setup();
-    BAROMETER_Setup();
 
-    kalman_Setup();
+    //IMU_Setup();
+    //BAROMETER_Setup();
+    //kalman_Setup();
 
     pressure_Setup();
-    //if(! fast_reboot) temp_i2c_Setup();
+    
+    //TODO remove
+    //fast_reboot = true;
+    //Launch = true;
+    if(! fast_reboot) temp_i2c_Setup();
 
     printf("Setup done\n");
 
     //delay(2000);
     //while(1){}
      // Set up Core 1 task handler
-    xTaskCreatePinnedToCore(
+    if(xTaskCreatePinnedToCore(
         software_work,
         "Core 0 task",
         10240,
         NULL,
-        1,
+        5,
         NULL,
-        1);
+        1) != pdPASS)
+    {
+        Serial.printf("cannot create stm work\n");
+    }
 
     if(xTaskCreatePinnedToCore(
         control_work,
         "Core 1 task",
         102400,
         NULL,
-        1,
+        10,
         NULL,
         0) != pdPASS)
-        {
-            Serial.printf("cannot create control work\n");
-        }
+    {
+        Serial.printf("cannot create control work\n");
+    }
 
     
 }
@@ -335,6 +381,9 @@ void setup() {
 void loop() { vTaskDelay(1000); }
 
 void software_work(void* paramms) {
+
+    Serial.printf("got to stm work\n\r");
+
     while(true)
     {
         static bool init_flag = false;
@@ -413,7 +462,7 @@ void software_work(void* paramms) {
             log(&state, 0, STATE_CHANGE);
         }
 
-        //used as the time base when dealing with sensor sampling rate and delays
+        //command state transitions must take precedence to event state transitions
         else if(event_state != state)
         {
             //only if comms haven't changed the state we can

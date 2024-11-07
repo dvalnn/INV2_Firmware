@@ -45,7 +45,13 @@ void telemetry(void);
 void reset_timers(void);
 void arm_timer_tick(void);
 void burn_timer_tick(void);
+void depressur_timer_tick(void);
+void depressur_global_timer_tick(void);
 
+void read_main_ematch(void);
+void read_drag_ematch(void);
+
+void recover_now(void);
 
 void single_mode_stm();
 

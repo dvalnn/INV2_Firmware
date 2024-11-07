@@ -142,11 +142,15 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
         if ((log_bits & ROCKET_KALMAN_BIT))
         {
             uint16_t u_z = kalman_altitude * 10;
+            uint16_t u_z_max = maxAltitude * 10;
             uint16_t u_vz = kalman_velocity * 10;
             uint16_t u_az = kalman_accel * 10;
 
             command_rep.data[index++] = (uint8_t)((u_z >> 8) & 0xff);
             command_rep.data[index++] = (uint8_t)((u_z) & 0xff);
+
+            command_rep.data[index++] = (uint8_t)((u_z_max >> 8) & 0xff);
+            command_rep.data[index++] = (uint8_t)((u_z_max) & 0xff);
 
             command_rep.data[index++] = (uint8_t)((u_vz >> 8) & 0xff);
             command_rep.data[index++] = (uint8_t)((u_vz) & 0xff);
@@ -175,11 +179,12 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 
         if ((log_bits & ROCKET_CHUTE_EMATCH_BIT))
         {
+            command_rep.data[index++] = ((ematch_main_reading >> 8) & 0xff);
+            command_rep.data[index++] = ((ematch_main_reading) & 0xff);
+
             command_rep.data[index++] = ((ematch_drag_reading >> 8) & 0xff);
             command_rep.data[index++] = ((ematch_drag_reading) & 0xff);
 
-            command_rep.data[index++] = ((ematch_main_reading >> 8) & 0xff);
-            command_rep.data[index++] = ((ematch_main_reading) & 0xff);
         }
 
         xSemaphoreGive(kalman_mutex);
@@ -324,7 +329,7 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 
     case CMD_MANUAL_EXEC:
     {
-        if (state != MANUAL && state != FUELING)
+        if (state != MANUAL)
             return CMD_RUN_STATE_ERROR;
 
         command_rep.cmd = CMD_MANUAL_EXEC_ACK;
@@ -389,6 +394,7 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
                 digitalWrite(Tank_Bot_Module.valve_pin, valve_state);
                 Tank_Bot_Module.valve_state = valve_state;
             }
+            break;
             case Engine_valve:
             {
                 digitalWrite(Chamber_Module.valve_pin, valve_state);
@@ -451,19 +457,25 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 
         case CMD_MANUAL_IMU_CALIBRATE:
         {
+            xSemaphoreTake(control_mutex, portMAX_DELAY);
             imu_calibrate();
+            xSemaphoreGive(control_mutex);
         }
         break;
 
         case CMD_MANUAL_BAROMETER_CALIBRATE:
         {
+            xSemaphoreTake(control_mutex, portMAX_DELAY);
             barometer_calibrate();
+            xSemaphoreGive(control_mutex);
         }
         break;
 
         case CMD_MANUAL_KALMAN_CALIBRATE:
         {
+            xSemaphoreTake(control_mutex, portMAX_DELAY);
             kalman_calibrate();
+            xSemaphoreGive(control_mutex);
         }
         break;
 

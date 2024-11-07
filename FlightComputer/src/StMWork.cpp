@@ -25,6 +25,8 @@ float tank_liquid = 0;
 
 uint16_t arm_reset_timer;
 uint16_t burn_timer;
+uint16_t depressur_timer;
+uint16_t depressur_global_timer;
 
 float ttp_values[press_values_size], tbp_values[press_values_size], chp_values[press_values_size];
 int ttp_index = 0, tbp_index = 0, chp_index = 0;
@@ -104,7 +106,7 @@ void imu_calibrate(void)
     double ay = 0;
     double az = 0;
 
-    for(int i = 0; i < 1000; i++) //10 seconds of reading imu
+    for(int i = 0; i < 500; i++) //5 seconds of reading imu
     {
         read_imu();
         ax += imu_ax;
@@ -123,6 +125,7 @@ void imu_calibrate(void)
 void kalman_calibrate(void)
 {
     //reset kalman position
+    alt_kal.update_offset(-kalman_altitude, -kalman_velocity, -kalman_accel);
 }
 
 
@@ -138,7 +141,10 @@ void logger(void)
     command_rep.id = FILL_STATION_ID;
 
     command_rep.size = 2;
+    
     int16_t ipressure = (int16_t)(Tank_Top_Module.pressure * 100);
+    
+    //int16_t ipressure = (int16_t)(Tank_Top_Module.temperature * 10);
     command_rep.data[0] = (ipressure >> 8) & 0xff;
     command_rep.data[1] = (ipressure) & 0xff;
 
@@ -218,11 +224,15 @@ void telemetry(void)
 //---------------kalman
 
     uint16_t u_z = kalman_altitude * 10;
+    uint16_t u_z_max = maxAltitude;
     uint16_t u_vz = kalman_velocity * 10;
     uint16_t u_az = kalman_accel * 10;
 
     command.data[index++] = (uint8_t)((u_z >> 8) & 0xff);
     command.data[index++] = (uint8_t)((u_z) & 0xff);
+
+    command.data[index++] = (uint8_t)((u_z_max >> 8) & 0xff);
+    command.data[index++] = (uint8_t)((u_z_max) & 0xff);
 
     command.data[index++] = (uint8_t)((u_vz >> 8) & 0xff);
     command.data[index++] = (uint8_t)((u_vz) & 0xff);
@@ -249,11 +259,11 @@ void telemetry(void)
     command.data[index++] = (uint8_t)((u_quat4) & 0xff);
 //-------------- ematchs
 
-    command.data[index++] = ((ematch_drag_reading >> 8) & 0xff);
-    command.data[index++] = ((ematch_drag_reading) & 0xff);
-
     command.data[index++] = ((ematch_main_reading >> 8) & 0xff);
     command.data[index++] = ((ematch_main_reading) & 0xff);
+
+    command.data[index++] = ((ematch_drag_reading >> 8) & 0xff);
+    command.data[index++] = ((ematch_drag_reading) & 0xff);
 
     xSemaphoreGive(kalman_mutex);
     
@@ -271,6 +281,9 @@ void read_temperature_tank_top(void)
 
     float temp = Tank_Top_Module.thermocouple.getThermocoupleTemp();
     Tank_Top_Module.temperature = (int16_t)(temp * 10.0);
+
+    //TODO remove, just for debugging
+    //Tank_Top_Module.pressure = (Tank_Top_Module.temperature * 1.0) / 10.0;
 }
 
 void read_temperature_tank_bot(void)
@@ -286,7 +299,7 @@ void read_temperature_tank_bot(void)
 void read_main_ematch(void)
 {
     // should already be low
-    digitalWrite(MAIN_CHUTE_READ, LOW);
+    digitalWrite(MAIN_CHUTE_DEPLOY_PIN, LOW);
 
     ematch_main_reading = analogRead(MAIN_CHUTE_READ);
 }
@@ -294,9 +307,33 @@ void read_main_ematch(void)
 void read_drag_ematch(void)
 {
     // should already be low
-    digitalWrite(DRAG_CHUTE_READ, LOW);
+    digitalWrite(DRAG_CHUTE_DEPLOY_PIN, LOW);
 
     ematch_drag_reading = analogRead(DRAG_CHUTE_READ);
+}
+
+void read_gps(void)
+{
+    bool reading = false;
+    bool first = true;
+    while (Serial1.available() && reading == false)
+        reading = gps.encode(Serial1.read());
+
+    if (reading)
+    {
+        gps_lat = gps.location.lat();
+        gps_lon = gps.location.lng();
+        gps_altitude = gps.altitude.meters();
+        gps_horizontal_vel = gps.speed.kmph();
+        gps_satalites = gps.satellites.value();
+    }
+}
+
+
+void recover_now(void)
+{
+    V_Purge_open();
+    drag_ematch_high();
 }
 
 //---------TIMERS---------------
@@ -304,9 +341,13 @@ void reset_timers(void)
 {
     arm_reset_timer = 0;
     burn_timer = 0;
+    depressur_timer = 0;
+    depressur_global_timer = 0;
 }
 
 void timer_tick(uint16_t *timer) { (*timer)++; }
 
 void arm_timer_tick(void) { timer_tick(&arm_reset_timer); }
 void burn_timer_tick(void) { timer_tick(&burn_timer); }
+void depressur_timer_tick(void) { timer_tick(&depressur_timer); }
+void depressur_global_timer_tick(void) { timer_tick(&depressur_global_timer); }

@@ -26,6 +26,7 @@ extern bool fast_reboot;
 
 extern SemaphoreHandle_t kalman_mutex;
 extern SemaphoreHandle_t transmit_mutex;
+extern SemaphoreHandle_t control_mutex;
 
 //----------- IMU vars ------------
 extern MPU9250 IMU;
@@ -95,4 +96,6 @@ extern uint16_t RL1;
 //---------------Timers----------------
 extern uint16_t arm_reset_timer;
 extern uint16_t burn_timer;
+extern uint16_t depressur_timer;
+extern uint16_t depressur_global_timer;
 #endif

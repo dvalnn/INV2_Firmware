@@ -24,17 +24,13 @@ rocket_state_t comm_transition[rocket_state_size][cmd_size] = {
     /* Ready           */ {    -1,  -1, IDLE,  -1,  IDLE,     -1,     -1,     -1,    -1,   ARMED,-1,     -1,     -1,},
     /* Armed           */ {    -1,  -1, IDLE,  -1,  READY,    -1,     -1,     -1,    -1,    -1, LAUNCH,  -1,     -1,},
     /* Launch          */ {    -1,  -1, ABORT, -1,  IDLE,     -1,     -1,     -1,    -1,    -1,  -1,     -1,     -1,},
-    /* Abort           */ {    -1,  -1,  -1,   -1,   -1,      -1,     -1,     -1,    IDLE,  -1,  -1,     -1,     -1,},
-    /* Flight          */ {    -1,  -1, IDLE,  -1,   -1,      -1,     -1,     -1,    -1,    -1,  -1,     -1,     -1,}};
+    /* Abort           */ {    -1,  -1,  -1,   -1,  IDLE,     -1,     -1,     -1,    IDLE,  -1,  -1,     -1,     -1,},
+    /* Flight          */ {    -1,  -1, ABORT, -1,  IDLE,     -1,     -1,     -1,    -1,    -1,  -1,     -1,     -1,},
+    /* Recovery        */ {    -1,  -1, IDLE,  -1,  IDLE,     -1,     -1,     -1,    -1,    -1,  -1,     -1,     -1,}};
 
 #define TANK_TEMPERATURE_SENSORS(val) \
     {.channel = read_temperature_tank_top, .sample = val}, \
     {.channel = read_temperature_tank_bot, .sample = val, .delay = 50}
-
-#define TANK_PRESSURE_SENSORS(val) \
-    {.channel = read_pressure_tank_top, .sample = val}, \
-    {.channel = read_pressure_tank_bot, .sample = val, .delay = 50}
-
 
 #define CLOSE_VALVES                             \
     {.channel = V_Vpu_close, .sample = 100},     \
@@ -48,30 +44,30 @@ rocket_state_t comm_transition[rocket_state_size][cmd_size] = {
     //{.channel = read_gps, .sample = 100}, \
 
 #define KALMAN_EVENTS \
-    {.condition = apogee_event, .reaction = drag_ematch_high, .next_state = -1}, \
-    {.condition = main_deployment_condition, .reaction = main_ematch_high, .next_state = -1}
+    {.condition = apogee_event, .reaction = drag_ematch_high, .next_state = RECOVERY}, \
+    {.condition = main_deployment_event, .reaction = main_ematch_high, .next_state = RECOVERY}
 
 State_t state_machine[rocket_state_size] =
 {
     // IDLE
     {
         .work = {
-            TANK_TEMPERATURE_SENSORS(1000),
+            TANK_TEMPERATURE_SENSORS(1000), //CANha ttop, tbot
             
-            CLOSE_VALVES,
-            //{.channel = read_barometer, .sample = 1000},
-            //{.channel = read_gps, .sample = 100},
-            //{.channel = read_imu, .sample = 1000},
+            CLOSE_VALVES, //CANha ttop, tbot, chamber
 
-            //RUN_KALMAN,
+            {.channel = read_gps, .sample = 100}, //obc or comm board
 
-            //{.channel = ADS_handler_slow, .sample = 1},
-            {.channel = logger, .sample = 1000},
-            {.channel = flash_log_sensors, .sample = 1000, .delay = 200},
+            {.channel = ADS_handler_slow, .sample = 1}, //CANha ttop, tbot, chamber
+            {.channel = logger, .sample = 1000}, //obc
+            //{.channel = flash_log_sensors, .sample = 1000, .delay = 200}, //obs
+
+            //obc apenas pede log status das CANha board nos estados
         },
 
         .events = {
-            {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
+            {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1}, //CANha ttop, tbot, chamber
+            //com o alert pin não precisamos do evento, apenas ler o alert de 1 em 1 ms
         },
 
         .comms = comm_transition[IDLE],
@@ -79,7 +75,7 @@ State_t state_machine[rocket_state_size] =
     // FUELING
     {
         .work = {
-            TANK_TEMPERATURE_SENSORS(100),
+            TANK_TEMPERATURE_SENSORS(150),
 
             {.channel = ADS_handler_fast, .sample = 1},
 
@@ -87,8 +83,8 @@ State_t state_machine[rocket_state_size] =
 
             CLOSE_VALVES,
 
-            {.channel = logger, .sample = 50},
-            {.channel = flash_log_sensors, .sample = 100},
+            {.channel = logger, .sample = 100},
+            //{.channel = flash_log_sensors, .sample = 100},
         },
 
         .events = {
@@ -100,13 +96,17 @@ State_t state_machine[rocket_state_size] =
     // MANUAL
     {
         .work = {
-            TANK_TEMPERATURE_SENSORS(100),
+            TANK_TEMPERATURE_SENSORS(150),
 
-            {.channel = ADS_handler_fast, .sample = 1},
+            {.channel = ADS_handler_all_fast, .sample = 1},
 
+            {.channel = read_main_ematch, .sample = 1000}, 
+            {.channel = read_drag_ematch, .sample = 1000}, 
+
+            {.channel = read_gps, .sample = 100}, 
 
             {.channel = logger, .sample = 50},
-            {.channel = flash_log_sensors, .sample = 100},
+            //{.channel = flash_log_sensors, .sample = 100},
         },
 
         .events = {
@@ -118,7 +118,7 @@ State_t state_machine[rocket_state_size] =
     // SAFETY_PRESSURE
     {
         .work = {
-            TANK_TEMPERATURE_SENSORS(100),
+            TANK_TEMPERATURE_SENSORS(150),
 
             {.channel = ADS_handler_fast, .sample = 1},
 
@@ -137,7 +137,7 @@ State_t state_machine[rocket_state_size] =
     // PURGE_PRESSURE
     {
         .work = {
-            TANK_TEMPERATURE_SENSORS(100),
+            TANK_TEMPERATURE_SENSORS(150),
 
             {.channel = ADS_handler_fast, .sample = 1},
 
@@ -156,7 +156,7 @@ State_t state_machine[rocket_state_size] =
     // PURGE_LIQUID
     {
         .work = {
-            TANK_TEMPERATURE_SENSORS(100),
+            TANK_TEMPERATURE_SENSORS(150),
 
             {.channel = ADS_handler_fast, .sample = 1},
 
@@ -175,7 +175,7 @@ State_t state_machine[rocket_state_size] =
     // SAFETY_PRESSURE_ACTIVE
     {
         .work = {
-            TANK_TEMPERATURE_SENSORS(100),
+            TANK_TEMPERATURE_SENSORS(150),
 
             {.channel = ADS_handler_fast, .sample = 1},
 
@@ -194,15 +194,15 @@ State_t state_machine[rocket_state_size] =
     // READY
     {
         .work = {
-            //TANK_TEMPERATURE_SENSORS(1000),
-
-            //RUN_KALMAN,
-
             {.channel = ADS_handler_all_slow, .sample = 1},
 
             {.channel = reset_timers, .sample = 200}, // used to reset the timers used in armed, fire, launch
+            
+            {.channel = read_gps, .sample = 100}, 
 
-            {.channel = logger, .sample = 50},
+            {.channel = read_main_ematch, .sample = 1000}, 
+            {.channel = read_drag_ematch, .sample = 1000}, 
+
             {.channel = flash_log_sensors, .sample = 100},
         },
 
@@ -216,19 +216,15 @@ State_t state_machine[rocket_state_size] =
     // ARMED
     {
         .work = {
-            //TANK_TEMPERATURE_SENSORS(1000),
-            
-            //RUN_KALMAN,
-
             {.channel = ADS_handler_all_fast, .sample = 1},
+            
+            {.channel = read_gps, .sample = 100}, 
 
             {.channel = arm_timer_tick, .sample = 1000},
-            {.channel = logger, .sample = 50},
             {.channel = flash_log_sensors, .sample = 100},
         },
 
         .events = {
-            //{.condition = IgniteCond, .reaction = V_Engine_open, .next_state = LAUNCH},
             {.condition = arm_timer_event, .reaction = NULL, .next_state = READY},
             {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
         },
@@ -241,10 +237,10 @@ State_t state_machine[rocket_state_size] =
         .work = {
             {.channel = V_Engine_open, .sample = 5},
 
-            //TANK_TEMPERATURE_SENSORS(1000),
-            //RUN_KALMAN,
-
-            {.channel = burn_timer_tick, .sample = 1000},
+            {.channel = read_gps, .sample = 100}, 
+            
+            {.channel = burn_timer_tick, .sample = 100},
+            {.channel = depressur_global_timer_tick, .sample = 1000},
 
             {.channel = ADS_handler_all_fast, .sample = 1},
 
@@ -254,8 +250,7 @@ State_t state_machine[rocket_state_size] =
 
         .events = {
             {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
-            {.condition = motor_timer_event, .reaction = V_Engine_close, .next_state = FLIGHT},
-            KALMAN_EVENTS,
+            {.condition = motor_shutdown_event, .reaction = V_Engine_close, .next_state = FLIGHT},
         },
 
         .comms = comm_transition[LAUNCH],
@@ -267,11 +262,9 @@ State_t state_machine[rocket_state_size] =
             {.channel = V_Engine_close, .sample = 5},
             {.channel = V_Purge_open, .sample = 5},
 
-            //TANK_TEMPERATURE_SENSORS(250),
-            
-            //RUN_KALMAN,
-
             {.channel = ADS_handler_all_fast, .sample = 1},
+
+            {.channel = depressur_global_timer_tick, .sample = 1000},
 
             {.channel = logger, .sample = 500},
             {.channel = telemetry, .sample = 1000},
@@ -279,8 +272,11 @@ State_t state_machine[rocket_state_size] =
         },
 
         .events = {
+            {.condition = tank_depressure_start_event, .reaction = recover_now, .next_state = -1},
+            //{.condition = touchdown_event, .reaction = V_Purge_close, .next_state = -1},
             {.condition = ADS_event, .reaction = ADS_reader, .next_state = -1},
-            KALMAN_EVENTS,
+            //{.condition = apogee_event, .reaction = drag_ematch_high, .next_state =  -1}, 
+            //{.condition = main_deployment_event, .reaction = main_ematch_high, .next_state =  -1}
         },
 
         .comms = comm_transition[ABORT],
@@ -291,13 +287,38 @@ State_t state_machine[rocket_state_size] =
         .work = {
             {.channel = V_Engine_close, .sample = 5},
             
+            {.channel = read_gps, .sample = 100}, 
+            
+            {.channel = depressur_global_timer_tick, .sample = 1000},
+
             {.channel = telemetry, .sample = 2000},
             {.channel = flash_log_sensors, .sample = 100},
-            //RUN_KALMAN,
         },
 
         .events = {
-            KALMAN_EVENTS,
+            //{.condition = apogee_event, .reaction = drag_ematch_high, .next_state = RECOVERY},
+            {.condition = tank_depressure_start_event, .reaction = recover_now, .next_state = RECOVERY},
+            //{.condition = touchdown_event, .reaction = V_Purge_close, .next_state = -1},
+        }, 
+
+        .comms = comm_transition[FLIGHT],
+    },
+    // RECOVERY 
+    {
+        .work = {
+            {.channel = V_Engine_close, .sample = 5},
+
+            //{.channel = depressur_timer_tick, .sample = 1000},
+            //{.channel = depressur_global_timer_tick, .sample = 1000},
+            
+            {.channel = telemetry, .sample = 2000},
+            {.channel = flash_log_sensors, .sample = 100},
+        },
+
+        .events = {
+            //{.condition = main_deployment_event, .reaction = main_ematch_high, .next_state = -1},
+            //{.condition = tank_depressure_start_event, .reaction = recover_now, .next_state = -1},
+            //{.condition = touchdown_event, .reaction = V_Purge_close, .next_state = -1},
         }, 
 
         .comms = comm_transition[FLIGHT],
@@ -306,7 +327,6 @@ State_t state_machine[rocket_state_size] =
 
 rocket_state_t event_handler()
 {
-    // digitalWrite(TEMP_AMP3_SS_PIN, HIGH);
     rocket_state_t next_state_event = -1;
 
     for (int i = 0; i < MAX_EVENT_SIZE; i++)
@@ -326,7 +346,6 @@ rocket_state_t event_handler()
                 next_state_event = next_state;
         }
     }
-    // digitalWrite(TEMP_AMP3_SS_PIN, LOW);
 
     return next_state_event;
 }

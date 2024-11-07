@@ -40,6 +40,7 @@
 
 //---------------BAUD-----------------
 #define SERIAL_BAUD 115200
+//#define SERIAL1_BAUD 115200 
 #define SERIAL1_BAUD 9600 
 #define SERIAL2_BAUD 115200
 
@@ -56,13 +57,7 @@
 #define IMU_READ_TIME 10 //ms
 #define BMP_READ_TIME 10 //ms
 
-#define FREEFALL_ALTITUDE_THRESHOLD 2 //free-fall considered if altitude decreases by more than this
-#define FREEFALL_THRESHOLD 3 //free-fall considered if global acceleration is smaller than it 
-#define WAY_TOO_MUCH_SPEED 1
-
-#define OFFSET_X 0.0075
-#define OFFSET_Y -0.015
-#define OFFSET_Z 0.045
+#define LOW_AFTER_TRANSMIT 250
 
 #define MAX_STORAGE 100 //Kalman
 

@@ -1,5 +1,7 @@
 #include <kalman.h>
+#include <Preferences.h>
 
+#include "GlobalVars.h"
 ///_______________________________GENERIC KALMAN______________________________________________________
 
 bool debug_flag;
@@ -231,7 +233,13 @@ void alt_kalman::begin(){
     R_mean = MatrixXf::Zero(9,1);
     Q_mean = MatrixXf::Zero(9,1);
 
+    //X_off << 0,0,0,0,0,0,0,0,-(9.9)/10.0;
+    float preferences_altitude = preferences.getFloat("altitude", 0.0);
+    Serial.printf("preferences altitude %f\n", preferences_altitude);
+    //X << 0,0,0,0,0,0,preferences_altitude,0,0;
     X_off << 0,0,0,0,0,0,0,0,0;
+
+    //while(1) {}
 }
 
 void alt_kalman::A_update(){

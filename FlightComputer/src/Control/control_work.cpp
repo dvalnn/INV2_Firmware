@@ -4,6 +4,7 @@
 
 float altitude = 0;
 float maxAltitude = 0;
+float maxAltitude_local = 0;
 
 float ground_hPa = 0;
 
@@ -37,16 +38,14 @@ float kalman_accel;
 float kalman_q[4];
 
 SemaphoreHandle_t kalman_mutex;
+SemaphoreHandle_t transmit_mutex;
+SemaphoreHandle_t control_mutex;
+
+unsigned long transmit_time;
 
 void write_values(void)
 {
     xSemaphoreTake(kalman_mutex, portMAX_DELAY);
-
-    gps_lat = gps.location.lat();
-    gps_lon = gps.location.lng();
-    gps_altitude = gps.altitude.meters();
-    gps_horizontal_vel = gps.speed.kmph();
-    gps_satalites = gps.satellites.value();
 
     altitude = altitude_local;
 
@@ -62,13 +61,14 @@ void write_values(void)
     kalman_velocity = alt_kalman_state(7);
     kalman_accel = alt_kalman_state(8);
 
+    maxAltitude = maxAltitude_local;
+
     kalman_q[0] = q[0];
     kalman_q[1] = q[1];
     kalman_q[2] = q[2];
     kalman_q[3] = q[3];
 
     xSemaphoreGive(kalman_mutex);
-
 }
 
 void read_imu(void)
@@ -81,7 +81,13 @@ void read_imu(void)
     static float sum_y = 0;
     static float sum_z = 0;
 
+    static float imu_gx_last = 0;
+    static float imu_gy_last = 0;
+    static float imu_gz_last = 0;
+
     static uint8_t avg_index = 0;
+
+    static float offset_vector[] = {0.008, -0.01, 0.0215};
 
     IMU.update_accel_gyro();
 
@@ -107,11 +113,22 @@ void read_imu(void)
     imu_ax_local = sum_x / 10;
     imu_ay_local = sum_z / 10;
     //imu_az = -(sum_y / 10) - (9.9)/10.0;
-    imu_az_local = (sum_y / 10) + (9.9)/10.0;
+    imu_az_local = (sum_y / 10) + (10.0)/10.0;
+    //imu_az_local = (sum_y / 10) ;
     
     imu_gx_local = IMU.getGyroX();
-    imu_gy_local = IMU.getGyroY();
-    imu_gz_local = IMU.getGyroZ();
+    imu_gy_local = IMU.getGyroZ();
+    imu_gz_local = IMU.getGyroY();
+
+    //imu_ax_local = imu_ax_local - (imu_gx_local - imu_gx_last) * offset_vector[0] - imu_gx_local * (imu_gx_local * offset_vector[0]);
+    //imu_ay_local = imu_ay_local - (imu_gy_local - imu_gy_last) * offset_vector[1] - imu_gy_local * (imu_gy_local * offset_vector[1]);
+    //imu_az_local = imu_az_local - (imu_gz_local - imu_gz_last) * offset_vector[2] - imu_gz_local * (imu_gz_local * offset_vector[2]);
+
+    imu_gx_last = imu_gx_local;
+    imu_gy_last = imu_gy_local;
+    imu_gz_last = imu_gz_local;
+
+    //att.update(imu_ax_local, imu_ay_local, imu_az_local, imu_gx_local, imu_gy_local, imu_gz_local, 0, 0, 0, q);
 
     //Serial.printf("%f %f %f\n", imu_ax_local, imu_ay_local, imu_az_local);
 
@@ -121,35 +138,27 @@ void read_imu(void)
 void read_barometer(void)
 {
     static float lpf_alt = 0.0f;
+
+    bool flag = false;
+    xSemaphoreTake(transmit_mutex, portMAX_DELAY);
+    if(millis() - transmit_time < LOW_AFTER_TRANSMIT)
+    {
+        //bmp.readAltitude(ground_hPa);
+        flag = true;
+    }
+    xSemaphoreGive(transmit_mutex);
+    if(flag) return;
+        
+
     // LOW PASS altitude
     lpf_alt = bmp.readAltitude(ground_hPa);
     altitude_local += (lpf_alt - altitude_local) * betha_alt;
 
-    Serial.printf("Altitude barometer %f\n", lpf_alt);
+    //Serial.printf("Altitude barometer %f\n", altitude_local);
 
-    Serial.printf("Pressure %f Temp %d\n", bmp.readPressure(), bmp.readTemperature());
+    //Serial.printf("Pressure %f Temp %d\n", bmp.readPressure(), bmp.readTemperature());
 }
 
-void read_gps(void)
-{
-    bool reading = false;
-    bool first = true;
-    while (Serial1.available() && reading == false)
-        reading = gps.encode(Serial1.read());
-
-    if (reading)
-    {
-        //if(first && gps.altitude.meters() != 0)
-        //{
-            //gps_offset = gps.altitude.meters(); 
-            //first = false;
-        //}
-        //Serial.printf("N satalites %d\n", gps.satellites.value());
-        //Serial.printf("Lat %f Lon %f\n", gps.location.lat(), gps.location.lng());
-        //Serial.printf("GPS altitude %f\n", gps.altitude.meters());
-        //Serial.printf("GPS Velocity %f\n", gps.speed.kmph());
-    }
-}
 
 void kalman(void)
 {
@@ -161,15 +170,14 @@ void kalman(void)
     static Matrix<float, 3, 1> U, Acc;
     static Matrix<float, 9, 1> Z_2, U_2;
     static Vector3f norm_acc, axis, acc;
-    static float last_alt = altitude;
     static float gps_alt_offset, alt_offset, last_lat, last_long;
     static bool first = true;
 
     static unsigned long last = millis();
 
-    Serial.printf("dt: %d\n", millis() - last);
-    last = millis();
-    Serial.flush();
+    //Serial.printf("dt: %d\n", millis() - last);
+    //last = millis();
+    //Serial.flush();
 
     if (first)
     {
@@ -185,17 +193,16 @@ void kalman(void)
         q[2] = axis(1) * isin(t / 2);
         q[3] = axis(2) * isin(t / 2);
         first = false;
+        
+        //float preferences_altitude = preferences.getFloat("altitude", 0);
+        //Z_2 << 0, 0, 0, 0, 0, 0, preferences_altitude, 0, 0;
         Z_2 << 0, 0, 0, 0, 0, 0, 0, 0, 0;
-
-        //TODO remove
     }
 
-    //att.update(imu_ax, imu_ay, imu_az, imu_gx, imu_gy, imu_gz, 0, 0, 0, q);
-
-    //Q.qw = q[0];
-    //Q.qx = q[1];
-    //Q.qy = q[2];
-    //Q.qz = q[3];
+    //Q.qx = q[0];
+    //Q.qy = q[1];
+    //Q.qz = q[2];
+    //Q.qw = q[3];
 
     //Q = euler_to_quaternion(0,0,0);
 
@@ -207,7 +214,9 @@ void kalman(void)
 
     //quaternion_to_euler(Q, angles);
 
-    //Serial.printf("%f %f %f %f\n", Q.qx, Q.qy, Q.qz, Q.qw);
+    //Serial.printf("%f %f %f \n", angles[0], angles[1], angles[2]);
+    //Serial.flush();
+
 #ifdef KALMAN_DEBBUG
     Serial.println("Orientation done");
     Serial.print(" |qw:");
@@ -226,7 +235,7 @@ void kalman(void)
     Z_2 << 0, 0, Acc(0), 0, 0, Acc(1), altitude_local, 0, Acc(2); 
     //Z_2 << 0, 0, 0, 0, 0, 0, altitude, 0, 0; 
 
-    last_alt = altitude_local;
+
 #ifdef KALMAN_DEBBUG
     Serial.println("measurements done");
     Serial.println("Starting kalman");
@@ -234,7 +243,7 @@ void kalman(void)
     alt_kalman_state = alt_kal.cicle(Q, Z_2, U_2);
 
     if (Launch)
-        maxAltitude = max(maxAltitude, alt_kalman_state(6));
+        maxAltitude_local = max(maxAltitude_local, alt_kalman_state(6));
 
     //Serial.print(" |pos_X:");
     //Serial.print(alt_kalman_state(0));
@@ -249,30 +258,21 @@ void kalman(void)
     //Serial.print(" |Acc_Y:");
     //Serial.print(alt_kalman_state(5));
 
-    static float alt_arr[25];
-    static uint8_t alt_index = 0;
-    static float alt_sum = 0; 
+    preferences.putFloat("altitude", alt_kalman_state(6));
 
-    alt_sum += alt_kalman_state(6);
-    alt_sum -= alt_arr[alt_index]; 
-    alt_arr[alt_index] = alt_kalman_state(6);
-    alt_index = (alt_index + 1) % 25;
-
-    Serial.print(" |altitude1:");
-    Serial.print(alt_kalman_state(6));
-    Serial.print(" |altitude2:");
-    Serial.print(alt_sum / 25);
-    Serial.print(" |vel_Z:");
-    Serial.print(alt_kalman_state(7));
-    Serial.print(" |Acc_Z:");
-    Serial.print(alt_kalman_state(8));
-    Serial.print(" |Update:");
-    Serial.print(debug_flag);
-    Serial.print(" |GPS:");
-    Serial.print(gps.altitude.meters());
-    Serial.printf("(%d)", gps.satellites.value());
-    Serial.println();
-    Serial.flush();
+    //Serial.print(" |altitude1:");
+    //Serial.print(alt_kalman_state(6));
+    //Serial.print(" |vel_Z:");
+    //Serial.print(alt_kalman_state(7));
+    //Serial.print(" |Acc_Z:");
+    //Serial.print(alt_kalman_state(8));
+    //Serial.print(" |Update:");
+    //Serial.print(debug_flag);
+    //Serial.print(" |GPS:");
+    //Serial.print(gps.altitude.meters());
+    //Serial.printf("(%d)", gps.satellites.value());
+    //Serial.println();
+    //Serial.flush();
 
     debug_flag = false;
 
@@ -283,26 +283,27 @@ void kalman(void)
 
 void control_work(void* parameters)
 {
-    Serial.print("got to control work\n");
-    Serial.flush();
 
     Work_t control_tasks[] = { 
       {.channel = read_barometer, .sample = BMP_READ_TIME}, 
       {.channel = read_imu, .sample = IMU_READ_TIME}, 
-      //{.channel = read_gps, .sample = 100},
       {.channel = kalman, .sample = 20},
       {.channel = write_values, .sample = 20},
     };
 
+    Serial.printf("got to control work %d\n\r", sizeof(control_tasks) / sizeof(Work_t));
+    Serial.flush();
+
     unsigned long entry_time = 0;
 
-    for(int i = 0; i < 4; i++)
+    for(int i = 0; i < sizeof(control_tasks) / sizeof(Work_t); i++)
         control_tasks[i].begin = control_tasks[i].delay;
 
     while(true)
     {
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < sizeof(control_tasks) / sizeof(Work_t); i++)
         {
+            xSemaphoreTake(control_mutex, portMAX_DELAY);
             unsigned long end = millis() - entry_time;
 
             if (control_tasks[i].channel == NULL)
@@ -319,7 +320,8 @@ void control_work(void* parameters)
                 control_tasks[i].begin = end;
                 control_tasks[i].channel(); // execute sample function
             }
+            xSemaphoreGive(control_mutex);
+            vTaskDelay(1);
         }
-        vTaskDelay(1);
     }
 }

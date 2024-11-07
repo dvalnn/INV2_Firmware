@@ -182,7 +182,7 @@ typedef struct __attribute__((__packed__))
     uint16_t crc;
 
     uint8_t data_recv; // helper pointer to fill data[]
-    clock_t begin;
+    unsigned long begin;
 } command_t;
 
 typedef enum

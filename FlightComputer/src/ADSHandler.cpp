@@ -4,7 +4,7 @@
 #include "StMWork.h"
 
 #define ADS1115_CHANNELS 4
-#define ADS_MEASURE_DELAY 4 // MS
+#define ADS_MEASURE_DELAY 8 // MS
 
 typedef enum
 {
@@ -163,7 +163,7 @@ void ADS_handler_slow()
 
 void ADS_handler_fast()
 {
-    int16_t arr[] = {30, 30, -1, -1};
+    int16_t arr[] = {50, 50, -1, -1};
     ADS_handler(arr);
 }
 
@@ -175,6 +175,6 @@ void ADS_handler_all_slow()
 
 void ADS_handler_all_fast()
 {
-    int16_t arr[] = {30, 30, 30, -1};
+    int16_t arr[] = {50, 50, 50, -1};
     ADS_handler(arr);
 }
