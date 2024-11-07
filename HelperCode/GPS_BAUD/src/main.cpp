@@ -1,0 +1,64 @@
+#include <Arduino.h>
+
+void init(int tx, int rx){
+
+    SerialGPS.begin ( 9600 , SERIAL_8N1, tx , rx );
+    
+    changeFrequency();
+    delay(200);
+
+    SerialGPS.flush();
+
+    changeBaudrate();
+    
+    delay(200);
+
+    SerialGPS.flush();
+
+    SerialGPS.end();
+    
+    SerialGPS.begin ( 115200 , SERIAL_8N1, tx , rx );
+
+    Serial.println("GPS interface initialized");
+
+}
+
+
+
+void changeBaudrate() {
+    byte packet38400[] = {
+      0xB5, 0x62, 0x06, 0x00, 0x14, 0x00, 0x01, 0x00, 0x00, 
+      0x00, 0xD0, 0x08, 0x00, 0x00, 0xF0, 0x87, 0x00, 0x00, 
+      0x07, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x74, 0x24,
+    };
+
+    byte packet115200[] = {
+      0xB5, 0x62, 0x06, 0x00, 0x14, 0x00, 0x01, 0x00, 0x00, 
+      0x00, 0xD0, 0x08, 0x00, 0x00, 0x00, 0xC2, 0x01, 0x00, 
+      0x07, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x7E,
+    };
+    sendPacket(packet115200, sizeof(packet115200));
+}
+
+void changeFrequency() {
+    byte packet[] = {
+      0xB5,0x62,0x06,0x08,0x06,0x00,0xC8,0x00,0x01,0x00,0x01,0x00,0xDE,0x6A,
+    };
+    sendPacket(packet, sizeof(packet));
+}
+
+void sendPacket(byte *packet, byte len) {
+    for (byte i = 0; i < len; i++)
+    {
+        SerialGPS.write(packet[i]);
+    }
+}
+
+void setup() {
+  // put your setup code here, to run once:
+  int result = myFunction(2, 3);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+}

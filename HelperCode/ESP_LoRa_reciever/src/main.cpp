@@ -1,13 +1,20 @@
-#include <SPI.h>
+#include <arduino.h>
 #include <LoRa.h>
 
+#include "HardwareCfg.h"
+
+#include "Wire.h"
+
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
+
   while (!Serial);
+  
+  Wire.begin();
 
-  Serial.println("LoRa Receiver");
-
-  LoRa.setPins(5,4,36);
+  pinMode(LORA_SS_PIN, OUTPUT);
+  
+  LoRa.setPins(LORA_SS_PIN, LORA_RESET_PIN, LORA_DIO0_PIN);
   if (!LoRa.begin(868E6)) {
     Serial.println("Starting LoRa failed!");
     while (1);
@@ -15,19 +22,12 @@ void setup() {
 }
 
 void loop() {
-  // try to parse packet
+  
+  // read packet
   int packetSize = LoRa.parsePacket();
-  if (packetSize) {
-    // received a packet
-    Serial.print("Received packet '");
-
-    // read packet
-    while (LoRa.available()) {
-      Serial.print((char)LoRa.read());
-    }
-
-    // print RSSI of packet
-    Serial.print("' with RSSI ");
-    Serial.println(LoRa.packetRssi());
+  if( packetSize > 0) Serial.printf("got message %d\n", packetSize);
+  while (packetSize != 0 && LoRa.available()) {
+    Serial.write((char)LoRa.read());
   }
+
 }

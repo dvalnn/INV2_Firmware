@@ -100,6 +100,6 @@ unsigned long crc (unsigned char *blk_adr, unsigned long blk_len)
 {
     unsigned long crc = INIT;
     while (blk_len--)
-        crc = crctable[((crc>>8) ^ *blk_adr++)] ^ (crc << 8);
+        crc = crctable[((crc>>8) ^ *blk_adr++) & 0xFFL] ^ (crc << 8);
     return crc ^ XOROT;
 }

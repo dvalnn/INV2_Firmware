@@ -1,3 +1,10 @@
+*.bin
 *.txt
 *.csv
 .DS_Store
+./GUI/out
+./GUI/.vscode
+*.json
+*.autosave
+*.class
+*.java

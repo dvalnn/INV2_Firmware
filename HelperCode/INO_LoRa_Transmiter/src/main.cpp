@@ -7,9 +7,9 @@ void setup() {
   Serial.begin(115200);
   while (!Serial);
 
-  Serial.println("LoRa Sender");
+  Serial.println("Ino Sender");
 
-  LoRa.setPins(10, 9, 2);
+  LoRa.setPins(10, 9, 8);
   //LoRa.setSignalBandwidth(500E3);
   //LoRa.setCodingRate4(5);
   //LoRa.setSpreadingFactor(7);
@@ -26,8 +26,9 @@ void loop() {
   int size = 0;
   while(Serial.available())
   {
-    //Serial.println("got serial");
     buff[size++] = Serial.read();
+    Serial.print("got serial ");
+    Serial.println(buff[size - 1]);
   }
 
   if(size > 0)

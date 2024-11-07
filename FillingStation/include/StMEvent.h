@@ -19,4 +19,11 @@ bool prog2_stop_cond(void);
 void prog2_stop_reaction(void);
 void close_valves(void);
 
+bool chamber_temp_cond(void);
+
+bool heart_beat_signal(void);
+
+bool arm_timer_event(void);
+bool fire_timer_event(void);
+bool launch_timer_event(void);
 #endif

@@ -126,6 +126,8 @@ int LoRaClass::begin(long frequency)
   // check version
   uint8_t version = readRegister(REG_VERSION);
   if (version != 0x12) {
+    Serial.print("version ");
+    Serial.println(version);
     return 0;
   }
 
