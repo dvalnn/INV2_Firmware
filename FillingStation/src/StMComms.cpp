@@ -47,6 +47,10 @@ int run_command(command_t* cmd, rocket_state_t state, interface_t interface)
 
                 command_rep.data[index++] = (Line_Module.pressure >> 8) & 0xff;
                 command_rep.data[index++] = (Line_Module.pressure) & 0xff;
+
+                command_rep.data[index++] = (tank_pressure >> 8) & 0xff;
+                command_rep.data[index++] = (tank_pressure) & 0xff;
+
             }
 
             if((log_bits & FILL_TEMPERATURE_BIT))

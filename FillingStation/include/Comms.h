@@ -20,7 +20,7 @@
 #include "HardwareCfg.h"
 
 #define MAX_COMMAND_BUFFER 150
-#define RS485_TIMEOUT_TIME_MS 50 //try to get limit bounds 
+#define RS485_TIMEOUT_TIME_MS 200 //try to get limit bounds 
 //#define RS485_TIMEOUT_TIME_MS 5000
 
 /*

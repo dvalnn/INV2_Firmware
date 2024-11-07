@@ -85,6 +85,9 @@ void LoRa_Setup(void)
 {
   LoRa.setPins(LORA_SS_PIN, LORA_RESET_PIN, LORA_DIO0_PIN);
   LoRa.setSignalBandwidth(300E3);
+  LoRa.setCodingRate4(8);
+  LoRa.setSpreadingFactor(12);
+  LoRa.setGain(6);
   Serial.println("Lora starting");
   if (!LoRa.begin(868E6)) {
     Serial.println("Starting LoRa failed!");
@@ -97,11 +100,11 @@ void Spi_Thermo_Setup(void)
 {
     Serial.println("Temp spi amp starting");
     
-    He_Module.thermocouple.begin();
+    //He_Module.thermocouple.begin();
     N2O_Module.thermocouple.begin();
     Line_Module.thermocouple.begin();
     
-    He_Module.thermocouple.setSPIspeed(100000);
+    //He_Module.thermocouple.setSPIspeed(100000);
     N2O_Module.thermocouple.setSPIspeed(100000);
     Line_Module.thermocouple.setSPIspeed(100000);
 }
@@ -116,7 +119,7 @@ void Pressure_Setup(void)
     ADS.setVoltageRange_mV(ADS1115_RANGE_6144); //comment line/change parameter to change range
     ADS.setCompareChannels(ADS1115_COMP_0_GND); //comment line/change parameter to change range
     ADS.setAlertPinMode(ADS1115_ASSERT_AFTER_4); // alternative: ...AFTER_2 or 4. If you disable this sketch does not work
-    ADS.setConvRate(ADS1115_475_SPS); //uncomment if you want to change the default
+    ADS.setConvRate(ADS1115_860_SPS); //uncomment if you want to change the default
     ADS.setMeasureMode(ADS1115_SINGLE); //comment or change you want to change to single shot
     ADS.setAlertPinToConversionReady(); //needed for this sketch
 }
@@ -136,7 +139,7 @@ void setup() {
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
         Wire.begin();
-        Wire.setClock(400000);
+        Wire.setClock(100000);
     #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
         Fastwire::setup(400, true);
     #endif

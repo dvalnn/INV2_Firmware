@@ -76,9 +76,9 @@ void echo_reply(void)
         error == CMD_READ_OK &&
         cmd->cmd == CMD_STATUS) 
     {
-        Serial.println("send response");
         /* Update rocket tank values */
         tank_pressure =  (cmd->data[0] << 8) + (cmd->data[1]);
+        Serial.printf("got rs %d\n", tank_pressure);
     }
 }
 
@@ -116,7 +116,7 @@ static float calibrated_pressure(float value, pressure_calib paramm)
     return paramm.b + (value * paramm.m);
 }
 
-#define TIMEOUT 3
+#define TIMEOUT 10
 void ads_handler_stm(unsigned long sample_timer)
 {
     static uint8_t state = 0;
@@ -174,8 +174,10 @@ void ads_handler_stm(unsigned long sample_timer)
                     float pressure_calib = calibrated_pressure(voltage,
                                             He_Module.pressure_serial);
 
-                    //Serial2.printf("Pressure %f\n", pressure_calib);
-                    //Serial2.flush();
+                    Serial.printf("Pressure He %f\n", pressure_calib);
+                    Serial.flush();
+                    //Line_Module.pressure = (int16_t)(pressure_calib * 100);
+                    //N2O_Module.pressure = (int16_t)(pressure_calib * 100);
                     He_Module.pressure = (int16_t)(pressure_calib * 100);
                 }
                 break;
@@ -184,7 +186,11 @@ void ads_handler_stm(unsigned long sample_timer)
                     float pressure_calib = calibrated_pressure(voltage,
                                             N2O_Module.pressure_serial);
                 
+                    //He_Module.pressure = (int16_t)(pressure_calib * 100);
                     N2O_Module.pressure = (int16_t)(pressure_calib * 100);
+                    //Line_Module.pressure = (int16_t)(pressure_calib * 100);
+                    Serial.printf("Pressure N2O %f\n", pressure_calib);
+                    Serial.flush();
                 }
                 break;
                 case ADS1115_COMP_2_GND: 
@@ -194,6 +200,9 @@ void ads_handler_stm(unsigned long sample_timer)
                                             Line_Module.pressure_serial);
                 
                     Line_Module.pressure = (int16_t)(pressure_calib * 100);
+                    //He_Module.pressure = (int16_t)(pressure_calib * 100);
+                    Serial.printf("Pressure Line %f\n", pressure_calib);
+                    Serial.flush();
                 }
                 break;
                 default:

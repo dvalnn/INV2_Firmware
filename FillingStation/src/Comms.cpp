@@ -12,6 +12,8 @@
 
 bool check_crc(command_t* command);
 
+unsigned long last_command_heart_beat = 0;
+
 void write_command(command_t* cmd, interface_t interface)
 {
     //Serial.printf("Writing message");
@@ -97,6 +99,8 @@ static COMMAND_STATE parse_input(uint8_t read_byte, command_t* command, COMMAND_
 
         case CRC2:
             command->crc += read_byte;
+            //change place, were we still don't know if is a valid message or just noise
+            last_command_heart_beat = millis();
             state = END;
         break;
 
@@ -170,7 +174,7 @@ command_t* read_command(int* error, interface_t interface)
     //if timeout reset state
     if(*state != SYNC && msec > RS485_TIMEOUT_TIME_MS) //timeout
     {
-        //Serial.println("timeout"); //debug
+        Serial.println("timeout"); //debug
         //Serial.print("state: "); //debug
         //Serial.println(*state); //debug
 
@@ -189,7 +193,7 @@ command_t* read_command(int* error, interface_t interface)
              command->id == BROADCAST_ID )
              && (check_crc(command) || ! CRC_ENABLED) )
     {
-        //Serial.printf("got cmd\n"); //debug
+        Serial.printf("got cmd\n"); //debug
         *state = SYNC;
 
         *error = CMD_READ_OK;
@@ -203,7 +207,7 @@ command_t* read_command(int* error, interface_t interface)
             interface == DEFAULT_LOG_INFERFACE
             /* && check_crc(&command) */)
     {
-        //Serial.printf("crc error %d %d %d\n", command->id, command->crc, (uint16_t)crc((unsigned char*)command, command->size + 3));
+        Serial.printf("crc error %d %d %d\n", command->id, command->crc, (uint16_t)crc((unsigned char*)command, command->size + 3));
         //Serial.printf("got cmd\n"); //debug
         *state = SYNC;
 

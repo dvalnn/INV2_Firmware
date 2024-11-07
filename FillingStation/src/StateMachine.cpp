@@ -15,16 +15,16 @@ rocket_state_t comm_transition[rocket_state_size][cmd_size] = {
 //                  STATUS LOG ABORT EXEC  STOP   FUELING  MANUAL MAN_EXEC READY  ARM  LAUNCH  RESUME  FIRE  
 /* Idle       */  {   -1,  -1, ABORT, -1,   -1,   FUELING, MANUAL,   -1,   READY, -1,    -1,      -1,   -1,  },
 /* Fueling    */  {   -1,  -1, IDLE,  -1,   IDLE,   -1,    MANUAL,   -1,    -1,   -1,    -1,      -1,   -1,  },
-/* Manual     */  {   -1,  -1, ABORT, -1,   IDLE,   -1,     -1,      -1,   -1,   -1,    -1,      -1,   -1,  },
+/* Manual     */  {   -1,  -1, IDLE,  -1,   IDLE,   -1,     -1,      -1,   -1,   -1,    -1,      -1,   -1,  },
 /* FILL_He    */  {   -1,  -1, ABORT, -1, FUELING,  -1,     -1,      -1,    -1,   -1,    -1,      -1,   -1,  },
 /* FILL_N2O   */  {   -1,  -1, ABORT, -1, FUELING,  -1,     -1,      -1,    -1,   -1,    -1,      -1,   -1,  },
 /* PURGE_LINE */  {   -1,  -1, ABORT, -1, FUELING,  -1,     -1,      -1,    -1,   -1,    -1,      -1,   -1,  },
 /* Stop       */  {   -1,  -1, ABORT, -1, FUELING,  -1,     -1,      -1,    -1,   -1,    -1,  FILL_N2O, -1,  },
-/* Abort      */  {   -1,  -1,  -1,   -1,   -1,     -1,     -1,      -1,   IDLE,  -1,    -1,      -1,   -1,  },
+/* Abort      */  {   -1,  -1,  -1,   -1,   IDLE,   -1,     -1,      -1,   IDLE,  -1,    -1,      -1,   -1,  },
 /* Ready      */  {   -1,  -1, IDLE,  -1,   IDLE,   -1,     -1,      -1,    -1,  ARMED,  -1,      -1,   -1,  },
 /* Armed      */  {   -1,  -1, IDLE,  -1,  READY,   -1,     -1,      -1,    -1,   -1,    -1,      -1,  FIRE, },
-/* FIRE       */  {   -1,  -1, ABORT, -1,  READY,     -1,     -1,      -1,    -1,   -1,    -1,      -1,   -1,  },
-/* Launch     */  {   -1,  -1, ABORT, -1,   -1,     -1,     -1,      -1,    -1,   -1,    -1,      -1,   -1,  },
+/* FIRE       */  {   -1,  -1, ABORT, -1,  READY,   -1,     -1,      -1,    -1,   -1,    -1,      -1,   -1,  },
+/* Launch     */  {   -1,  -1, ABORT, -1,   IDLE,   -1,     -1,      -1,    -1,   -1,    -1,      -1,   -1,  },
 };
 /*
  EXEC_CMD state is set inside the command function so it can have 3 diferent exits, [prog1, prog2, prog3]
@@ -37,9 +37,9 @@ rocket_state_t comm_transition[rocket_state_size][cmd_size] = {
         {.channel = read_temperature_Line, .sample = val}
 
 #define HYDROLIC_PRESSURE_SENSORS(val) \
-        {.channel = read_pressure_He, .sample = val}, \
         {.channel = read_pressure_N2O, .sample = val}, \
         {.channel = read_pressure_Line, .sample = val}
+        //{.channel = read_pressure_He, .sample = val}, \
 
 #define CLOSE_VALVES \
         {.channel = V_He_close, .sample = 100}, \
@@ -103,7 +103,9 @@ State_t state_machine[rocket_state_size] =
             {.channel = flash_log_sensors, .sample = 100}, 
         },
 
-        .events = {},
+        .events = {
+            {.condition = heart_beat_signal, .reaction = NULL, .next_state = FUELING},
+        },
 
         .comms = comm_transition[MANUAL],
     },
@@ -124,7 +126,8 @@ State_t state_machine[rocket_state_size] =
 
         .events = 
         { 
-            {.condition = prog1_finish_cond, .reaction = V_He_close, .next_state = FUELING} 
+            {.condition = prog1_finish_cond, .reaction = V_He_close, .next_state = FUELING},
+            {.condition = heart_beat_signal, .reaction = NULL, .next_state = FUELING},
         },
 
         .comms = comm_transition[FILL_He],
@@ -147,7 +150,8 @@ State_t state_machine[rocket_state_size] =
         .events = 
         { 
             {.condition = prog2_stop_cond, .reaction = V_N2O_close, .next_state = STOP},
-            {.condition = prog2_finish_cond, .reaction = V_N2O_close, .next_state = FUELING} 
+            {.condition = prog2_finish_cond, .reaction = V_N2O_close, .next_state = FUELING},
+            {.condition = heart_beat_signal, .reaction = NULL, .next_state = FUELING},
         },
 
         .comms = comm_transition[FILL_N2O],
@@ -169,7 +173,8 @@ State_t state_machine[rocket_state_size] =
 
         .events = 
         { 
-            {.condition = prog3_finish_cond, .reaction = V_Line_close, .next_state = FUELING} 
+            {.condition = prog3_finish_cond, .reaction = V_Line_close, .next_state = FUELING}, 
+            {.condition = heart_beat_signal, .reaction = NULL, .next_state = FUELING},
         },
 
         .comms = comm_transition[PURGE_LINE],
@@ -189,7 +194,9 @@ State_t state_machine[rocket_state_size] =
             {.channel = flash_log_sensors, .sample = 100}, 
         },
 
-        .events = {},
+        .events = {
+            {.condition = heart_beat_signal, .reaction = NULL, .next_state = FUELING},
+        },
 
         .comms = comm_transition[STOP],
     },

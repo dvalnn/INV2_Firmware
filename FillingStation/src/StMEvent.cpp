@@ -48,6 +48,12 @@ void close_valves(void)
     return;
 }
 
+bool heart_beat_signal(void)
+{
+    if(millis() - last_command_heart_beat > HEART_BEAT_TIMEOUT)
+        return true;
+    return false;
+}
 
 //---------TIMERS---------------
 bool arm_timer_event(void)

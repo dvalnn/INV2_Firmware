@@ -58,6 +58,8 @@ extern uint16_t ematch_v_reading;
 extern int16_t chamber_temp;
 
 //---------------Timers----------------
+extern unsigned long last_command_heart_beat;
+
 extern uint16_t arm_reset_timer;
 extern uint16_t fire_reset_timer; 
 extern uint16_t launch_reset_timer; 

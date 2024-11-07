@@ -10,6 +10,8 @@
 #define FIRE_TIMER_TRIGGER 5
 #define LAUNCH_TIMER_TRIGGER 5
 
+#define HEART_BEAT_TIMEOUT 10000 //10 sec in millis
+
 //use the enum below as the values of rocket_state_t
 //use -1 for default behavior
 typedef int8_t rocket_state_t;
