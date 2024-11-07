@@ -36,6 +36,7 @@ int16_t chamber_temp = 0;
 uint16_t arm_reset_timer;
 uint16_t fire_reset_timer; 
 uint16_t launch_reset_timer; 
+uint16_t timeout_timer; 
 
 void V_He_close(void) { 
     digitalWrite(He_Module.valve_pin, 0); 
@@ -387,6 +388,7 @@ void reset_timers(void)
     arm_reset_timer = 0;
     fire_reset_timer = 0;
     launch_reset_timer = 0;
+    timeout_timer = 0;
 }
 
 void timer_tick(uint16_t* timer) { (*timer)++;}
@@ -394,3 +396,4 @@ void timer_tick(uint16_t* timer) { (*timer)++;}
 void arm_timer_tick(void) { timer_tick(&arm_reset_timer); }
 void fire_timer_tick(void) { timer_tick(&fire_reset_timer); }
 void launch_timer_tick(void) { timer_tick(&launch_reset_timer); }
+void timeout_timer_tick(void) { timer_tick(&timeout_timer); }

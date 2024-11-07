@@ -49,6 +49,9 @@ void LoRa_Setup(void)
 {
   LoRa.setPins(LORA_SS_PIN, LORA_RESET_PIN, LORA_DIO0_PIN);
   LoRa.setSignalBandwidth(300E3);
+  LoRa.setCodingRate4(8);
+  LoRa.setSpreadingFactor(12);
+  LoRa.setGain(6);
   Serial.println("Lora starting");
   if (!LoRa.begin(868E6)) {
     Serial.println("Starting LoRa failed!");

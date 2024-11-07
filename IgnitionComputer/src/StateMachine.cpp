@@ -15,15 +15,15 @@ rocket_state_t comm_transition[rocket_state_size][cmd_size] = {
 //                  STATUS LOG ABORT EXEC  STOP   FUELING  MANUAL MAN_EXEC READY  ARM  LAUNCH  RESUME  FIRE  
 /* Idle       */  {   -1,  -1, ABORT, -1,   -1,   FUELING, MANUAL,   -1,   READY, -1,    -1,      -1,   -1,  },
 /* Fueling    */  {   -1,  -1, IDLE,  -1,   IDLE,   -1,    MANUAL,   -1,    -1,   -1,    -1,      -1,   -1,  },
-/* Manual     */  {   -1,  -1, ABORT, -1,   IDLE,   -1,     -1,      -1,   -1,   -1,    -1,      -1,   -1,  },
+/* Manual     */  {   -1,  -1, IDLE, -1,   IDLE,    -1,     -1,      -1,    -1,   -1,    -1,      -1,   -1,  },
 /* FILL_He    */  {   -1,  -1, ABORT, -1, FUELING,  -1,     -1,      -1,    -1,   -1,    -1,      -1,   -1,  },
 /* FILL_N2O   */  {   -1,  -1, ABORT, -1, FUELING,  -1,     -1,      -1,    -1,   -1,    -1,      -1,   -1,  },
 /* PURGE_LINE */  {   -1,  -1, ABORT, -1, FUELING,  -1,     -1,      -1,    -1,   -1,    -1,      -1,   -1,  },
 /* Stop       */  {   -1,  -1, ABORT, -1, FUELING,  -1,     -1,      -1,    -1,   -1,    -1,  FILL_N2O, -1,  },
-/* Abort      */  {   -1,  -1,  -1,   -1,   -1,     -1,     -1,      -1,   IDLE,  -1,    -1,      -1,   -1,  },
+/* Abort      */  {   -1,  -1,  -1,   -1,   IDLE,   -1,     -1,      -1,   IDLE,  -1,    -1,      -1,   -1,  },
 /* Ready      */  {   -1,  -1, IDLE,  -1,   IDLE,   -1,     -1,      -1,    -1,  ARMED,  -1,      -1,   -1,  },
 /* Armed      */  {   -1,  -1, IDLE,  -1,  READY,   -1,     -1,      -1,    -1,   -1,    -1,      -1,  FIRE, },
-/* FIRE       */  {   -1,  -1, ABORT, -1,  READY,     -1,     -1,      -1,    -1,   -1,    -1,      -1,   -1,  },
+/* FIRE       */  {   -1,  -1, ABORT, -1,  READY,   -1,     -1,      -1,    -1,   -1,    -1,      -1,   -1,  },
 /* Launch     */  {   -1,  -1, ABORT, -1,   -1,     -1,     -1,      -1,    -1,   -1,    -1,      -1,   -1,  },
 };
 /*
@@ -133,7 +133,7 @@ State_t state_machine[rocket_state_size] =
     {
         .work = 
         { 
-            {.channel = ematch_low, .sample = 1000, .delay = 0},
+            {.channel = ematch_low, .sample = 10, .delay = 0},
         },
 
         .events = {},
@@ -180,9 +180,11 @@ State_t state_machine[rocket_state_size] =
         .work = 
         { 
             {.channel = ematch_high, .sample = 1000},
+            
             {.channel = read_active_ematch, .sample = 200, .delay = 200}, 
             {.channel = fire_timer_tick, .sample = 1000},
-            
+            {.channel = timeout_timer_tick, .sample = 1000},
+
             {.channel = read_chamber_temp, .sample = 250},
         },
 
@@ -190,6 +192,7 @@ State_t state_machine[rocket_state_size] =
         {
             {.condition = fire_timer_event, .reaction = ematch_low, .next_state = LAUNCH}, //after x seconds laucnh it anyway
             {.condition = chamber_temp_cond, .reaction = ematch_low, .next_state = LAUNCH}, //after x seconds laucnh it anyway
+            {.condition = timeout_timer_event, .reaction = ematch_low, .next_state = IDLE}, 
         },
 
         .comms = comm_transition[FIRE],

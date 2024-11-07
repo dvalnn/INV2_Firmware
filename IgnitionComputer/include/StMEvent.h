@@ -24,4 +24,5 @@ bool chamber_temp_cond(void);
 bool arm_timer_event(void);
 bool fire_timer_event(void);
 bool launch_timer_event(void);
+bool timeout_timer_event(void);
 #endif

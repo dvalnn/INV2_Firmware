@@ -46,4 +46,5 @@ void timer_tick(uint16_t* timer);
 void arm_timer_tick(void);
 void fire_timer_tick(void);
 void launch_timer_tick(void);
+void timeout_timer_tick(void);
 #endif

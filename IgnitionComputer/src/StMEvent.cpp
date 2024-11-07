@@ -62,10 +62,16 @@ bool arm_timer_event(void)
 bool fire_timer_event(void)
 {
     return ((N2O_Module.temperature > CHAMBER_TEMP_THREASHOLD_ALLOW)
-            && (fire_reset_timer > FIRE_TIMER_TRIGGER));
+            || (fire_reset_timer > FIRE_TIMER_TRIGGER));
+    //return ((fire_reset_timer > FIRE_TIMER_TRIGGER));
 }
 
 bool launch_timer_event(void)
 {
     return launch_reset_timer > LAUNCH_TIMER_TRIGGER;
+}
+
+bool timeout_timer_event(void)
+{
+    return launch_reset_timer > TIMEOUT_TIMER_TRIGGER;
 }

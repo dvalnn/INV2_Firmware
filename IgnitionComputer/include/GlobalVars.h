@@ -61,4 +61,5 @@ extern int16_t chamber_temp;
 extern uint16_t arm_reset_timer;
 extern uint16_t fire_reset_timer; 
 extern uint16_t launch_reset_timer; 
+extern uint16_t timeout_timer; 
 #endif
