@@ -23,17 +23,7 @@ void serialThread() {
     // Send packets in queue
     dataPacket head = tx_queue.peek();
     if (millis() - last_cmd_sent_time > packet_loss_timeout) {
-      if (millis() - last_r_ping > heartbeat_timeout || millis() - last_f_ping > heartbeat_timeout) {
-        //byte[] ping = {(byte)0x55, (byte)0xFF, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x00};
-        last_r_ping = millis();
-        last_f_ping = millis();
-      }
       if (head != null) {
-        if (head.id == (byte) 0x01) {
-          last_r_ping = millis();
-        } else if (head.id == (byte) 0x02) {
-          last_f_ping = millis();
-        }
         myPort.write(head.getPacket());
         last_cmd_sent_time = millis();
         if (last_cmd_sent != (byte)0xff) {
@@ -56,7 +46,7 @@ void serialThread() {
 }
 
 void parseIncomingByte(byte rx_byte) {
-  print((char)rx_byte);
+  //print((char)rx_byte);
   if (last_read_time == 0 || millis() - last_read_time > packet_read_timeout) {
     currentParseState = ParseState.START;
   }
@@ -168,6 +158,7 @@ void updateData(dataPacket packet) {
           print("Index out of bounds: " + ask);
           return;
         }
+        last_r_ping = millis();
         rocket_data.state = packet.payload[index];
         byte rocket_flags = packet.payload[index + 1];
         rocket_data.flash_running = (rocket_flags & (0x01 << 7)) != 0 ? true : false;
@@ -257,6 +248,7 @@ void updateData(dataPacket packet) {
           print("Index out of bounds: " + ask);
           return;
         }
+        last_f_ping = millis();
         filling_data.state = packet.payload[index];
         byte filling_flags = packet.payload[index + 1];
         filling_data.flash_running = (filling_flags & (0x01 << 7)) != 0 ? true : false;
@@ -298,6 +290,7 @@ void updateData(dataPacket packet) {
           print("Index out of bounds: " + ask);
           return;
         }
+        last_i_ping = millis();
         ignition_data.state = packet.payload[index];
         index += 1;
         break;

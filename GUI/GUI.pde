@@ -277,11 +277,13 @@ public void controlEvent(ControlEvent event) {
       }
     }
   }
-  if (event.isFrom("Select Command")) {
-    byte cmd_index = (byte) event.getValue();
-    byte[] man_payload = {man_commands_map.get(man_commands.get(cmd_index))};
-    send((byte)0x07, man_payload);
-  } else if (event.isFrom("Reset Chart")) {
+  for (String man_cmd : man_commands) {
+    if (event.isFrom(man_cmd)) {
+      byte[] man_payload = {man_commands_map.get(man_cmd)};
+      send((byte)0x07, man_payload);
+    }
+  }
+  if (event.isFrom("Reset Chart")) {
     fillingChart.setData("Pressure", new float[0]);
     fillingChart.setData("Temperature", new float[0]);
     fillingChart.setData("Weight", new float[0]);

@@ -219,11 +219,16 @@ void multi_tab_controllers(String tab) {
     bar_label.show();
     imu_label.show();
     kalman_label.show();
+    pressureLabel.hide();
   } else if (tab == "launch") {
+    gps_label.show();
+    pressureLabel.show();
+    ematch_label.show();
     imu_label.hide();
     bar_label.hide();
     kalman_label.hide();
   } else {
+    pressureLabel.show();
     ematch_label.hide();
     gps_label.hide();
     bar_label.hide();
