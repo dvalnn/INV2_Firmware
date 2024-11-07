@@ -23,9 +23,10 @@ void updateControllersData() {
   } else {
     log_display_rocket.setText("Rocket: " + rocket_data.getState());
   }
+  String debug = cp5.getTab("default").isActive() ? "DEBUG: ttp - " + df.format((float)filling_data.rs_press * .01) + " bar" : "";
   String tt_data = "Tank Top\n" +
     "P: " + df.format(float(rocket_data.tank.pressure_top) * .01) + " bar\n" +
-    "T: " + df.format(float(rocket_data.tank.temp_top) * .1) + " ºC";
+    "T: " + df.format(float(rocket_data.tank.temp_top) * .1) + " ºC" + "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"+debug;
   tt_label.setText(tt_data);
   String tb_data = "Tank Bottom\n" +
     "P: " + df.format(float(rocket_data.tank.pressure_bot) * .01) + " bar\n" +

@@ -258,14 +258,15 @@ void updateData(dataPacket packet) {
         index += 2;
         break;
       case fill_pressures:
-        if (packet.payloadLength < index + 6) {
+        if (packet.payloadLength < index + 8) {
           print("Index out of bounds: " + ask);
           return;
         }
         filling_data.he.pressure = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index, index + 2)).getShort();
         filling_data.n2o.pressure = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 2, index + 4)).getShort();
         filling_data.line.pressure = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 4, index + 6)).getShort();
-        index += 6;
+        filling_data.rs_press = ByteBuffer.wrap(Arrays.copyOfRange(packet.payload, index + 6, index + 8)).getShort();
+        index += 8;
         break;
       case fill_temps:
         if (packet.payloadLength < index + 6) {

@@ -9,10 +9,17 @@ void setupGPSMap() {
     return;
   }
   map_image = loadImage(map_img);
-   map_width = map_image.width * .59 * width/1920;
+  map_width = map_image.width * .59 * width/1920;
+  map_x1 = width * .23;
+  map_height = map_image.height * .59 * height/1080;
+  map_y1 = height * .5;
+  /*
+  map_image = loadImage(map_pimg);
+   map_width = map_image.width * .8 * width/1920;
    map_x1 = width * .23;
-   map_height = map_image.height * .59 * height/1080;
+   map_height = map_image.height * .8 * height/1080;
    map_y1 = height * .5;
+   */
 }
 
 void setup3D() {
