@@ -18,7 +18,8 @@
 #include <time.h>
 
 #define MAX_COMMAND_BUFFER 150
-#define RS485_TIMEOUT_TIME_MS 500 //try to get limit bounds 
+//#define RS485_TIMEOUT_TIME_MS 500 //try to get limit bounds 
+#define RS485_TIMEOUT_TIME_MS 250 //try to get limit bounds 
 //#define RS485_TIMEOUT_TIME_MS 5000
 
 /*
@@ -141,6 +142,7 @@ typedef enum
 #define GROUND_ID 0x0
 #define ROCKET_ID 0X1
 #define FILL_STATION_ID 0X2
+#define IGNITION_ID 0x3
 #define BROADCAST_ID 0xFF
 
 #define DEFAULT_ID GROUND_ID 

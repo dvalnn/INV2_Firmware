@@ -67,6 +67,7 @@ static COMMAND_STATE parse_input(uint8_t read_byte, command_t* command, COMMAND_
     switch(state)
     {
         case SYNC:
+        {
             if(read_byte == 0x55)
             {
                 //start timeout timer
@@ -75,6 +76,7 @@ static COMMAND_STATE parse_input(uint8_t read_byte, command_t* command, COMMAND_
                 memset(command, 0, sizeof(command_t));
                 command->begin = millis();
             }
+        }
         break;
 
         case CMD:
@@ -171,7 +173,7 @@ command_t* read_command(int* error, interface_t interface)
             //Work arourd for lora to not spam the spi bus
             static unsigned long begin_c = 0, end_c = 0;
             end_c = millis();
-            if(end_c - begin_c < 1) break;
+            if(end_c - begin_c < 5) break;
             begin_c = end_c;
             
             int packetSize = LoRa.parsePacket();

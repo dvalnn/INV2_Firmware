@@ -1,9 +1,13 @@
 #ifndef HARDWARE_CFG_H_
 #define HARDWARE_CFG_H_
 
-#define LORA_SS_PIN 5
-#define LORA_RESET_PIN 14
-#define LORA_DIO0_PIN 36
+#define LORA_SS_PIN 26
+#define LORA_RESET_PIN 27
+#define LORA_DIO0_PIN 25
+
+#define ARM_KEY_PIN 32
+#define LAUNCH_BUTTON_PIN 33
+#define ABORT_BUTTON_PIN 35
 
 #define SERIAL_BAUD 115000
 #define SERIAL2_BAUD 115200
