@@ -1,6 +1,4 @@
 #include <kalman.h>
-#include <Preferences.h>
-
 #include "GlobalVars.h"
 ///_______________________________GENERIC KALMAN______________________________________________________
 
@@ -95,7 +93,7 @@ MatrixXf ekf::tick(MatrixXf new_Z, MatrixXf new_U){
     }
 
     if(new_U.rows()!=U.rows()||new_U.cols()!=U.cols()){
-        Serial.printf("Kalman error - U has worng size%d /%d \n",new_U.rows(),new_U.cols());
+        Serial.printf("Kalman error - U has worng size %d / %d \n",new_U.rows(),new_U.cols());
         return X;
     }
 
@@ -234,9 +232,6 @@ void alt_kalman::begin(){
     Q_mean = MatrixXf::Zero(9,1);
 
     //X_off << 0,0,0,0,0,0,0,0,-(9.9)/10.0;
-    float preferences_altitude = preferences.getFloat("altitude", 0.0);
-    Serial.printf("preferences altitude %f\n", preferences_altitude);
-    //X << 0,0,0,0,0,0,preferences_altitude,0,0;
     X_off << 0,0,0,0,0,0,0,0,0;
 
     //while(1) {}

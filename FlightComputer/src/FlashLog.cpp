@@ -26,7 +26,7 @@ void start_log()
     Serial.print(filename);
     Serial.print("\n");
 
-    file = SD.open(filename, FILE_WRITE, true);
+    file = SD.open(filename, FILE_WRITE);
 
     if (!file)
     {
@@ -71,8 +71,6 @@ uint16_t get_last_id()
     }
 
     root.close();
-
-    preferences.putUInt("last_log_id", last_log_id);
 
     return last_log_id;
 }

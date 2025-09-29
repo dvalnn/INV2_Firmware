@@ -14,7 +14,7 @@
 #include <I2Cdev.h>
 #include <MPU6050.h>
 #include <HX711.h>
-#include <Max6675.h>
+#include <MAX6675.h>
 #include <ADS1115_WE.h>
 #include <Crc.h>
 
@@ -94,8 +94,6 @@ void barometer_calibrate(void)
     pressure /= 500;
     pressure /= 100;
     ground_hPa = pressure;
-
-    preferences.putFloat("ground_hpa", ground_hPa);
 }
 
 void imu_calibrate(void)
@@ -171,8 +169,6 @@ void telemetry(void)
     command.id = GROUND_ID;
     command.data[index++] = ((ask_bits >> 8) & 0xff);
     command.data[index++] = ((ask_bits) & 0xff);
-
-    xSemaphoreTake(kalman_mutex, portMAX_DELAY);
 
 //-----------flags
     command.data[index++] = state;
@@ -265,8 +261,6 @@ void telemetry(void)
     command.data[index++] = ((ematch_drag_reading >> 8) & 0xff);
     command.data[index++] = ((ematch_drag_reading) & 0xff);
 
-    xSemaphoreGive(kalman_mutex);
-    
     command.size = index; 
     command.crc = crc((unsigned char *)&command, command.size + 3);
     write_command(&command, DEFAULT_CMD_INTERFACE);

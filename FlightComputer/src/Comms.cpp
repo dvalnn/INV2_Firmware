@@ -39,10 +39,7 @@ void write_command(command_t* cmd, interface_t interface)
             int sz = LoRa.write(buff, size);
             LoRa.endPacket(true);
 
-            xSemaphoreTake(transmit_mutex, portMAX_DELAY);
             transmit_time = millis();
-            xSemaphoreGive(transmit_mutex);
-
             //Serial.printf("Lora sent %d packets\n");
             
             //for(int i = 0; i < size; i++)

@@ -37,16 +37,10 @@ float kalman_velocity;
 float kalman_accel;
 float kalman_q[4];
 
-SemaphoreHandle_t kalman_mutex;
-SemaphoreHandle_t transmit_mutex;
-SemaphoreHandle_t control_mutex;
-
 unsigned long transmit_time;
 
 void write_values(void)
 {
-    xSemaphoreTake(kalman_mutex, portMAX_DELAY);
-
     altitude = altitude_local;
 
     imu_ax = imu_ax_local; 
@@ -67,8 +61,6 @@ void write_values(void)
     kalman_q[1] = q[1];
     kalman_q[2] = q[2];
     kalman_q[3] = q[3];
-
-    xSemaphoreGive(kalman_mutex);
 }
 
 void read_imu(void)
@@ -140,13 +132,11 @@ void read_barometer(void)
     static float lpf_alt = 0.0f;
 
     bool flag = false;
-    xSemaphoreTake(transmit_mutex, portMAX_DELAY);
     if(millis() - transmit_time < LOW_AFTER_TRANSMIT)
     {
         //bmp.readAltitude(ground_hPa);
         flag = true;
     }
-    xSemaphoreGive(transmit_mutex);
     if(flag) return;
         
 
@@ -258,8 +248,6 @@ void kalman(void)
     //Serial.print(" |Acc_Y:");
     //Serial.print(alt_kalman_state(5));
 
-    preferences.putFloat("altitude", alt_kalman_state(6));
-
     //Serial.print(" |altitude1:");
     //Serial.print(alt_kalman_state(6));
     //Serial.print(" |vel_Z:");
@@ -303,7 +291,6 @@ void control_work(void* parameters)
     {
         for (int i = 0; i < sizeof(control_tasks) / sizeof(Work_t); i++)
         {
-            xSemaphoreTake(control_mutex, portMAX_DELAY);
             unsigned long end = millis() - entry_time;
 
             if (control_tasks[i].channel == NULL)
@@ -320,8 +307,6 @@ void control_work(void* parameters)
                 control_tasks[i].begin = end;
                 control_tasks[i].channel(); // execute sample function
             }
-            xSemaphoreGive(control_mutex);
-            vTaskDelay(1);
         }
     }
 }

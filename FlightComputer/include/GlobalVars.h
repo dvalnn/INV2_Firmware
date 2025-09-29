@@ -14,19 +14,10 @@
 #include <TinyGPSPlus.h>
 #include <Adafruit_BMP280.h>
 
-#include <Preferences.h>
 #include <ArduinoEigen.h>
 
 //-----------Internal flash------------
-
-extern Preferences preferences;
 extern bool fast_reboot;
-
-//------------Mutexs-----------------
-
-extern SemaphoreHandle_t kalman_mutex;
-extern SemaphoreHandle_t transmit_mutex;
-extern SemaphoreHandle_t control_mutex;
 
 //----------- IMU vars ------------
 extern MPU9250 IMU;

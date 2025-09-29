@@ -71,18 +71,13 @@ bool apogee_event(void)
 {
     bool return_val = false;
 
-    xSemaphoreTake(kalman_mutex, portMAX_DELAY);
-    
     //if(Launch && ((maxAltitude-kalman_altitude)>2) && (kalman_accel < -2.0))
     //if(Launch && ((maxAltitude-kalman_altitude)>10) && (kalman_accel < -2.0))
     if(Launch && ((maxAltitude-kalman_altitude)>2))
     {
       DragDeployed = true;
-      preferences.putChar("drag_state", 1);
       return_val = true;
     }
-
-    xSemaphoreGive(kalman_mutex);
 
     return return_val;
 }
@@ -91,16 +86,12 @@ bool main_deployment_event(void)
 {
     bool return_val = false;
 
-    xSemaphoreTake(kalman_mutex, portMAX_DELAY);
-    
     if(DragDeployed && !MainDeployed && kalman_altitude < MAIN_OPENING_ALTITUDE)
     {
         MainDeployed = true;
-        preferences.putChar("main_state", 1);
         return_val = true;
     }
     
-    xSemaphoreGive(kalman_mutex);
     return return_val;
 }
 bool touchdown_event(void)

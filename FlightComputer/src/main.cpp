@@ -36,19 +36,13 @@
 #include <MPU6050.h>
 #include <MPU9250.h>
 #include <HX711.h>
-#include <Max6675.h>
+#include <MAX6675.h>
 #include <ADS1X15.h>
 #include <MCP9600.h>
 #include <Adafruit_BMP280.h>
-
 #include <LoRa.h>
-
 #include <Crc.h>
-
 #include <SerialFlash.h>
-
-#include <Preferences.h>
-
 #include <LittleFS.h>
 
 // Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
@@ -65,13 +59,9 @@
 // AD0 high = 0x69
 //MPU6050 accelgyro(0x69); // <-- use for AD0 high
 
-Preferences preferences;
 bool fast_reboot = 0;
 
 bool Launch = false;
-
-TaskHandle_t Core0Task;
-TaskHandle_t Core1Task;
 
 void software_work(void* paramms);
 
@@ -146,7 +136,7 @@ void changeFrequency() {
 
 void GPS_Setup(void)
 {
-    Serial1.begin(9600, 134217756U, GPS_TX_PIN, GPS_RX_PIN); //GPS
+    Serial1.begin(9600); //GPS
 
     changeFrequency();
     delay(200);
@@ -161,7 +151,7 @@ void GPS_Setup(void)
 
     Serial1.end();
     
-    Serial1.begin(115200, 134217756U, GPS_TX_PIN, GPS_RX_PIN); //GPS
+    Serial1.begin(115200); //GPS
 }
 
 void IMU_Setup(void)
@@ -197,17 +187,8 @@ void BAROMETER_Setup(void)
                   Adafruit_BMP280::STANDBY_MS_1   /* Standby time. */
                   //Adafruit_BMP280::STANDBY_MS_250   /* Standby time. */
                   );
-
-    if(fast_reboot)
-    {
-        ground_hPa = preferences.getFloat("ground_hpa", 1015.6);
-    }
-    else
-    {
-        ground_hPa = bmp.readPressure(); // in Si units for Pascal
-        ground_hPa /= 100;
-    }
-
+    ground_hPa = bmp.readPressure(); // in Si units for Pascal
+    ground_hPa /= 100;
     //barometer_calibrate();
 }
 
@@ -277,25 +258,15 @@ void LoRa_Setup(void)
 void dummy_func(void* parameters) {}
 
 void setup() {
-
-    kalman_mutex = xSemaphoreCreateMutex();
-    transmit_mutex = xSemaphoreCreateMutex();
-    control_mutex = xSemaphoreCreateMutex();
-
     Serial.begin(SERIAL_BAUD); //USBC serial
     Serial2.begin(SERIAL2_BAUD); //RS485
 
-    Wire.begin(I2C_SDA_1_PIN, I2C_SCL_1_PIN);
-    Wire1.begin(I2C_SDA_2_PIN, I2C_SCL_2_PIN, 400000);
+    Wire.begin();
+    Wire1.begin();
 
     SPI.begin();
     //SPI.setFrequency(800000000);
     
-    preferences.begin("config", false);
-
-    uint8_t restart_count = preferences.getUInt("restart_count", 0);
-    rocket_state_t last_state = preferences.getUInt("last_state", 0);
-
     Pyro_Setup();
     Valves_Setup();
 
@@ -307,31 +278,6 @@ void setup() {
 
     LoRa_Setup();
     //Flash_Setup();
-    //printf("Last state %u\n", last_state);
-    //printf("Restart_count %u\n", restart_count);
-
-    if((last_state == LAUNCH || last_state == FLIGHT || last_state == ABORT || last_state == RECOVERY)
-        && restart_count < MAX_RESTART_ALLOWED)
-    {
-        state = last_state;
-        preferences.putUInt("restart_count", restart_count + 1);
-        //start_log();
-        fast_reboot = 1;
-        
-        DragDeployed = preferences.getUChar("drag_state", 0);
-        MainDeployed = preferences.getUChar("main_state", 0);
-    }
-    else
-    {
-        preferences.putUInt("restart_count", 0);
-        preferences.putUInt("last_state", 0);
-
-        preferences.putChar("drag_state", 0);
-        preferences.putChar("main_state", 0);
-    }
-
-    //todo remove
-    //state = LAUNCH;
 
     GPS_Setup();
 
@@ -341,44 +287,12 @@ void setup() {
 
     pressure_Setup();
     
-    //TODO remove
-    //fast_reboot = true;
-    //Launch = true;
     if(! fast_reboot) temp_i2c_Setup();
 
     printf("Setup done\n");
-
-    //delay(2000);
-    //while(1){}
-     // Set up Core 1 task handler
-    if(xTaskCreatePinnedToCore(
-        software_work,
-        "Core 0 task",
-        10240,
-        NULL,
-        5,
-        NULL,
-        1) != pdPASS)
-    {
-        Serial.printf("cannot create stm work\n");
-    }
-
-    if(xTaskCreatePinnedToCore(
-        control_work,
-        "Core 1 task",
-        102400,
-        NULL,
-        10,
-        NULL,
-        0) != pdPASS)
-    {
-        Serial.printf("cannot create control work\n");
-    }
-
-    
 }
 
-void loop() { vTaskDelay(1000); }
+void loop() { }
 
 void software_work(void* paramms) {
 
@@ -477,10 +391,5 @@ void software_work(void* paramms) {
                 
             log(&state, 0, STATE_CHANGE);
         }
-
-        //save last state
-        preferences.putUInt("last_state", state);
-
-        vTaskDelay(1);
     }
 }

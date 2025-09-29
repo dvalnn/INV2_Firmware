@@ -2,9 +2,9 @@
 
 #include "HardwareCfg.h"
 #include "GlobalVars.h"
-#include "StmWork.h"
+#include "StMWork.h"
 
-#include <Max6675.h>
+#include <MAX6675.h>
 #include <ADS1X15.h>
 #include <HX711.h>
 #include <MPU6050.h>

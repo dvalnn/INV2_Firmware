@@ -40,8 +40,6 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 
         uint16_t log_bits = (cmd->data[0] << 8) + cmd->data[1];
 
-        xSemaphoreTake(kalman_mutex, portMAX_DELAY);
-
         if ((log_bits & ROCKET_STATE_BIT))
         {
             command_rep.data[index++] = state;
@@ -187,8 +185,6 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 
         }
 
-        xSemaphoreGive(kalman_mutex);
-
         command_rep.size = index;
         command_rep.crc = crc((unsigned char *)&command_rep, command_rep.size + 3);
         write_command(&command_rep, interface);
@@ -241,7 +237,7 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
         {
         }
 
-        if (error != OK || arm_cmd->cmd != CMD_ARM || arm_cmd->data[0] != ARN_TRIGGER_3)
+        if (error != CMD_READ_OK || arm_cmd->cmd != CMD_ARM || arm_cmd->data[0] != ARN_TRIGGER_3)
         {
             // error
             return CMD_RUN_ARM_ERROR;
@@ -457,25 +453,19 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
 
         case CMD_MANUAL_IMU_CALIBRATE:
         {
-            xSemaphoreTake(control_mutex, portMAX_DELAY);
             imu_calibrate();
-            xSemaphoreGive(control_mutex);
         }
         break;
 
         case CMD_MANUAL_BAROMETER_CALIBRATE:
         {
-            xSemaphoreTake(control_mutex, portMAX_DELAY);
             barometer_calibrate();
-            xSemaphoreGive(control_mutex);
         }
         break;
 
         case CMD_MANUAL_KALMAN_CALIBRATE:
         {
-            xSemaphoreTake(control_mutex, portMAX_DELAY);
             kalman_calibrate();
-            xSemaphoreGive(control_mutex);
         }
         break;
 

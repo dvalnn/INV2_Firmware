@@ -4,7 +4,7 @@
 #include <inttypes.h>
 
 #include <MCP9600.h>
-#include <Max6675.h>
+#include <MAX6675.h>
 #include <HX711.h>
 #include <ADS1115_WE.h> 
 
