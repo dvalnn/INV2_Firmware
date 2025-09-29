@@ -45,130 +45,19 @@
 /*
     Arm Stages
 */
-#define ARN_TRIGGER_1 1
-#define ARN_TRIGGER_2 2
-#define ARN_TRIGGER_3 3
+#define ARM_TRIGGER_1 1
+#define ARM_TRIGGER_2 2
+#define ARM_TRIGGER_3 3
 
 
 /*
     Sensors bit mask
 */
+#define BIT(x) (1 << (x))
 
-#define ROCKET_STATE_BIT 1 << 0
-#define ROCKET_PRESSURE_BIT 1 << 1
-#define ROCKET_TEMPERATURE_BIT 1 << 2
-#define ROCKET_GPS_BIT 1 << 3
-#define ROCKET_BAROMETER_BIT 1 << 4
-#define ROCKET_IMU_BIT 1 << 5
-#define ROCKET_KALMAN_BIT 1 << 6
-#define ROCKET_CHUTE_EMATCH_BIT 1 << 7
 
-#define FILL_STATE_BIT  1 << 8
-#define FILL_PRESSURE_BIT 1 << 9
-#define FILL_TEMPERATURE_BIT 1 << 10
-#define FILL_LOAD_CELL_BIT 1 << 11
 
-#define IGNITION_STATE_BIT 1 << 12
-#define IGNIITON_CHAMBER_TEMPERATURE_BIT 1 << 13
-#define IGNITION_EMATCH_BIT 1 << 14
 
-/*
-    Commands
-*/
-typedef enum __attribute__((__packed__))
-{
-    // shared commands
-    CMD_STATUS,
-    CMD_LOG,
-    CMD_ABORT,
-    CMD_EXEC_PROG,
-    CMD_STOP_PROG,
-    CMD_FUELING,
-    CMD_MANUAL,
-    CMD_MANUAL_EXEC,
-    CMD_READY,
-    CMD_ARM,
-
-    // FLIGHT computer commands
-    CMD_ALLOW_LAUNCH,
-
-    // FILLING station commands
-    CMD_RESUME_PROG,
-    CMD_FIRE_PYRO,
-
-    // used to get the number of commands
-    cmd_size,
-
-    // ACKs
-    CMD_STATUS_ACK,
-    CMD_LOG_ACK,
-    CMD_ABORT_ACK,
-    CMD_EXEC_PROG_ACK,
-    CMD_STOP_PROG_ACK,
-    CMD_FUELING_ACK,
-    CMD_MANUAL_ACK,
-    CMD_MANUAL_EXEC_ACK,
-    CMD_READY_ACK,
-    CMD_ARM_ACK,
-    CMD_ALLOW_LAUNCH_ACK,
-    CMD_RESUME_PROG_ACK,
-    CMD_FIRE_PYRO_ACK,
-} cmd_type_t;
-
-typedef enum
-{
-    SAFETY_PRESSURE_PROG,
-    PURGE_PRESSURE_PROG,
-    PURGE_LIQUID_PROG,
-    FILL_He_PROG,
-    FILL_N2O_PROG,
-    PURGE_LINE_PROG,
-} fill_program_t;
-
-typedef enum
-{
-    VPU_valve,
-    Purge_valve,
-    Engine_valve,
-    He_valve,
-    N2O_valve,
-    Line_valve,
-} valve_t;
-
-typedef enum
-{
-    CMD_MANUAL_FLASH_LOG_START,
-    CMD_MANUAL_FLASH_LOG_STOP,
-    CMD_MANUAL_FLASH_IDS,
-    CMD_MANUAL_FLASH_DUMP,
-
-    CMD_MANUAL_VALVE_STATE,
-    CMD_MANUAL_VALVE_MS,
-
-    CMD_MANUAL_IMU_CALIBRATE,
-    CMD_MANUAL_BAROMETER_CALIBRATE,
-    CMD_MANUAL_KALMAN_CALIBRATE,
-
-    CMD_MANUAL_LOADCELL_CALIBRATE,
-    CMD_MANUAL_LOADCELL_TARE,
-
-    CMD_MANUAL_TANK_TARE,
-
-    manual_cmd_size,
-
-    CMD_MANUAL_FLASH_LOG_START_ACK,
-    CMD_MANUAL_FLASH_LOG_STOP_ACK,
-    CMD_MANUAL_FLASH_IDS_ACK,
-    CMD_MANUAL_FLASH_DUMP_ACK,
-    CMD_MANUAL_VALVE_STATE_ACK,
-    CMD_MANUAL_VALVE_MS_ACK,
-    CMD_MANUAL_IMU_CALIBRATE_ACK,
-    CMD_MANUAL_BAROMETER_CALIBRATE_ACK,
-    CMD_MANUAL_KALMAN_CALIBRATE_ACK,
-    CMD_MANUAL_LOADCELL_CALIBRATE_ACK,
-    CMD_MANUAL_LOADCELL_TARE_ACK,
-    CMD_MANUAL_TANK_TARE_ACK,
-} manual_command_t;
 
 //----------------------------------------
 
@@ -199,30 +88,32 @@ typedef enum
 
 typedef enum
 {
-    LoRa_INTERFACE,
+    LORA_INTERFACE,
     RS485_INTERFACE,
-    Uart_INTERFACE,
+    UART_INTERFACE,
     interface_t_size
 } interface_t;
 
-//#define DEFAULT_CMD_INTERFACE Uart_INTERFACE
-#define DEFAULT_CMD_INTERFACE LoRa_INTERFACE
+//#define DEFAULT_CMD_INTERFACE UART_INTERFACE
+#define DEFAULT_CMD_INTERFACE LORA_INTERFACE
 // #define DEFAULT_CMD_INTERFACE RS485_INTERFACE
 
-#define DEFAULT_LOG_INFERFACE RS485_INTERFACE
-// #define DEFAULT_LOG_INFERFACE LoRa_INTERFACE
+#define DEFAULT_LOG_INTERFACE RS485_INTERFACE
+// #define DEFAULT_LOG_INTERFACE LORA_INTERFACE
 
-#define DEFAULT_SYNC_INTERFACE Uart_INTERFACE
+#define DEFAULT_SYNC_INTERFACE UART_INTERFACE
 
 #define CRC_ENABLED false
 
 #define GROUND_ID 0
-#define ROCKET_ID 1
-#define FILL_STATION_ID 2
-#define IGNITION_ID 3
+#define OBC_ID 1
+#define HYDRA_UF_ID 2
+#define HYDRA_LF_ID 3
+#define HYDRA_FS_ID 4
+#define NAVIGATOR_ID 5
 #define BROADCAST_ID 0xFF
 
-#define DEFAULT_ID ROCKET_ID
+#define DEFAULT_ID OBC_ID
 
 
 void write_command(command_t *cmd, interface_t interface);

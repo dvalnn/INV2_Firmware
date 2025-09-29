@@ -18,7 +18,7 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
     //Serial.printf("State: %d\n", state);
     switch (cmd->cmd)
     {
-    case CMD_STATUS:
+    case CMD_STATUS_REQ:
     {
         uint16_t index = 0;
         // union used to get bit representation of float
@@ -33,7 +33,7 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
          * Prepare ACK response
          * Send response
          */
-        command_rep.cmd = CMD_STATUS_ACK;
+        command_rep.cmd = CMD_STATUS_REP;
 
         command_rep.data[index++] = cmd->data[0];
         command_rep.data[index++] = cmd->data[1];
@@ -273,8 +273,8 @@ int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
             return CMD_RUN_OUT_OF_BOUND;
         }
 
-        // ensure that the rocket is in fueling mode before running a fueling program
-        if (state == FUELING)
+        // ensure that the rocket is in filling mode before running a filling program
+        if (state == FILLING)
         {
             rocket_state_t next_state = -1;
             switch (cmd->data[0])

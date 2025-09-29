@@ -35,38 +35,32 @@ uint16_t ematch_main_reading = 0, ematch_drag_reading = 0;
 
 void V_Vpu_close(void)
 {
-    digitalWrite(Tank_Top_Module.valve_pin, 0);
     Tank_Top_Module.valve_state = 0;
 }
 void V_Purge_close(void)
 {
-    digitalWrite(Tank_Bot_Module.valve_pin, 0);
     Tank_Bot_Module.valve_state = 0;
 }
 void V_Engine_close(void)
 {
-    digitalWrite(Chamber_Module.valve_pin, 0);
     Chamber_Module.valve_state = 0;
 }
 
 void V_Vpu_open(void)
 {
-    digitalWrite(Tank_Top_Module.valve_pin, 1);
     Tank_Top_Module.valve_state = 1;
 }
 void V_Purge_open(void)
 {
-    digitalWrite(Tank_Bot_Module.valve_pin, 1);
     Tank_Bot_Module.valve_state = 1;
 }
 void V_Engine_open(void)
 {
-    digitalWrite(Chamber_Module.valve_pin, 1);
     Chamber_Module.valve_state = 1;
 }
 
 void main_ematch_high(void) { 
-    digitalWrite(MAIN_CHUTE_DEPLOY_PIN, HIGH); 
+    
 }
 
 void main_ematch_low(void) { 

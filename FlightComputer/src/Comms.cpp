@@ -32,7 +32,7 @@ void write_command(command_t* cmd, interface_t interface)
     
     switch(interface)
     {
-        case LoRa_INTERFACE:
+        case LORA_INTERFACE:
         {
 
             LoRa.beginPacket();
@@ -51,7 +51,7 @@ void write_command(command_t* cmd, interface_t interface)
         case RS485_INTERFACE:
             Serial2.write(buff, size);
         break;
-        case Uart_INTERFACE:
+        case UART_INTERFACE:
             Serial.write(buff, size);
         break;
         default:
