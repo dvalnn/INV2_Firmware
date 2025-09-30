@@ -24,14 +24,12 @@
 #define DEPRESSUR_TIMEOUT 10
 #define DEPRESSUR_GLOBAL_TIMEOUT 35
 
-
-
 typedef struct 
 {
     bool (*condition)(void);
     void (*reaction)(void);
     state_t next_state;
-} Event_t;
+} sm_event_t;
 
 typedef struct
 {
@@ -39,21 +37,21 @@ typedef struct
     unsigned long sample; //millis of delay between samples
     unsigned long delay; //millis phase for reading sensors
     unsigned long begin; //millis of last sensor reading
-} Work_t;
+} sm_work_t;
 
 typedef struct
 {
-    Work_t work[MAX_WORK_SIZE];
-    Event_t events[MAX_EVENT_SIZE];
-    state_t *comms;
+    sm_work_t work[MAX_WORK_SIZE];
+    sm_event_t events[MAX_EVENT_SIZE];
+    state_t *next_states;
 
     //used as the time base when dealing with sensor sampling rate and delays
     unsigned long entry_time; 
-} State_t;
+} sm_state_t;
 
-extern state_t state; 
-extern state_t comm_transition[rocket_state_size][cmd_size]; //save transition state for communication
-extern State_t state_machine[rocket_state_size]; 
+extern sm_state_t state; 
+extern state_t expected_state[state_count][cmd_size]; //save transition state for communication
+extern sm_state_t state_machine[state_count]; 
 
 
 state_t event_handler();

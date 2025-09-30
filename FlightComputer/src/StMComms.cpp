@@ -10,506 +10,376 @@
 
 #include "FlashLog.h"
 
-int run_command(command_t *cmd, rocket_state_t state, interface_t interface)
+extern system_data_t system_data;
+extern filling_params_t filling_params;
+
+int handle_status_cmd(packet_t *packet, interface_t interface, packet_t *packet_rep)
 {
-    // Serial.printf("run command %d\n", cmd->cmd);
-    command_t command_rep;
-    command_rep.id = GROUND_ID;
-    //Serial.printf("State: %d\n", state);
-    switch (cmd->cmd)
+    uint16_t index = 0;
+    // union used to get bit representation of float
+    union ufloat
     {
-    case CMD_STATUS_REQ:
+        float f;
+        uint32_t i;
+    };
+    union ufloat f;
+
+    /*
+     * Prepare ACK response
+     * Send response
+     */
+    packet_rep->cmd = CMD_ACK;
+    packet_rep->payload[index++] = CMD_STATUS;
+
+    // echo ASK bytes
+    packet_rep->payload[index++] = packet->payload[0];
+    packet_rep->payload[index++] = packet->payload[1];
+
+    uint16_t ask = (packet->payload[0] << 8) + packet->payload[1];
+
+    if ((ask & STATE_BIT))
     {
-        uint16_t index = 0;
-        // union used to get bit representation of float
-        union ufloat
-        {
-            float f;
-            uint32_t i;
-        };
-        union ufloat f;
-
-        /*
-         * Prepare ACK response
-         * Send response
-         */
-        command_rep.cmd = CMD_STATUS_REP;
-
-        command_rep.data[index++] = cmd->data[0];
-        command_rep.data[index++] = cmd->data[1];
-
-        uint16_t log_bits = (cmd->data[0] << 8) + cmd->data[1];
-
-        if ((log_bits & ROCKET_STATE_BIT))
-        {
-            command_rep.data[index++] = state;
-            command_rep.data[index++] = (uint8_t)((log_running << 7) |
-                                                  (Tank_Top_Module.valve_state << 6) |
-                                                  (Tank_Bot_Module.valve_state << 5) |
-                                                  (Chamber_Module.valve_state << 4) |
-                                                  (DragDeployed << 3) |
-                                                  (MainDeployed << 2));
-        }
-
-        if ((log_bits & ROCKET_PRESSURE_BIT))
-        {
-            int16_t ipressure;
-            ipressure = (int16_t)(Tank_Top_Module.pressure * 100);
-            command_rep.data[index++] = (ipressure >> 8) & 0xff;
-            command_rep.data[index++] = (ipressure) & 0xff;
-
-            ipressure = (int16_t)(Tank_Bot_Module.pressure * 100);
-            command_rep.data[index++] = (ipressure >> 8) & 0xff;
-            command_rep.data[index++] = (ipressure) & 0xff;
-
-            ipressure = (int16_t)(Chamber_Module.pressure * 100);
-            command_rep.data[index++] = (ipressure >> 8) & 0xff;
-            command_rep.data[index++] = (ipressure) & 0xff;
-        }
-
-        if ((log_bits & ROCKET_TEMPERATURE_BIT))
-        {
-            command_rep.data[index++] = (Tank_Top_Module.temperature >> 8) & 0xff;
-            command_rep.data[index++] = (Tank_Top_Module.temperature) & 0xff;
-
-            command_rep.data[index++] = (Tank_Bot_Module.temperature >> 8) & 0xff;
-            command_rep.data[index++] = (Tank_Bot_Module.temperature) & 0xff;
-        }
-
-        if ((log_bits & ROCKET_GPS_BIT))
-        {
-
-            uint16_t gps_alt = (uint16_t)(gps_altitude);
-
-            command_rep.data[index++] = (uint8_t)(gps_satalites);
-
-            command_rep.data[index++] = (uint8_t)((gps_alt >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((gps_alt) & 0xff);
-
-            f.f = gps_lat;
-            command_rep.data[index++] = (uint8_t)((f.i >> 24) & 0xff);
-            command_rep.data[index++] = (uint8_t)((f.i >> 16) & 0xff);
-            command_rep.data[index++] = (uint8_t)((f.i >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((f.i) & 0xff);
-
-            f.f = gps_lon;
-            command_rep.data[index++] = (uint8_t)((f.i >> 24) & 0xff);
-            command_rep.data[index++] = (uint8_t)((f.i >> 16) & 0xff);
-            command_rep.data[index++] = (uint8_t)((f.i >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((f.i) & 0xff);
-
-            uint16_t horizontal_vel = (gps_horizontal_vel * 10);
-            command_rep.data[index++] = (uint8_t)((horizontal_vel >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((horizontal_vel) & 0xff);
-        }
-
-        if ((log_bits & ROCKET_BAROMETER_BIT))
-        {
-            uint16_t ualtitude = altitude;
-            command_rep.data[index++] = (uint8_t)((ualtitude >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((ualtitude) & 0xff);
-        }
-
-        if ((log_bits & ROCKET_IMU_BIT))
-        {
-            uint16_t u_ax = imu_ax * 10;
-            command_rep.data[index++] = (uint8_t)((u_ax >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_ax) & 0xff);
-
-            uint16_t u_ay = imu_ay * 10;
-            command_rep.data[index++] = (uint8_t)((u_ay >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_ay) & 0xff);
-
-            uint16_t u_az = imu_az * 10;
-            command_rep.data[index++] = (uint8_t)((u_az >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_az) & 0xff);
-
-            uint16_t u_gx = imu_gx * 10;
-            command_rep.data[index++] = (uint8_t)((u_gx >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_gx) & 0xff);
-
-            uint16_t u_gy = imu_gy * 10;
-            command_rep.data[index++] = (uint8_t)((u_gy >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_gy) & 0xff);
-
-            uint16_t u_gz = imu_gz * 10;
-            command_rep.data[index++] = (uint8_t)((u_gz >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_gz) & 0xff);
-        }
-
-        if ((log_bits & ROCKET_KALMAN_BIT))
-        {
-            uint16_t u_z = kalman_altitude * 10;
-            uint16_t u_z_max = maxAltitude * 10;
-            uint16_t u_vz = kalman_velocity * 10;
-            uint16_t u_az = kalman_accel * 10;
-
-            command_rep.data[index++] = (uint8_t)((u_z >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_z) & 0xff);
-
-            command_rep.data[index++] = (uint8_t)((u_z_max >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_z_max) & 0xff);
-
-            command_rep.data[index++] = (uint8_t)((u_vz >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_vz) & 0xff);
-
-            command_rep.data[index++] = (uint8_t)((u_az >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_az) & 0xff);
-
-            // convert quaternion [0:1] to uint16 [0, 2^16 - 1]
-            uint16_t u_quat1 = kalman_q[0] * (0xFFFF);
-            uint16_t u_quat2 = kalman_q[1] * (0xFFFF);
-            uint16_t u_quat3 = kalman_q[2] * (0xFFFF);
-            uint16_t u_quat4 = kalman_q[3] * (0xFFFF);
-
-            command_rep.data[index++] = (uint8_t)((u_quat1 >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_quat1) & 0xff);
-
-            command_rep.data[index++] = (uint8_t)((u_quat2 >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_quat2) & 0xff);
-
-            command_rep.data[index++] = (uint8_t)((u_quat3 >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_quat3) & 0xff);
-
-            command_rep.data[index++] = (uint8_t)((u_quat4 >> 8) & 0xff);
-            command_rep.data[index++] = (uint8_t)((u_quat4) & 0xff);
-        }
-
-        if ((log_bits & ROCKET_CHUTE_EMATCH_BIT))
-        {
-            command_rep.data[index++] = ((ematch_main_reading >> 8) & 0xff);
-            command_rep.data[index++] = ((ematch_main_reading) & 0xff);
-
-            command_rep.data[index++] = ((ematch_drag_reading >> 8) & 0xff);
-            command_rep.data[index++] = ((ematch_drag_reading) & 0xff);
-
-        }
-
-        command_rep.size = index;
-        command_rep.crc = crc((unsigned char *)&command_rep, command_rep.size + 3);
-        write_command(&command_rep, interface);
-
-        // Serial.printf("he moles %f %d\ntank_moles %f %d\n", he_mol, he_moles_i, tank_mol_lost, tank_mol_lost_i);
-
-        return CMD_RUN_OK;
+        packet_rep->payload[index++] = system_data.state;
     }
-    break;
 
-    case CMD_ARM:
+    if ((ask & R_PRESSURES_BIT))
     {
-        if(state != READY)
-            return CMD_RUN_STATE_ERROR;
+        int16_t ipressure;
+        ipressure = (int16_t)(system_data.pressures.n2o_tank_pressure * 100);
+        packet_rep->payload[index++] = (ipressure >> 8) & 0xff;
+        packet_rep->payload[index++] = (ipressure) & 0xff;
 
-        // stage 1
-        if (cmd->data[0] != ARN_TRIGGER_1)
-        {
-            // error
-            return CMD_RUN_ARM_ERROR;
-        }
-
-        command_rep.cmd = CMD_ARM_ACK;
-        command_rep.size = 1;
-
-        command_rep.data[0] = ARN_TRIGGER_1;
-
-        command_rep.crc = crc((unsigned char *)&command_rep, command_rep.size + 3);
-        write_command(&command_rep, interface);
-
-        // stage 2
-        int error = 0;
-        command_t *arm_cmd;
-        while ((arm_cmd = read_command(&error, DEFAULT_CMD_INTERFACE)) == NULL && error == CMD_READ_NO_CMD)
-        {
-        }
-
-        if (error != CMD_READ_OK || arm_cmd->cmd != CMD_ARM || arm_cmd->data[0] != ARN_TRIGGER_2)
-        {
-            // error
-            return CMD_RUN_ARM_ERROR;
-        }
-
-        command_rep.data[0] = ARN_TRIGGER_2;
-        command_rep.crc = crc((unsigned char *)&command_rep, command_rep.size + 3);
-        write_command(&command_rep, interface);
-
-        // stage 3
-        while ((arm_cmd = read_command(&error, DEFAULT_CMD_INTERFACE)) == NULL && error == CMD_READ_NO_CMD)
-        {
-        }
-
-        if (error != CMD_READ_OK || arm_cmd->cmd != CMD_ARM || arm_cmd->data[0] != ARN_TRIGGER_3)
-        {
-            // error
-            return CMD_RUN_ARM_ERROR;
-        }
-
-        command_rep.data[0] = ARN_TRIGGER_3;
-        command_rep.crc = crc((unsigned char *)&command_rep, command_rep.size + 3);
-        write_command(&command_rep, interface);
-
-        start_log();
-
-        return CMD_RUN_OK;
+        ipressure = (int16_t)(system_data.pressures.chamber_pressure * 100);
+        packet_rep->payload[index++] = (ipressure >> 8) & 0xff;
+        packet_rep->payload[index++] = (ipressure) & 0xff;
     }
-    break;
 
-    case CMD_ALLOW_LAUNCH:
+    if ((ask & R_TEMPERATURES_BIT))
     {
-        Launch = true; // used in kalman for events
+        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t1 >> 8) & 0xff;
+        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t1) & 0xff;
 
-        command_rep.cmd = CMD_ALLOW_LAUNCH_ACK;
-        command_rep.size = 0;
-        command_rep.crc = crc((unsigned char *)&command_rep, command_rep.size + 3);
-        write_command(&command_rep, interface);
+        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t2 >> 8) & 0xff;
+        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t2) & 0xff;
 
-        return CMD_RUN_OK;
+        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t3 >> 8) & 0xff;
+        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t3) & 0xff;
+
+        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_lf_t1 >> 8) & 0xff;
+        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_lf_t1) & 0xff;
+
+        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_lf_t2 >> 8) & 0xff;
+        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_lf_t2) & 0xff;
+
+        packet_rep->payload[index++] = (system_data.thermocouples.chamber_thermo >> 8) & 0xff;
+        packet_rep->payload[index++] = (system_data.thermocouples.chamber_thermo) & 0xff;
     }
-    break;
 
-    case CMD_EXEC_PROG:
+    if ((ask & NAV_SENSORS_BIT))
     {
-        if (cmd->size != 7) // 1 byte for prog 2 bytes per var (p1,p2,p3,l1,l2)
+        // EUROC: Add nav sensors
+    }
+
+    if ((ask & NAV_KALMAN_BIT))
+    {
+        // EUROC: Add kalman payload
+    }
+
+    if ((ask & NAV_ACTUATORS_BIT))
+    {
+        // EUROC: Add nav actuators
+    }
+
+    packet_rep->payload_size = index;
+    packet_rep->crc = crc((unsigned char *)&packet_rep, packet_rep->payload_size + 3);
+    write_packet(packet_rep, interface);
+
+    // Serial.printf("he moles %f %d\ntank_moles %f %d\n", he_mol, he_moles_i, tank_mol_lost, tank_mol_lost_i);
+
+    return CMD_RUN_OK;
+}
+
+int handle_arm_cmd(packet_t *packet, interface_t interface, packet_t *packet_rep)
+{
+    // TODO: check arming logic
+    if (system_data.state != READY)
+        return CMD_RUN_STATE_ERROR;
+
+    packet_rep->cmd = CMD_ACK;
+    packet_rep->payload_size = 1;
+
+    packet_rep->payload[0] = CMD_ARM;
+
+    packet_rep->crc = crc((unsigned char *)packet_rep, packet_rep->payload_size + 3);
+    write_packet(packet_rep, interface);
+
+    start_log();
+
+    return CMD_RUN_OK;
+}
+
+int handle_launch_override_cmd(packet_t *packet, interface_t interface, packet_t *packet_rep)
+{
+    // TODO: send command to open main valve
+
+    packet_rep->cmd = CMD_ACK;
+    packet_rep->payload_size = 0;
+    packet_rep->crc = crc((unsigned char *)packet_rep, packet_rep->payload_size + 3);
+    write_packet(packet_rep, interface);
+
+    return CMD_RUN_OK;
+}
+
+int handle_fill_exec_cmd(packet_t *packet, interface_t interface, packet_t *packet_rep)
+{
+    if (packet->payload_size > filling_program_count * 2 + 1) // 1 byte for prog 2 bytes per parameter
+    {
+        return CMD_RUN_OUT_OF_BOUND;
+    }
+
+    // ensure that the rocket is in filling mode before running a filling program
+    if (system_data.state == FILLING)
+    {
+        int index = 1;
+        switch (packet->payload[0])
         {
+        case SAFE_IDLE:
+            index = 1;
+            filling_params.target_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
+            filling_params.trigger_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
+            break;
+        case FILLING_N2:
+            index = 1;
+            filling_params.target_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
+            break;
+        case PRE_PRESSURE:
+            index = 1;
+            filling_params.target_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
+            filling_params.trigger_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
+            break;
+        case FILLING_N2O:
+            index = 1;
+            filling_params.target_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
+            filling_params.trigger_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
+            filling_params.target_temperature = (packet->payload[index++] << 8) + packet->payload[index++];
+            filling_params.trigger_temperature = (packet->payload[index++] << 8) + packet->payload[index++];
+            filling_params.target_weight = (packet->payload[index++] << 8) + packet->payload[index++];
+            break;
+        case POST_PRESSURE:
+            index = 1;
+            filling_params.target_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
+            filling_params.trigger_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
+            break;
+        default:
             return CMD_RUN_OUT_OF_BOUND;
         }
 
-        // ensure that the rocket is in filling mode before running a filling program
-        if (state == FILLING)
-        {
-            rocket_state_t next_state = -1;
-            switch (cmd->data[0])
-            {
-            case SAFETY_PRESSURE_PROG:
-                next_state = SAFETY_PRESSURE;
-                RP1 = (cmd->data[1] << 8) + cmd->data[2];
-                RP2 = (cmd->data[3] << 8) + cmd->data[4];
+        packet_rep->cmd = CMD_ACK;
+        packet_rep->payload_size = 0;
+        packet_rep->crc = crc((unsigned char *)&packet_rep, packet_rep->payload_size + 3);
+        write_packet(packet_rep, interface);
 
-                // if(RP2 > 5500) RP2 = 5500;
-                // if(RP1 > RP2) RP1 = RP2 - 1000;
-
-                RL1 = (cmd->data[5] << 8) + cmd->data[6];
-                break;
-            case PURGE_PRESSURE_PROG:
-                next_state = PURGE_PRESSURE;
-                RP1 = (cmd->data[1] << 8) + cmd->data[2];
-                RP2 = (cmd->data[3] << 8) + cmd->data[4];
-                RL1 = (cmd->data[5] << 8) + cmd->data[6];
-                break;
-            case PURGE_LIQUID_PROG:
-                next_state = PURGE_LIQUID;
-                RP1 = (cmd->data[1] << 8) + cmd->data[2];
-                RP2 = (cmd->data[3] << 8) + cmd->data[4];
-                RL1 = (cmd->data[5] << 8) + cmd->data[6];
-                break;
-            default:
-            {
-                return CMD_RUN_OUT_OF_BOUND;
-            }
-            }
-
-            comm_transition[FUELING][CMD_EXEC_PROG] = next_state;
-
-            command_rep.cmd = CMD_EXEC_PROG_ACK;
-            command_rep.size = 0;
-            command_rep.crc = crc((unsigned char *)&command_rep, command_rep.size + 3);
-            write_command(&command_rep, interface);
-
-            return CMD_RUN_OK;
-        }
-        else
-        {
-            return CMD_RUN_STATE_ERROR;
-        }
+        return CMD_RUN_OK;
     }
-    break;
-
-    case CMD_MANUAL_EXEC:
+    else
     {
+        return CMD_RUN_STATE_ERROR;
+    }
+    return CMD_RUN_OK;
+}
+
+int handle_manual_valve_cmd(packet_t *packet)
+{
+    int valve = packet->payload[1];
+    int valve_state = packet->payload[2];
+
+    switch (valve)
+    {
+    case VALVE_ABORT:
+        system_data.actuators.v_abort = valve_state;
+        break;
+    case VALVE_N2_PURGE:
+        system_data.actuators.v_n2_purge = valve_state;
+        break;
+    case VALVE_N2O_PURGE:
+        system_data.actuators.v_n2o_purge = valve_state;
+        break;
+    case VALVE_MAIN:
+        system_data.actuators.v_main = valve_state;
+        break;
+    case VALVE_N2_FILL:
+        system_data.actuators.v_n2_fill = valve_state;
+        break;
+    case VALVE_N2O_FILL:
+        system_data.actuators.v_n2o_fill = valve_state;
+        break;
+    case VALVE_N2_QUICK_DC:
+        system_data.actuators.v_n2_quick_dc = valve_state;
+        break;
+    case VALVE_N2O_QUICK_DC:
+        system_data.actuators.v_n2o_quick_dc = valve_state;
+        break;
+    case VALVE_PRESSURIZING:
+        system_data.actuators.v_pressurizing = valve_state;
+        break;
+    case VALVE_VENT:
+        system_data.actuators.v_vent = valve_state;
+        break;
+    default:
+        // valve not defined
+        return CMD_RUN_OUT_OF_BOUND;
+    }
+    return CMD_RUN_OK;
+}
+
+int handle_manual_valve_ms_cmd(packet_t *packet)
+{
+    int valve = packet->payload[1];
+    int valve_time = packet->payload[2];
+    switch (valve)
+    {
+    case VALVE_ABORT:
+        system_data.actuators.v_abort = 1;
+        delay(valve_time);
+        system_data.actuators.v_abort = 0;
+        break;
+    case VALVE_N2_PURGE:
+        system_data.actuators.v_n2_purge = 1;
+        delay(valve_time);
+        system_data.actuators.v_n2_purge = 0;
+        break;
+    case VALVE_N2O_PURGE:
+        system_data.actuators.v_n2o_purge = 1;
+        delay(valve_time);
+        system_data.actuators.v_n2o_purge = 0;
+        break;
+    case VALVE_MAIN:
+        system_data.actuators.v_main = 1;
+        delay(valve_time);
+        system_data.actuators.v_main = 0;
+        break;
+    case VALVE_N2_FILL:
+        system_data.actuators.v_n2_fill = 1;
+        delay(valve_time);
+        system_data.actuators.v_n2_fill = 0;
+        break;
+    case VALVE_N2O_FILL:
+        system_data.actuators.v_n2o_fill = 1;
+        delay(valve_time);
+        system_data.actuators.v_n2o_fill = 0;
+        break;
+    case VALVE_N2_QUICK_DC:
+        system_data.actuators.v_n2_quick_dc = 1;
+        delay(valve_time);
+        system_data.actuators.v_n2_quick_dc = 0;
+        break;
+    case VALVE_N2O_QUICK_DC:
+        system_data.actuators.v_n2o_quick_dc = 1;
+        delay(valve_time);
+        system_data.actuators.v_n2o_quick_dc = 0;
+        break;
+    case VALVE_PRESSURIZING:
+        system_data.actuators.v_pressurizing = 1;
+        delay(valve_time);
+        system_data.actuators.v_pressurizing = 0;
+        break;
+    case VALVE_VENT:
+        system_data.actuators.v_vent = 1;
+        delay(valve_time);
+        system_data.actuators.v_vent = 0;
+        break;
+    default:
+        // valve not defined
+        return CMD_RUN_OUT_OF_BOUND;
+    }
+    return CMD_RUN_OK;
+}
+
+int handle_manual_exec_cmd(packet_t *packet, interface_t interface, packet_t *packet_rep)
+{
+    /* For now this check will be done by the GUI
         if (state != MANUAL)
             return CMD_RUN_STATE_ERROR;
+        */
 
-        command_rep.cmd = CMD_MANUAL_EXEC_ACK;
-        command_rep.size = 1;
-        command_rep.data[0] = cmd->data[0] + manual_cmd_size + 1;
+    packet_rep->cmd = CMD_ACK;
+    packet_rep->payload_size = 1;
+    packet_rep->payload[0] = packet->payload[0] + manual_cmd_size + 1;
 
-        switch (cmd->data[0])
-        {
-        case CMD_MANUAL_FLASH_LOG_START:
-        {
-            start_log();
-        }
+    switch (packet->payload[0])
+    {
+    case CMD_MANUAL_SD_LOG_START:
+        start_log();
         break;
-
-        case CMD_MANUAL_FLASH_LOG_STOP:
-        {
-            stop_log();
-        }
+    case CMD_MANUAL_SD_LOG_STOP:
+        stop_log();
         break;
-
-        case CMD_MANUAL_FLASH_IDS:
-        {
-            uint16_t files[256] = {0};
-            uint16_t index;
-            get_log_ids(files, &index);
-
-            // fill data buff with all file indexs
-            for (int i = 0; i < index; i++)
-            {
-                command_rep.data[i * 2 + 1] = ((files[i] >> 8) & 0xff);
-                command_rep.data[i * 2 + 2] = (files[i] & 0xff);
-            }
-            command_rep.size += index * 2;
-
-            // for(int i = 0; i < index; i++)
-            // printf("%x %x\n", command_rep.data[i*2 + 1], command_rep.data[i*2 + 2]);
-        }
+    case CMD_MANUAL_VALVE_STATE:
+        handle_manual_valve_cmd(packet);
         break;
-
-        case CMD_MANUAL_FLASH_DUMP:
-        {
-            uint16_t id = (cmd->data[1] << 8) + (cmd->data[2]);
-            dump_log(id);
-        }
+    case CMD_MANUAL_VALVE_MS:
+        handle_manual_valve_ms_cmd(packet);
         break;
-
-        case CMD_MANUAL_VALVE_STATE:
-        {
-            int valve = cmd->data[1];
-            int valve_state = cmd->data[2];
-
-            switch (valve)
-            {
-            case VPU_valve:
-            {
-                digitalWrite(Tank_Top_Module.valve_pin, valve_state);
-                Tank_Top_Module.valve_state = valve_state;
-            }
-            break;
-            case Purge_valve:
-            {
-                digitalWrite(Tank_Bot_Module.valve_pin, valve_state);
-                Tank_Bot_Module.valve_state = valve_state;
-            }
-            break;
-            case Engine_valve:
-            {
-                digitalWrite(Chamber_Module.valve_pin, valve_state);
-                Chamber_Module.valve_state = valve_state;
-            }
-            break;
-            default:
-            {
-                // bad valve
-                return CMD_RUN_OUT_OF_BOUND;
-            }
-            };
-        }
-        break;
-
-        case CMD_MANUAL_VALVE_MS:
-        {
-            int valve = cmd->data[1];
-            int valve_time = cmd->data[2];
-
-            switch (valve)
-            {
-            case VPU_valve:
-            {
-                if (!Tank_Top_Module.valve_state)
-                {
-                    digitalWrite(Tank_Top_Module.valve_pin, 1);
-                    delay(valve_time);
-                    digitalWrite(Tank_Top_Module.valve_pin, 0);
-                }
-            }
-            break;
-            case Purge_valve:
-            {
-                if (!Tank_Bot_Module.valve_state)
-                {
-                    digitalWrite(Tank_Bot_Module.valve_pin, 1);
-                    delay(valve_time);
-                    digitalWrite(Tank_Bot_Module.valve_pin, 0);
-                }
-            }
-            break;
-            case Engine_valve:
-            {
-                if (!Chamber_Module.valve_state)
-                {
-                    digitalWrite(Chamber_Module.valve_pin, 1);
-                    delay(valve_time);
-                    digitalWrite(Chamber_Module.valve_pin, 0);
-                }
-            }
-            default:
-            {
-                // bad valve
-                return CMD_RUN_OUT_OF_BOUND;
-            }
-            };
-        }
-        break;
-
-        case CMD_MANUAL_IMU_CALIBRATE:
-        {
-            imu_calibrate();
-        }
-        break;
-
-        case CMD_MANUAL_BAROMETER_CALIBRATE:
-        {
-            barometer_calibrate();
-        }
-        break;
-
-        case CMD_MANUAL_KALMAN_CALIBRATE:
-        {
-            kalman_calibrate();
-        }
-        break;
-
-        default:
-        {
-            return CMD_RUN_OUT_OF_BOUND;
-        }
-        };
-
-        // send manual command ack
-        command_rep.crc = crc((unsigned char *)&command_rep, command_rep.size + 3);
-        write_command(&command_rep, interface);
-
-        return CMD_RUN_OK;
-    }
-    break;
-
     default:
-        // if the command has no action it still needs to return ok to change state
-        if (cmd->cmd < cmd_size)
-        {
-            if (cmd->id == BROADCAST_ID)
+        return CMD_RUN_OUT_OF_BOUND;
+        break;
+    }
+    // send manual command ack
+    packet_rep->crc = crc((unsigned char *)&packet_rep, packet_rep->payload_size + 3);
+    write_packet(packet_rep, interface);
+
+    return CMD_RUN_OK;
+}
+
+int run_command(packet_t *packet, state_t state, interface_t interface)
+{
+    // Serial.printf("run command %d\n", cmd->cmd);
+    packet_t packet_rep;
+    packet_rep.sender_id = GROUND_ID;
+    // Serial.printf("State: %d\n", state);
+
+    switch (packet->cmd) {
+        case CMD_STATUS:
+            return handle_status_cmd(packet, interface, &packet_rep);
+            break;
+        case CMD_ARM:
+            return handle_arm_cmd(packet, interface, &packet_rep);
+            break;
+        case CMD_LAUNCH_OVERRIDE:
+            return handle_launch_override_cmd(packet, interface, &packet_rep);
+            break;
+        case CMD_FILL_EXEC:
+            return handle_fill_exec_cmd(packet, interface, &packet_rep);
+            break;
+        case CMD_MANUAL_EXEC:
+            return handle_manual_exec_cmd(packet, interface, &packet_rep);
+            break;
+        default:
+            // if the command has no action it still needs to return ok to change state
+            if (packet->cmd < cmd_size)
             {
-                // if we recieve a broadcast message, we don't send an ack
+                if (packet->target_id == BROADCAST_ID)
+                {
+                    // if we recieve a broadcast message, we don't send an ack
+                    return CMD_RUN_OK;
+                }
+
+                packet_rep.cmd = (cmd_type_t)(packet->cmd + cmd_size + 1);
+                packet_rep.payload_size = 0;
+                packet_rep.crc = crc((unsigned char *)&packet_rep, packet_rep.payload_size + 3);
+
+                write_packet(&packet_rep, interface);
+
+                // printf("Command %d state %d resulting transition state %d\n",
+                // cmd->cmd, state, state_machine[state].next_states[cmd->cmd]);
                 return CMD_RUN_OK;
             }
-
-            command_rep.cmd = (cmd_type_t)(cmd->cmd + cmd_size + 1);
-            command_rep.size = 0;
-            command_rep.crc = crc((unsigned char *)&command_rep, command_rep.size + 3);
-
-            write_command(&command_rep, interface);
-
-            // printf("Command %d state %d resulting transition state %d\n",
-            // cmd->cmd, state, state_machine[state].comms[cmd->cmd]);
-            return CMD_RUN_OK;
-        }
-        else // cmd code out of bounds, return error
-            return CMD_RUN_OUT_OF_BOUND;
-        break;
+            else // cmd code out of bounds, return error
+                return CMD_RUN_OUT_OF_BOUND;
+            break;
     };
 
     return CMD_RUN_OUT_OF_BOUND;
-
     // Serial.printf("cmd: %x state: %d return state %d table: %d\n", cmd->cmd, state, return_state,
-    //(rocket_state_t)comm_transition[state][cmd->cmd]);
+    //(rocket_state_t)expected_state[state][cmd->cmd]);
 }

@@ -3,6 +3,6 @@
 
 #include "StateMachine.h"
 
-int run_command(command_t* cmd, rocket_state_t state, interface_t interface);
+int run_command(packet_t* cmd, state_t state, interface_t interface);
 
 #endif

@@ -12,54 +12,42 @@
 #include <Crc.h>
 #include <LoRa.h>
 
-bool check_crc(command_t* command);
+bool check_crc(packet_t* packet);
 
-void write_command(command_t* cmd, interface_t interface)
+void write_packet(packet_t* packet, interface_t interface)
 {
     int size = 0;
-    uint8_t buff[MAX_COMMAND_BUFFER + 5] = {0};
+    uint8_t buff[MAX_PAYLOAD_SIZE + 5] = {0};
     
     buff[size++] = 0x55;
-    buff[size++] = cmd->cmd;
-    buff[size++] = cmd->id;
-    buff[size++] = cmd->size;
-    for(int i = 0; i < cmd->size; i++)
-        buff[size++] = cmd->data[i];
-    buff[size++] = ((cmd->crc >> 8) & 0xff);
-    buff[size++] = ((cmd->crc) & 0xff);
+    buff[size++] = packet->cmd;
+    buff[size++] = packet->sender_id;
+    buff[size++] = packet->target_id;
+    buff[size++] = packet->payload_size;
+    for(int i = 0; i < packet->payload_size; i++)
+        buff[size++] = packet->payload[i];
+    buff[size++] = ((packet->crc >> 8) & 0xff);
+    buff[size++] = ((packet->crc) & 0xff);
 
     //log_command(cmd);
     
     switch(interface)
     {
         case LORA_INTERFACE:
-        {
 
-            LoRa.beginPacket();
-            int sz = LoRa.write(buff, size);
-            LoRa.endPacket(true);
-
-            transmit_time = millis();
-            //Serial.printf("Lora sent %d packets\n");
-            
-            //for(int i = 0; i < size; i++)
-                //Serial.printf("%d ", buff[i]);
-            
-            //Serial.printf("\n");
-        }
-        break;
+            break;
         case RS485_INTERFACE:
             Serial2.write(buff, size);
-        break;
+            break;
         case UART_INTERFACE:
             Serial.write(buff, size);
-        break;
+            break;
         default:
-        break;
+            break;
     }
 }
 
-static COMMAND_STATE parse_input(uint8_t read_byte, command_t* command, COMMAND_STATE cmd_state)
+static cmd_parse_state_t parse_input(uint8_t read_byte, packet_t* command, cmd_parse_state_t cmd_state)
 {
     uint8_t state = cmd_state;
 
@@ -69,12 +57,12 @@ static COMMAND_STATE parse_input(uint8_t read_byte, command_t* command, COMMAND_
         case SYNC:
         {
             Serial.printf("Sync byte %x\n\r", read_byte);
-            if(read_byte == 0x55)
+            if(read_byte == SYNC_BYTE)
             {
                 //start timeout timer
                 state = CMD;
                 command->data_recv = 0;
-                memset(command, 0, sizeof(command_t));
+                memset(command, 0, sizeof(packet_t));
                 command->begin = clock();
             }
         }        
@@ -83,34 +71,42 @@ static COMMAND_STATE parse_input(uint8_t read_byte, command_t* command, COMMAND_
         case CMD:
         {
             Serial.printf("CMD byte %x\n\r", read_byte);
-            command->cmd = (cmd_type_t)read_byte;
-            state = ID;
+            command->cmd = read_byte;
+            state = SENDER_ID;
         }
         break;
 
-        case ID:
+        case SENDER_ID:
         {
             Serial.printf("ID byte %x\n\r", read_byte);
-            command->id = read_byte;
-            state = SIZE;
+            command->sender_id = read_byte;
+            state = TARGET_ID;
         }
         break;
 
-        case SIZE:                
+        case TARGET_ID:
+        {
+            Serial.printf("ID byte %x\n\r", read_byte);
+            command->target_id = read_byte;
+            state = PAYLOAD_SIZE;
+        }
+        break;
+
+        case PAYLOAD_SIZE:
         {
             Serial.printf("SIZE byte %x %d\n\r", read_byte, read_byte);
-            command->size = read_byte;
-            if(command->size == 0)
+            command->payload_size = read_byte;
+            if(command->payload_size == 0)
                 state = CRC1;
-            else state = DATA;
+            else state = PAYLOAD;
         }
         break;
 
-        case DATA:
+        case PAYLOAD:
         {
             Serial.printf("DATA byte %x\n\r", read_byte);
-            command->data[command->data_recv++] = read_byte;
-            if(command->data_recv == command->size)
+            command->payload[command->data_recv++] = read_byte;
+            if(command->data_recv == command->payload_size)
                 state = CRC1;
         }
         break;
@@ -135,18 +131,18 @@ static COMMAND_STATE parse_input(uint8_t read_byte, command_t* command, COMMAND_
             state = SYNC;
     };
 
-    return (COMMAND_STATE)state;
+    return (cmd_parse_state_t)state;
 }
 
-command_t* read_command(int* error, interface_t interface)
+packet_t* read_packet(int* error, interface_t interface)
 {
-    static command_t command_arr[interface_t_size];
-    static COMMAND_STATE state_arr[interface_t_size] = {SYNC};
+    static packet_t command_arr[interface_t_size];
+    static cmd_parse_state_t state_arr[interface_t_size] = {SYNC};
     static clock_t end_arr[interface_t_size] = {0};
     
     uint8_t index = (uint8_t)interface;
-    command_t *command = &command_arr[index];
-    COMMAND_STATE *state = &state_arr[index];
+    packet_t *command = &command_arr[index];
+    cmd_parse_state_t *state = &state_arr[index];
     clock_t *end = &end_arr[index];
 
     size_t size;
@@ -154,7 +150,7 @@ command_t* read_command(int* error, interface_t interface)
 
     switch(interface)
     {
-        case LoRa_INTERFACE:
+        case LORA_INTERFACE:
         {
             //Work arourd for lora to not spam the spi bus
             static unsigned int begin = 0, end = 0;
@@ -183,7 +179,7 @@ command_t* read_command(int* error, interface_t interface)
         }
         break;
         
-        case Uart_INTERFACE:
+        case UART_INTERFACE:
         {
             while(Serial.available() && *state != END)
             {
@@ -212,11 +208,11 @@ command_t* read_command(int* error, interface_t interface)
     }
     //if bad cr reset state
     else if(*state == END && 
-            (command->id == DEFAULT_ID || 
-             command->id == BROADCAST_ID )
+            (command->target_id == DEFAULT_ID || 
+             command->target_id == BROADCAST_ID )
              && (check_crc(command) || ! CRC_ENABLED) )
     {
-        Serial.printf("got message %d %d\n\r", command->cmd, command->id);
+        Serial.printf("got message %d %d\n\r", command->cmd, command->target_id);
         *state = SYNC;
 
         *error = CMD_READ_OK;
@@ -228,7 +224,7 @@ command_t* read_command(int* error, interface_t interface)
     }
     else if(*state == END)
     {
-        Serial.printf("crc error %d %d %d\n\r", command->id, command->crc, (uint16_t)crc((unsigned char*)command, command->size + 3));
+        Serial.printf("crc error %d %d %d\n\r", command->target_id, command->crc, (uint16_t)crc((unsigned char*)command, command->payload_size + 3));
         //uint8_t* ptr = (uint8_t*)command;
         //printf("%x %x %x\n", command->cmd, command->id, command->size);
         //for(int i = 0; i < command->size + 3; i++)
@@ -248,12 +244,12 @@ command_t* read_command(int* error, interface_t interface)
     }
 }
 
-bool check_crc(command_t* command)
+bool check_crc(packet_t* packet)
 {
     uint16_t crc1, crc2;
 
-    crc1 = command->crc;
-    crc2 = crc((unsigned char*)command, command->size + 3); //+3 bytes cmd, id, size
+    crc1 = packet->crc;
+    crc2 = crc((unsigned char*)packet, packet->payload_size + 3); //+3 bytes cmd, id, size
 
     return (crc1 == crc2);
 }

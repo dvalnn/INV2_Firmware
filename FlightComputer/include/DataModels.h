@@ -5,8 +5,7 @@
 
 //use the enum below as the values of state_t
 //use -1 for default behavior
-typedef int8_t state_t;
-enum 
+typedef enum 
 {
     IDLE,
     FILLING,
@@ -17,16 +16,28 @@ enum
     FLIGHT,
     RECOVERY,
     ABORT,
-    rocket_state_size, //this needs to be the last state for size to work
-} rocket_state;
+    state_count, //this needs to be the last state for size to work
+    S_NONE = -1
+} state_t;
+
+typedef enum 
+{
+    FP_NONE = 0,
+    SAFE_IDLE,
+    FILLING_N2,
+    PRE_PRESSURE,
+    FILLING_N2O,
+    POST_PRESSURE,
+    filling_program_count, //this needs to be the last state for size to work
+} filling_program_t;
 
 /*
     Commands
 */
-typedef enum __attribute__((__packed__))
+typedef enum
 {
     // shared commands
-    CMD_STATUS_REQ = 0,
+    CMD_STATUS = 0,
     CMD_ABORT,
     CMD_STOP,
     CMD_READY,
@@ -151,10 +162,17 @@ typedef union
 
 typedef struct
 {
-    state_t state;
-    pressures_t pressures;
-    thermocouples_t thermocouples;
-    actuators_bitmap_t actuators;
+    state_t state = IDLE;
+    pressures_t pressures = {0};
+    thermocouples_t thermocouples = {0};
+    actuators_bitmap_t actuators = {0};
 } system_data_t;
+
+typedef struct {
+    filling_program_t program;
+    uint16_t target_pressure, trigger_pressure;
+    uint16_t target_temperature, trigger_temperature;
+    uint16_t target_weight;
+} filling_params_t;
 
 #endif // DATA_MODELS_H

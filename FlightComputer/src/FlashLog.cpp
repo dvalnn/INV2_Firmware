@@ -96,46 +96,21 @@ void log(void *data, uint16_t size, log_event_t event)
     {
     case SENSOR_READING:
     {
-
-        buff[index++] = state;
-        buff[index++] = (uint8_t)((log_running << 7) |
-                                        (Tank_Top_Module.valve_state << 6) |
-                                        (Tank_Bot_Module.valve_state << 5) |
-                                        (Chamber_Module.valve_state << 4) |
-                                        (DragDeployed << 3) |
-                                        (MainDeployed << 2));
- 
-        uint16_t gps_altitude = (uint16_t)(gps.altitude.meters());
-        buff[index++] = (uint8_t)((gps_altitude >> 8) & 0xff);
-        buff[index++] = (uint8_t)((gps_altitude) & 0xff);
-
-        uint16_t ualtitude = altitude;
-        buff[index++] = (uint8_t)((ualtitude >> 8) & 0xff);
-        buff[index++] = (uint8_t)((ualtitude) & 0xff);
-
-        uint16_t u_ax = imu_ax * 10;
-        buff[index++] = (uint8_t)((u_ax >> 8) & 0xff);
-        buff[index++] = (uint8_t)((u_ax) & 0xff);
-
-        uint16_t u_ay = imu_ay * 10;
-        buff[index++] = (uint8_t)((u_ay >> 8) & 0xff);
-        buff[index++] = (uint8_t)((u_ay) & 0xff);
-
-        uint16_t u_az = imu_az * 10;
-        buff[index++] = (uint8_t)((u_az >> 8) & 0xff);
-        buff[index++] = (uint8_t)((u_az) & 0xff);
+        // TODO: implement sensor reading logging
+        // Same from StMComms.cpp telemetry
     }
     break;
 
     case MSG_RECEIVED:
     {
-        command_t *cmd = (command_t *)data;
-        buff[index++] = cmd->cmd;
-        buff[index++] = cmd->id;
-        buff[index++] = cmd->size;
+        packet_t *packet = (packet_t *)data;
+        buff[index++] = packet->cmd;
+        buff[index++] = packet->sender_id;
+        buff[index++] = packet->target_id;
+        buff[index++] = packet->payload_size;
 
-        for (int i = 0; i < cmd->size; i++)
-            buff[index++] = cmd->data[i];
+        for (int i = 0; i < packet->payload_size; i++)
+            buff[index++] = packet->payload[i];
     }
     break;
 

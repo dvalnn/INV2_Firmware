@@ -19,7 +19,9 @@
 
 #include "HardwareCfg.h"
 
-#define MAX_COMMAND_BUFFER 150
+#define SYNC_BYTE 0x55
+
+#define MAX_PAYLOAD_SIZE 150
 #define RS485_TIMEOUT_TIME_MS 50 // try to get limit bounds
 // #define RS485_TIMEOUT_TIME_MS 5000
 
@@ -49,14 +51,37 @@
 #define ARM_TRIGGER_2 2
 #define ARM_TRIGGER_3 3
 
+typedef enum
+{
+    ASK_STATE,
+    ASK_R_ACTUATOR_STATES,
+    ASK_R_PRESSURES,
+    ASK_R_TEMPERATURES,
+    ASK_FS_PRESSURES,
+    ASK_FS_TEMPERATURES,
+    ASK_FS_ACTUATOR_STATES,
+    ASK_NAV_SENSORS,
+    ASK_NAV_KALMAN,
+    ASK_NAV_ACTUATORS,
+    ask_groups_size
+} ask_groups_t;
+
 
 /*
     Sensors bit mask
 */
 #define BIT(x) (1 << (x))
 
-
-
+#define STATE_BIT BIT(ASK_STATE)
+#define R_ACTUATOR_STATES_BIT BIT(ASK_R_ACTUATOR_STATES)
+#define R_PRESSURES_BIT BIT(ASK_R_PRESSURES)
+#define R_TEMPERATURES_BIT BIT(ASK_R_TEMPERATURES)
+#define FS_PRESSURES_BIT BIT(ASK_FS_PRESSURES)
+#define FS_TEMPERATURES_BIT BIT(ASK_FS_TEMPERATURES)
+#define FS_ACTUATOR_STATES_BIT BIT(ASK_FS_ACTUATOR_STATES)
+#define NAV_SENSORS_BIT BIT(ASK_NAV_SENSORS)
+#define NAV_KALMAN_BIT BIT(ASK_NAV_KALMAN)
+#define NAV_ACTUATORS_BIT BIT(ASK_NAV_ACTUATORS)
 
 
 //----------------------------------------
@@ -64,27 +89,29 @@
 typedef struct __attribute__((__packed__))
 // typedef struct
 {
+    uint8_t sender_id;
+    uint8_t target_id;
     uint8_t cmd;
-    uint8_t id;
-    uint8_t size;
-    uint8_t data[MAX_COMMAND_BUFFER];
+    uint8_t payload_size;
+    uint8_t payload[MAX_PAYLOAD_SIZE];
     uint16_t crc;
 
     uint8_t data_recv; // helper pointer to fill data[]
     unsigned long begin;
-} command_t;
+} packet_t;
 
 typedef enum
 {
     SYNC = 0,
     CMD,
-    ID,
-    SIZE,
-    DATA,
+    SENDER_ID,
+    TARGET_ID,
+    PAYLOAD_SIZE,
+    PAYLOAD,
     CRC1, // first byte of crc
     CRC2, // second byte of crc
     END,
-} COMMAND_STATE;
+} cmd_parse_state_t;
 
 typedef enum
 {
@@ -94,14 +121,7 @@ typedef enum
     interface_t_size
 } interface_t;
 
-//#define DEFAULT_CMD_INTERFACE UART_INTERFACE
-#define DEFAULT_CMD_INTERFACE LORA_INTERFACE
-// #define DEFAULT_CMD_INTERFACE RS485_INTERFACE
-
-#define DEFAULT_LOG_INTERFACE RS485_INTERFACE
-// #define DEFAULT_LOG_INTERFACE LORA_INTERFACE
-
-#define DEFAULT_SYNC_INTERFACE UART_INTERFACE
+#define DEFAULT_CMD_INTERFACE UART_INTERFACE
 
 #define CRC_ENABLED false
 
@@ -115,8 +135,7 @@ typedef enum
 
 #define DEFAULT_ID OBC_ID
 
-
-void write_command(command_t *cmd, interface_t interface);
-command_t *read_command(int *error, interface_t interface);
+void write_packet(packet_t *cmd, interface_t interface);
+packet_t *read_packet(int *error, interface_t interface);
 
 #endif
