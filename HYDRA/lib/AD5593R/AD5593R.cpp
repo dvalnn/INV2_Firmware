@@ -127,7 +127,7 @@ int AD5593R::writeAllDacs(bool flag)
 
 
 ////////////////////////////////////////////////////////////
-//
+//easter egg do caçoete
 //  MODE
 //
 int AD5593R::setMode(const char config[9])
