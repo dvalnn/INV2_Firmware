@@ -18,83 +18,12 @@
 #include <time.h>
 #include <string.h>
 
-#include "HardwareCfg.h"
-#include "GlobalVars.h"
-
-#include "Comms.h"
-
-#include "StateMachine.h"
-#include "StMComms.h"
-#include "StMWork.h"
-#include "FlashLog.h"
-
-// I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
-// for both classes must be in the include path of your project
-#include <I2Cdev.h>
-
-#include <LoRa.h>
-
-#include <Crc.h>
-
-#include <SerialFlash.h>
 
 // Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
 // is used in I2Cdev.h
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     #include "Wire.h"
 #endif
-
-void loadCell_Setup(void)
-{
-    Serial.println("Load CELL starting");
-    scale1.begin(LOADCELL_OUT_PIN, LOADCELL_SCK_PIN);
-}
-
-void gyroSetup(void)
-{
-    accelgyro.initialize();
-    Wire.setBufferSize(256);
- // verify connection
-    Serial.println("Testing device connections...");
-    Serial.println(accelgyro.testConnection() ? "MPu6050 connection successful" : "MPu6050 connection failed");
-    
-}
-
-void Flash_Setup()
-{
-    if (!SD.begin(Flash_SS_PIN)) {
-        printf("Unable to access SPI Flash chip\n");
-        return;
-    }
-
-    current_id = get_last_id() + 1;
-    Serial.print("current id");
-    Serial.println(current_id);
-
-    Serial.print("Card type ");
-    Serial.println(SD.cardType());
-
-    Serial.print("Used bytes ");
-    Serial.println(SD.usedBytes());
-
-    Serial.print("Capacity ");
-    Serial.println(SD.cardSize());
-}
-
-void LoRa_Setup(void)
-{
-  LoRa.setPins(LORA_SS_PIN, LORA_RESET_PIN, LORA_DIO0_PIN);
-  LoRa.setSignalBandwidth(300E3);
-  LoRa.setCodingRate4(8);
-  LoRa.setSpreadingFactor(12);
-  LoRa.setGain(6);
-  Serial.println("Lora starting");
-  if (!LoRa.begin(868E6)) {
-    Serial.println("Starting LoRa failed!");
-    while (1);
-  }
-}
-
 
 void Spi_Thermo_Setup(void)
 {
