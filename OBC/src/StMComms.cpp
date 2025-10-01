@@ -44,6 +44,12 @@ int handle_status_cmd(packet_t *packet, interface_t interface, packet_t *packet_
         packet_rep->payload[index++] = system_data.state;
     }
 
+    if ((ask & ACTUATOR_STATES_BIT))
+    {
+        packet_rep->payload[index++] = (system_data.actuators.raw >> 8) & 0xff;
+        packet_rep->payload[index++] = (system_data.actuators.raw) & 0xff;
+    }
+
     if ((ask & R_PRESSURES_BIT))
     {
         int16_t ipressure;
@@ -52,6 +58,22 @@ int handle_status_cmd(packet_t *packet, interface_t interface, packet_t *packet_
         packet_rep->payload[index++] = (ipressure) & 0xff;
 
         ipressure = (int16_t)(system_data.pressures.chamber_pressure * 100);
+        packet_rep->payload[index++] = (ipressure >> 8) & 0xff;
+        packet_rep->payload[index++] = (ipressure) & 0xff;
+    }
+
+    if((ask & FS_PRESSURES_BIT))
+    {
+        int16_t ipressure;
+        ipressure = (int16_t)(system_data.pressures.n2o_line_pressure * 100);
+        packet_rep->payload[index++] = (ipressure >> 8) & 0xff;
+        packet_rep->payload[index++] = (ipressure) & 0xff;
+
+        ipressure = (int16_t)(system_data.pressures.n2_line_pressure * 100);
+        packet_rep->payload[index++] = (ipressure >> 8) & 0xff;
+        packet_rep->payload[index++] = (ipressure) & 0xff;
+
+        ipressure = (int16_t)(system_data.pressures.quick_dc_pressure * 100);
         packet_rep->payload[index++] = (ipressure >> 8) & 0xff;
         packet_rep->payload[index++] = (ipressure) & 0xff;
     }
@@ -77,6 +99,18 @@ int handle_status_cmd(packet_t *packet, interface_t interface, packet_t *packet_
         packet_rep->payload[index++] = (system_data.thermocouples.chamber_thermo) & 0xff;
     }
 
+    if ((ask & FS_TEMPERATURES_BIT))
+    {
+        packet_rep->payload[index++] = (system_data.thermocouples.n2o_line_thermo1 >> 8) & 0xff;
+        packet_rep->payload[index++] = (system_data.thermocouples.n2o_line_thermo1) & 0xff;
+
+        packet_rep->payload[index++] = (system_data.thermocouples.n2o_line_thermo2 >> 8) & 0xff;
+        packet_rep->payload[index++] = (system_data.thermocouples.n2o_line_thermo2) & 0xff;
+
+        packet_rep->payload[index++] = (system_data.thermocouples.n2_line_thermo >> 8) & 0xff;
+        packet_rep->payload[index++] = (system_data.thermocouples.n2_line_thermo) & 0xff;
+    }
+    
     if ((ask & NAV_SENSORS_BIT))
     {
         // EUROC: Add nav sensors
@@ -85,11 +119,6 @@ int handle_status_cmd(packet_t *packet, interface_t interface, packet_t *packet_
     if ((ask & NAV_KALMAN_BIT))
     {
         // EUROC: Add kalman payload
-    }
-
-    if ((ask & NAV_ACTUATORS_BIT))
-    {
-        // EUROC: Add nav actuators
     }
 
     packet_rep->payload_size = index;

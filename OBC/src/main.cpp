@@ -59,6 +59,14 @@ void lora_setup(void)
     // TODO: Setup LoRa module
 }
 
+void sys_data_setup(void)
+{
+    system_data.state = IDLE;
+    system_data.pressures = {0};
+    system_data.thermocouples = {0};
+    system_data.actuators = {0};
+}
+
 void setup()
 {
     Serial.begin(USB_BAUD_RATE);    // USBC serial
