@@ -103,15 +103,17 @@ typedef struct __attribute__((__packed__))
 typedef enum
 {
     SYNC = 0,
-    CMD,
     SENDER_ID,
     TARGET_ID,
+    CMD,
     PAYLOAD_SIZE,
     PAYLOAD,
     CRC1, // first byte of crc
     CRC2, // second byte of crc
     END,
 } cmd_parse_state_t;
+
+#define HEADER_SIZE 5
 
 typedef enum
 {

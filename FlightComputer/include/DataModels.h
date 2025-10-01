@@ -37,7 +37,8 @@ typedef enum
 typedef enum
 {
     // shared commands
-    CMD_STATUS = 0,
+    CMD_NONE = 0,
+    CMD_STATUS,
     CMD_ABORT,
     CMD_STOP,
     CMD_READY,

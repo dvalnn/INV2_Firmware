@@ -28,6 +28,8 @@ int handle_status_cmd(packet_t *packet, interface_t interface, packet_t *packet_
      * Prepare ACK response
      * Send response
      */
+    packet_rep->sender_id = DEFAULT_ID;
+    packet_rep->target_id = packet->sender_id;
     packet_rep->cmd = CMD_ACK;
     packet_rep->payload[index++] = CMD_STATUS;
 
@@ -93,8 +95,6 @@ int handle_status_cmd(packet_t *packet, interface_t interface, packet_t *packet_
     packet_rep->payload_size = index;
     packet_rep->crc = crc((unsigned char *)&packet_rep, packet_rep->payload_size + 3);
     write_packet(packet_rep, interface);
-
-    // Serial.printf("he moles %f %d\ntank_moles %f %d\n", he_mol, he_moles_i, tank_mol_lost, tank_mol_lost_i);
 
     return CMD_RUN_OK;
 }
@@ -335,11 +335,12 @@ int run_command(packet_t *packet, state_t state, interface_t interface)
 {
     // Serial.printf("run command %d\n", cmd->cmd);
     packet_t packet_rep;
-    packet_rep.sender_id = GROUND_ID;
+    packet_rep.sender_id = DEFAULT_ID;
+    packet_rep.target_id = packet->sender_id;
     // Serial.printf("State: %d\n", state);
-
     switch (packet->cmd) {
         case CMD_STATUS:
+            //Serial.println("Status cmd");
             return handle_status_cmd(packet, interface, &packet_rep);
             break;
         case CMD_ARM:

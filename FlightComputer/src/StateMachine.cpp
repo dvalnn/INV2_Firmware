@@ -12,16 +12,16 @@
 extern system_data_t system_data;
 
 state_t expected_state[state_count][cmd_size] = {
-    //                       STATUS_REQ ABORT  READY     ARM       FIRE      LAUNCH_OVERRIDE FILL_EXEC FILL_RESUME MANUAL_EXEC STOP   ACK
-    /* IDLE */             { IDLE,      ABORT, READY,    IDLE,     IDLE,     IDLE,           FILLING,  FILLING,    IDLE,       IDLE,  IDLE }, 
-    /* FILLING */          { FILLING,   ABORT, FILLING,  FILLING,  FILLING,  FILLING,        FILLING,  FILLING,    FILLING,    IDLE,  FILLING }, 
-    /* READY */            { READY,     ABORT, READY,    ARMED,    READY,    READY,          READY,    READY,      READY,      IDLE,  READY }, 
-    /* ARMED */            { ARMED,     ABORT, ARMED,    ARMED,    IGNITION, ARMED,          ARMED,    ARMED,      ARMED,      IDLE,  ARMED }, 
-    /* IGNITION */         { IGNITION,  ABORT, IGNITION, IGNITION, IGNITION, LAUNCH,         IGNITION, IGNITION,   IGNITION,   IDLE,  IGNITION }, 
-    /* LAUNCH */           { LAUNCH,    ABORT, LAUNCH,   LAUNCH,   LAUNCH,   LAUNCH,         LAUNCH,   LAUNCH,     LAUNCH,     IDLE,  LAUNCH }, 
-    /* FLIGHT */           { FLIGHT,    ABORT, FLIGHT,   FLIGHT,   FLIGHT,   FLIGHT,         FLIGHT,   FLIGHT,     FLIGHT,     IDLE,  FLIGHT },
-    /* RECOVERY */         { RECOVERY,  ABORT, RECOVERY, RECOVERY, RECOVERY, RECOVERY,       RECOVERY, RECOVERY,   RECOVERY,   IDLE,  RECOVERY }, 
-    /* ABORT */            { ABORT,     ABORT, IDLE,     ABORT,    ABORT,    ABORT,          ABORT,    ABORT,      ABORT,      IDLE,  ABORT }, 
+    //                       NONE      STATUS     ABORT  READY     ARM       FIRE      LAUNCH_OVERRIDE FILL_EXEC FILL_RESUME MANUAL_EXEC STOP   ACK
+    /* IDLE */             { IDLE,     IDLE,      ABORT, READY,    IDLE,     IDLE,     IDLE,           FILLING,  FILLING,    IDLE,       IDLE,  IDLE }, 
+    /* FILLING */          { FILLING,  FILLING,   ABORT, FILLING,  FILLING,  FILLING,  FILLING,        FILLING,  FILLING,    FILLING,    IDLE,  FILLING }, 
+    /* READY */            { READY,    READY,     ABORT, READY,    ARMED,    READY,    READY,          READY,    READY,      READY,      IDLE,  READY }, 
+    /* ARMED */            { ARMED,    ARMED,     ABORT, ARMED,    ARMED,    IGNITION, ARMED,          ARMED,    ARMED,      ARMED,      IDLE,  ARMED }, 
+    /* IGNITION */         { IGNITION, IGNITION,  ABORT, IGNITION, IGNITION, IGNITION, LAUNCH,         IGNITION, IGNITION,   IGNITION,   IDLE,  IGNITION }, 
+    /* LAUNCH */           { LAUNCH,   LAUNCH,    ABORT, LAUNCH,   LAUNCH,   LAUNCH,   LAUNCH,         LAUNCH,   LAUNCH,     LAUNCH,     IDLE,  LAUNCH }, 
+    /* FLIGHT */           { FLIGHT,   FLIGHT,    ABORT, FLIGHT,   FLIGHT,   FLIGHT,   FLIGHT,         FLIGHT,   FLIGHT,     FLIGHT,     IDLE,  FLIGHT },
+    /* RECOVERY */         { RECOVERY, RECOVERY,  ABORT, RECOVERY, RECOVERY, RECOVERY, RECOVERY,       RECOVERY, RECOVERY,   RECOVERY,   IDLE,  RECOVERY }, 
+    /* ABORT */            { ABORT,    ABORT,     ABORT, IDLE,     ABORT,    ABORT,    ABORT,          ABORT,    ABORT,      ABORT,      IDLE,  ABORT }, 
 };
 
 sm_state_t state_machine[state_count] =
