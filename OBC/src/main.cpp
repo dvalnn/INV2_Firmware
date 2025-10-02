@@ -175,9 +175,3 @@ void loop()
         }
     }
 }
-
-void software_work(void *paramms)
-{
-
-    Serial.printf("got to stm work\n\r");
-}

@@ -65,8 +65,6 @@ typedef enum
 
 typedef enum
 {
-    _VALVE_NONE = 0,
-
     // Rocket Valves
     VALVE_PRESSURIZING,
     VALVE_VENT,
