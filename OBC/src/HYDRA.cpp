@@ -1,6 +1,64 @@
 #include "HYDRA.h"
 #include <string.h> // for memset
 
+// Map valve enum to hydra actuator index
+int valve_to_actuator_map[_VALVE_COUNT] = {
+    // VALVE_PRESSURIZING
+    VALVE_CONTROLLED_1 * HYDRA_UF,
+    // VALVE_VENT
+    VALVE_CONTROLLED_2 * HYDRA_UF,
+    // VALVE_ABORT
+    VALVE_CONTROLLED_1 * HYDRA_LF,
+    // VALVE_MAIN
+    VALVE_CONTROLLED_2 * HYDRA_LF,
+    // VALVE_N2O_FILL
+    VALVE_CONTROLLED_1 * HYDRA_FS,
+    // VALVE_N2O_PURGE
+    VALVE_CONTROLLED_2 * HYDRA_FS,
+    // VALVE_N2_FILL
+    VALVE_STEEL_BALL_1 * HYDRA_FS,
+    // VALVE_N2_PURGE
+    VALVE_STEEL_BALL_2 * HYDRA_FS,
+    // VALVE_N2O_QUICK_DC
+    VALVE_QUICK_DC_1 * HYDRA_FS,
+    // VALVE_N2_QUICK_DC
+    VALVE_QUICK_DC_2 * HYDRA_FS,
+};
+
+// Map hydra actuator index to valve enum
+int actuator_to_valve_map[hydra_valve_count * hydra_id_count] = {
+    // HYDRA UF
+    // VALVE_QUICK_DC_1
+    
+    // VALVE_QUICK_DC_2
+    // VALVE_CONTROLLED_1
+    // VALVE_CONTROLLED_2
+    // VALVE_CONTROLLED_3
+    // VALVE_STEEL_BALL_1
+    // VALVE_STEEL_BALL_2
+    // VALVE_SERVO
+
+    // HYDRA LF
+    // VALVE_QUICK_DC_1
+    // VALVE_QUICK_DC_2
+    // VALVE_CONTROLLED_1
+    // VALVE_CONTROLLED_2
+    // VALVE_CONTROLLED_3
+    // VALVE_STEEL_BALL_1
+    // VALVE_STEEL_BALL_2
+    // VALVE_SERVO
+    
+    // HYDRA FS
+    // VALVE_QUICK_DC_1
+    // VALVE_QUICK_DC_2
+    // VALVE_CONTROLLED_1
+    // VALVE_CONTROLLED_2
+    // VALVE_CONTROLLED_3
+    // VALVE_STEEL_BALL_1
+    // VALVE_STEEL_BALL_2
+    // VALVE_SERVO
+};
+
 void init_hydra(hydra_t *hydra)
 {
     if (hydra)
@@ -82,7 +140,6 @@ int process_hydra_response(hydra_t *hydra, packet_t *packet)
             case HCMD_STATUS:
                 if (packet->payload_size < sizeof(hydra_data_t)) // Minimum size check
                     return -1;
-
                 hydra->data.thermo1 = (packet->payload[index++] << 8) | packet->payload[index++];
                 hydra->data.thermo2 = (packet->payload[index++] << 8) | packet->payload[index++];
                 hydra->data.thermo3 = (packet->payload[index++] << 8) | packet->payload[index++];
