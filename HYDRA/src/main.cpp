@@ -1,21 +1,52 @@
-#include <Arduino.h>
 #include <AD5593R.h>
-#include <MAX31856.h>
-
+#include <Adafruit_MAX31856.h>
+#include <Arduino.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
+
 #include "Wire.h"
+#include <IO_Map.h> //? Library with all I/O Hardware mapping
 
-
-MAX31856 maxthermo1 = MAX31856(8, 11, 9, 10);
-MAX31856 maxthermo2 = MAX31856(8, 11, 13, 10);
-MAX31856 maxthermo3 = MAX31856(8, 11, 29, 10);
+Adafruit_MAX31856 maxthermo1 = Adafruit_MAX31856(spi_miso, spi_mosi, thermo1_cs, spi_sck);
+Adafruit_MAX31856 maxthermo2 = Adafruit_MAX31856(spi_miso, spi_mosi, thermo2_cs, spi_sck);
+Adafruit_MAX31856 maxthermo3 = Adafruit_MAX31856(spi_miso, spi_mosi, thermo3_cs, spi_sck);
 
 AD5593R ad5593r = AD5593R(0x11);
 
 void thermo_setup(void) {
+    bool thermo1_config, thermo2_config = false;
+    if (!maxthermo1.begin()) {
+        Serial.println("Failed to initialize thermo1!");
+        thermo1_config = true;
+    }
+    if (!maxthermo2.begin()) {
+        Serial.println("Failed to initialize thermo2!");
+        thermo2_config = true;
+    }
+    if (!maxthermo3.begin()) {
+        Serial.println("Failed to initialize thermo3!");
+        if (thermo1_config && thermo2_config)
+            return;
+    }
 
+    maxthermo1.setThermocoupleType(MAX31856_TCTYPE_K);
+    maxthermo2.setThermocoupleType(MAX31856_TCTYPE_K);
+    maxthermo3.setThermocoupleType(MAX31856_TCTYPE_K);
+
+    maxthermo1.setConversionMode(MAX31856_CONTINUOUS);
+    maxthermo2.setConversionMode(MAX31856_CONTINUOUS);
+    maxthermo3.setConversionMode(MAX31856_CONTINUOUS);
+
+    maxthermo1.setAveragingSamples(16);
+    maxthermo2.setAveragingSamples(16);
+    maxthermo3.setAveragingSamples(16);
+
+    maxthermo1.setNoiseFilter(MAX31856_NOISE_FILTER_50HZ);
+    maxthermo2.setNoiseFilter(MAX31856_NOISE_FILTER_50HZ);
+    maxthermo3.setNoiseFilter(MAX31856_NOISE_FILTER_50HZ);
+
+    Serial.println("MAX31856 thermocouples initialized!");
 }
 
 void dac_adc_setup(void) {
@@ -25,29 +56,27 @@ void dac_adc_setup(void) {
         return;  // Exit if initialization fails
     }
 
-    ad5593r.reset(); //Reset the device to ensure clean state
-    delay(10);  // Small delay after reset
+    ad5593r.reset();  // Reset the device to ensure clean state
+    delay(10);        // Small delay after reset
 
-    ad5593r.setExternalReference(false, 2.5); // Configure voltage reference (false = internal 2.5V reference)
-    ad5593r.setMode("AAAATDDD"); // Set I/O configuration: 0-3 as ADC, 4 as THREESTATE (unused), 5-7 as DAC
-    
-    // Power down I/O4 to save power (since it's unused)
-    ad5593r.powerDownDac(4);
+    ad5593r.setExternalReference(false, 2.5);  // Configure voltage reference (false = internal 2.5V reference)
+    ad5593r.setMode("AAAATDDD");               // Set I/O configuration: 0-3 as ADC, 4 as THREESTATE (unused), 5-7 as DAC
+    ad5593r.powerDownDac(4);                   // Power down I/O4 to save power (since it's unused)
 
     // ADC Configs:
-    ad5593r.setADCRange2x(true); // ADC input range: 0V to 5V (2x Vref) 
-    ad5593r.enableADCBuffer(true); // Enable ADC buffer for better accuracy (optional but recommended)    
-    ad5593r.enableADCBufferPreCharge(true); // Enable ADC buffer pre-charge for faster settling (optional)
+    ad5593r.setADCRange2x(true);             // ADC input range: 0V to 5V (2x Vref)
+    ad5593r.enableADCBuffer(true);           // Enable ADC buffer for better accuracy (optional but recommended)
+    ad5593r.enableADCBufferPreCharge(true);  // Enable ADC buffer pre-charge for faster settling (optional)
 
     // DAC Configs:
     ad5593r.setDACRange2x(true);
-    ad5593r.setLDACmode(AD5593R_LDAC_DIRECT); // Set LDAC mode (direct write to DAC outputs)
-    
+    ad5593r.setLDACmode(AD5593R_LDAC_DIRECT);  // Set LDAC mode (direct write to DAC outputs)
+
     // With 2x range (5V) and 12-bit resolution: output = (Vout/5.0) * 4095
-    uint16_t dac_output = (2.5/5.0) * 4095;  // 2.5 output voltage
-    
+    uint16_t dac_output = (2.5 / 5.0) * 4095;  // 2.5 output voltage
+
     ad5593r.writeDAC(5, dac_output);  // Set DAC channel 5
-    ad5593r.writeDAC(6, dac_output);  // Set DAC channel 6  
+    ad5593r.writeDAC(6, dac_output);  // Set DAC channel 6
     ad5593r.writeDAC(7, dac_output);  // Set DAC channel 7
 
     Serial.println("AD5593R initialized and configured!");
@@ -58,34 +87,35 @@ void dac_adc_setup(void) {
 }
 
 void valves_setup(void) {
-
+    pinMode(SOL_VALVE_1, OUTPUT);
+    pinMode(SOL_VALVE_2, OUTPUT);
+    pinMode(SOL_VALVE_3, OUTPUT);
+    pinMode(QuickDisco_N2O, OUTPUT);
+    pinMode(QuickDisco_N2, OUTPUT);
+    pinMode(STVALVE_1, OUTPUT);
+    pinMode(STVALVE_2, OUTPUT);
+    pinMode(CAM_EN, OUTPUT);
+    pinMode(PWM_Sig, OUTPUT);
 }
+
+
 
 void setup() {
     // Serial.begin(SERIAL_BAUD);    // USBC serial
     // Serial2.begin(SERIAL2_BAUD);  // RS485
-
-    Wire.begin();
-    Wire.setClock(400000);
+    
+    // Initialize I2C with custom pins from IO_Map.h
+    Wire.setSDA(i2c_sda);   // Set SDA to pin 14
+    Wire.setSCL(i2c_scl);   // Set SCL to pin 15
+    Wire.begin();           // Initialize I2C with custom pins
+    Wire.setClock(400000);  // Set I2C clock to 400kHz
 
     dac_adc_setup();
     thermo_setup();
+    valves_setup();
 }
 
 
-//     pinMode(TEMP_AMP1_SS_PIN, OUTPUT);
-//     pinMode(TEMP_AMP2_SS_PIN, OUTPUT);
-//     pinMode(TEMP_AMP3_SS_PIN, OUTPUT);
-//     pinMode(LORA_SS_PIN, OUTPUT);
-//     pinMode(Flash_SS_PIN, OUTPUT);
-//     pinMode(EMATCH_IGNITE_PIN, OUTPUT);
-
-//     digitalWrite(TEMP_AMP1_SS_PIN, HIGH);
-//     digitalWrite(TEMP_AMP2_SS_PIN, HIGH);
-//     digitalWrite(TEMP_AMP3_SS_PIN, HIGH);
-//     digitalWrite(LORA_SS_PIN, HIGH);
-//     digitalWrite(Flash_SS_PIN, HIGH);
-//     digitalWrite(EMATCH_IGNITE_PIN, LOW);
 
 //     Valves_Setup();
 
