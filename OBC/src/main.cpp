@@ -61,7 +61,7 @@ void lora_setup(void)
 
 void sys_data_setup(void)
 {
-    system_data.state = IDLE;
+    system_data.state = FILLING;
     system_data.pressures = {0};
     system_data.thermocouples = {0};
     system_data.actuators = {0};
@@ -71,6 +71,8 @@ void setup()
 {
     Serial.begin(USB_BAUD_RATE);    // USBC serial
     Serial1.begin(RS485_BAUD_RATE); // RS485
+
+    sys_data_setup();
 
     printf("Setup done\n");
 }

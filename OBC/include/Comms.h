@@ -53,7 +53,7 @@
 
 typedef enum
 {
-    ASK_STATE,
+    ASK_STATE = 0,
     ASK_ACTUATOR_STATES,
     ASK_R_PRESSURES,
     ASK_R_TEMPERATURES,

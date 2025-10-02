@@ -141,11 +141,9 @@ typedef union
         int16_t n2o_tank_lf_t1;
         int16_t n2o_tank_lf_t2;
         int16_t chamber_thermo;
-        int16_t n2o_line_thermo1; // before and after solenoids
-        int16_t n2o_line_thermo2;
-        int16_t n2_line_thermo;
+        int16_t n2o_line_thermo;
     };
-    int16_t raw[8];
+    int16_t raw[7];
 } thermocouples_t;
 
 typedef union
@@ -158,7 +156,7 @@ typedef union
         uint16_t n2_line_pressure;
         uint16_t quick_dc_pressure;
     };
-    uint16_t raw[6];
+    uint16_t raw[5];
 } pressures_t;
 
 typedef struct

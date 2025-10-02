@@ -35,9 +35,11 @@ int handle_status_cmd(packet_t *packet, interface_t interface, packet_t *packet_
 
     // echo ASK bytes
     packet_rep->payload[index++] = packet->payload[0];
-    packet_rep->payload[index++] = packet->payload[1];
 
-    uint16_t ask = (packet->payload[0] << 8) + packet->payload[1];
+    uint8_t ask = packet->payload[0];
+    if(ask_groups_size > 8) {
+        return CMD_RUN_OUT_OF_BOUND;
+    }
 
     if ((ask & STATE_BIT))
     {
@@ -101,16 +103,10 @@ int handle_status_cmd(packet_t *packet, interface_t interface, packet_t *packet_
 
     if ((ask & FS_TEMPERATURES_BIT))
     {
-        packet_rep->payload[index++] = (system_data.thermocouples.n2o_line_thermo1 >> 8) & 0xff;
-        packet_rep->payload[index++] = (system_data.thermocouples.n2o_line_thermo1) & 0xff;
-
-        packet_rep->payload[index++] = (system_data.thermocouples.n2o_line_thermo2 >> 8) & 0xff;
-        packet_rep->payload[index++] = (system_data.thermocouples.n2o_line_thermo2) & 0xff;
-
-        packet_rep->payload[index++] = (system_data.thermocouples.n2_line_thermo >> 8) & 0xff;
-        packet_rep->payload[index++] = (system_data.thermocouples.n2_line_thermo) & 0xff;
+        packet_rep->payload[index++] = (system_data.thermocouples.n2o_line_thermo >> 8) & 0xff;
+        packet_rep->payload[index++] = (system_data.thermocouples.n2o_line_thermo) & 0xff;
     }
-    
+
     if ((ask & NAV_SENSORS_BIT))
     {
         // EUROC: Add nav sensors
@@ -394,8 +390,9 @@ int run_command(packet_t *packet, state_t state, interface_t interface)
                     return CMD_RUN_OK;
                 }
 
-                packet_rep.cmd = (cmd_type_t)(packet->cmd + cmd_size + 1);
-                packet_rep.payload_size = 0;
+                packet_rep.cmd = CMD_ACK;
+                packet_rep.payload_size = 1;
+                packet_rep.payload[0] = packet->cmd;
                 packet_rep.crc = crc((unsigned char *)&packet_rep, packet_rep.payload_size + 3);
 
                 write_packet(&packet_rep, interface);
