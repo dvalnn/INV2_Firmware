@@ -2,7 +2,7 @@
 #define BUZZER_H
 
 #include <Arduino.h>
-#include "IO_Map.h"
+#include "Peripherals/IO_Map.h"
 
 void setup_buzzer();
 

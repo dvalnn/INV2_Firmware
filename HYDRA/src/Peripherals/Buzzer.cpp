@@ -1,16 +1,16 @@
-#include "Buzzer.h"
+#include "Peripherals/Buzzer.h"
 #include "VeryImportantFile.h"  // For success_song function
 
 void setup_buzzer() {
-    pinMode(BUZZER_PWM, OUTPUT);
+    pinMode(BUZZER_PWM_PIN, OUTPUT);
 }
 
 void play_buzzer(int frequency, int duration) {
-    tone(BUZZER_PWM, frequency, duration);
+    tone(BUZZER_PWM_PIN, frequency, duration);
 }
 
 void stop_buzzer() {
-    noTone(BUZZER_PWM);
+    noTone(BUZZER_PWM_PIN);
 }
 
 void play_buzzer_error() {
@@ -23,9 +23,9 @@ void play_buzzer_error() {
 void play_buzzer_success() {
     /*
     for(int i = 0; i < 3; i++) {
-        play_buzzer(2000, 100); 
-        delay(200);
+        play_buzzer(2000, 75); 
+        delay(150);
     }
     */
-    success_song(BUZZER_PWM);
+    //success_song(BUZZER_PWM_PIN);
 }
