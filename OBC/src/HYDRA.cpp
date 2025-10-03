@@ -1,64 +1,6 @@
 #include "HYDRA.h"
 #include <string.h> // for memset
 
-// Map valve enum to hydra actuator index
-int valve_to_actuator_map[_VALVE_COUNT] = {
-    // VALVE_PRESSURIZING
-    VALVE_CONTROLLED_1 * HYDRA_UF,
-    // VALVE_VENT
-    VALVE_CONTROLLED_2 * HYDRA_UF,
-    // VALVE_ABORT
-    VALVE_CONTROLLED_1 * HYDRA_LF,
-    // VALVE_MAIN
-    VALVE_CONTROLLED_2 * HYDRA_LF,
-    // VALVE_N2O_FILL
-    VALVE_CONTROLLED_1 * HYDRA_FS,
-    // VALVE_N2O_PURGE
-    VALVE_CONTROLLED_2 * HYDRA_FS,
-    // VALVE_N2_FILL
-    VALVE_STEEL_BALL_1 * HYDRA_FS,
-    // VALVE_N2_PURGE
-    VALVE_STEEL_BALL_2 * HYDRA_FS,
-    // VALVE_N2O_QUICK_DC
-    VALVE_QUICK_DC_1 * HYDRA_FS,
-    // VALVE_N2_QUICK_DC
-    VALVE_QUICK_DC_2 * HYDRA_FS,
-};
-
-// Map hydra actuator index to valve enum
-int actuator_to_valve_map[hydra_valve_count * hydra_id_count] = {
-    // HYDRA UF
-    // VALVE_QUICK_DC_1
-    
-    // VALVE_QUICK_DC_2
-    // VALVE_CONTROLLED_1
-    // VALVE_CONTROLLED_2
-    // VALVE_CONTROLLED_3
-    // VALVE_STEEL_BALL_1
-    // VALVE_STEEL_BALL_2
-    // VALVE_SERVO
-
-    // HYDRA LF
-    // VALVE_QUICK_DC_1
-    // VALVE_QUICK_DC_2
-    // VALVE_CONTROLLED_1
-    // VALVE_CONTROLLED_2
-    // VALVE_CONTROLLED_3
-    // VALVE_STEEL_BALL_1
-    // VALVE_STEEL_BALL_2
-    // VALVE_SERVO
-    
-    // HYDRA FS
-    // VALVE_QUICK_DC_1
-    // VALVE_QUICK_DC_2
-    // VALVE_CONTROLLED_1
-    // VALVE_CONTROLLED_2
-    // VALVE_CONTROLLED_3
-    // VALVE_STEEL_BALL_1
-    // VALVE_STEEL_BALL_2
-    // VALVE_SERVO
-};
-
 void init_hydra(hydra_t *hydra)
 {
     if (hydra)
@@ -68,11 +10,41 @@ void init_hydra(hydra_t *hydra)
     }
 }
 
-int read_hydra(hydra_t *hydra)
+int read_hydra(hydra_t *hydra, system_data_t *system_data)
 {
-    if (hydra)
+    if (hydra && system_data)
     {
-
+        switch(hydra->id) {
+            case HYDRA_UF:
+                system_data->actuators.v_pressurizing = hydra->data.valve_states.v_controlled_1;
+                system_data->actuators.v_vent = hydra->data.valve_states.v_controlled_2;
+                system_data->thermocouples.n2o_tank_uf_t1 = hydra->data.thermo1;
+                system_data->thermocouples.n2o_tank_uf_t2 = hydra->data.thermo2;
+                system_data->thermocouples.n2o_tank_uf_t3 = hydra->data.thermo3;
+                break;
+            case HYDRA_LF:
+                system_data->actuators.v_abort = hydra->data.valve_states.v_controlled_1;
+                system_data->actuators.v_main = hydra->data.valve_states.v_controlled_2;
+                system_data->thermocouples.n2o_tank_lf_t1 = hydra->data.thermo1;
+                system_data->thermocouples.n2o_tank_lf_t2 = hydra->data.thermo2;
+                system_data->thermocouples.chamber_thermo = hydra->data.thermo3;
+                system_data->pressures.n2o_tank_pressure = hydra->data.pressure1;
+                break;
+            case HYDRA_FS:
+                system_data->actuators.v_n2o_fill = hydra->data.valve_states.v_controlled_1;
+                system_data->actuators.v_n2o_purge = hydra->data.valve_states.v_controlled_2;
+                system_data->actuators.v_n2_fill = hydra->data.valve_states.v_steel_ball_1;
+                system_data->actuators.v_n2_purge = hydra->data.valve_states.v_steel_ball_2;
+                system_data->actuators.v_n2o_quick_dc = hydra->data.valve_states.v_quick_dc_1;
+                system_data->actuators.v_n2_quick_dc = hydra->data.valve_states.v_quick_dc_2;
+                system_data->pressures.n2o_line_pressure = hydra->data.pressure1;
+                system_data->pressures.n2_line_pressure = hydra->data.pressure2;
+                system_data->pressures.quick_dc_pressure = hydra->data.pressure3;
+                system_data->thermocouples.n2o_line_thermo = hydra->data.thermo1;
+                break;
+            default:
+                return -1; // Invalid hydra ID
+        }
         return 0;
     }
     return -1;
@@ -83,7 +55,9 @@ int set_hydra_valve(hydra_t *hydra, hydra_valve_t valve, bool state)
     if (hydra && valve < hydra_valve_count)
     {
         // Set the valve state
-        send_hydra_command(hydra, HCMD_VALVE_SET, (uint8_t *)&valve, 1);
+        uint8_t payload[1];
+        payload[0] = (uint8_t)(valve);
+        send_hydra_command(hydra, HCMD_VALVE_SET, payload, 1);
         return 0;
     }
     return -1;

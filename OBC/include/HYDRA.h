@@ -7,7 +7,7 @@
 #include "DataModels.h"
 
 typedef enum {
-    HYDRA_UF = 0,
+    HYDRA_UF = 1,
     HYDRA_LF,
     HYDRA_FS,
     hydra_id_count,
@@ -66,7 +66,4 @@ int set_hydra_valve_ms(hydra_t *hydra, hydra_valve_t valve, uint16_t ms);
 int send_hydra_command(hydra_t *hydra, hydra_cmd_t cmd, uint8_t *payload, uint8_t payload_size);
 int parse_hydra_response(hydra_t *hydra, packet_t *packet);
     
-extern int valve_to_actuator_map[hydra_id_count * _VALVE_COUNT]; // get hydra actuator
-extern valve_t actuator_to_valve_map[hydra_id_count * hydra_valve_count]; // get actuator valve
-
 #endif // HYDRA_H
