@@ -39,6 +39,14 @@ int dac_adc_setup(void) {
     return 0;  // Successful initialization
 }
 
+// Read ADC channels 0 to 3 and store values in adc_values array
+void read_adc_channels(data_t *data) {
+    data->pressure1 = ad5593r.readADC(1);
+    data->pressure2 = ad5593r.readADC(2);
+    data->pressure3 = ad5593r.readADC(3);
+}
+
+
 int pressures_setup(void) {
     return dac_adc_setup();
 }

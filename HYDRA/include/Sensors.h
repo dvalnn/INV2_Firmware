@@ -4,6 +4,8 @@
 #include <Arduino.h>
 #include "Peripherals/IO_Map.h"
 #include "DataModels.h"
+#include "Peripherals/Pressures.h"
+#include "elapsedMillis.h"
 
 void read_sensors(data_t *data);
 

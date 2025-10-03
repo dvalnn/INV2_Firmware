@@ -83,7 +83,7 @@ int thermo_setup(void) {
     return 0; // Successful initialization
 }
 
-inline void set_thermo_callback(thermo_data_callback callback,
+void set_thermo_callback(thermo_data_callback callback,
                                 void *user_data) {
     thermo_cb.callback = callback;
     thermo_cb.user_data = user_data;
