@@ -17,6 +17,7 @@
 #include "Peripherals/Valves.h"
 #include "Peripherals/Buzzer.h"
 #include "Peripherals/RS485.h"
+#include "Peripherals/IO_Map.h"
 
 bool setup_error = false;
 data_t my_data;
@@ -128,6 +129,7 @@ void loop()
     packet_t *packet = read_packet(&error);
     if (packet != NULL && error == CMD_READ_OK)
     {
+        tone(BUZZER_PWM_PIN, 1000, 50); // beep on command receive
         run_command(packet);
     }
 

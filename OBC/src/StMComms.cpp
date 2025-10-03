@@ -7,11 +7,13 @@
 
 #include "StMComms.h"
 #include "StMWork.h"
-
+#include "HYDRA.h"
 #include "FlashLog.h"
 
 extern system_data_t system_data;
 extern filling_params_t filling_params;
+
+extern hydra_t hydras[];
 
 int handle_status_cmd(packet_t *packet, interface_t interface, packet_t *packet_rep)
 {
@@ -222,35 +224,36 @@ int handle_manual_valve_cmd(packet_t *packet)
 
     switch (valve)
     {
+    // Check HYDRA.cpp for valve mapping
     case VALVE_ABORT:
-        system_data.actuators.v_abort = valve_state;
+        set_hydra_valve(&hydras[HYDRA_LF], H_VALVE_CONTROLLED_1, valve_state);
         break;
     case VALVE_N2_PURGE:
-        system_data.actuators.v_n2_purge = valve_state;
+        set_hydra_valve(&hydras[HYDRA_FS], H_VALVE_STEEL_BALL_2, valve_state);
         break;
     case VALVE_N2O_PURGE:
-        system_data.actuators.v_n2o_purge = valve_state;
+        set_hydra_valve(&hydras[HYDRA_FS], H_VALVE_CONTROLLED_2, valve_state);
         break;
     case VALVE_MAIN:
-        system_data.actuators.v_main = valve_state;
+        set_hydra_valve(&hydras[HYDRA_LF], H_VALVE_CONTROLLED_2, valve_state);
         break;
     case VALVE_N2_FILL:
-        system_data.actuators.v_n2_fill = valve_state;
+        set_hydra_valve(&hydras[HYDRA_FS], H_VALVE_STEEL_BALL_1, valve_state);
         break;
     case VALVE_N2O_FILL:
-        system_data.actuators.v_n2o_fill = valve_state;
+        set_hydra_valve(&hydras[HYDRA_FS], H_VALVE_CONTROLLED_1, valve_state);
         break;
     case VALVE_N2_QUICK_DC:
-        system_data.actuators.v_n2_quick_dc = valve_state;
+        set_hydra_valve(&hydras[HYDRA_FS], H_VALVE_QUICK_DC_2, valve_state);
         break;
     case VALVE_N2O_QUICK_DC:
-        system_data.actuators.v_n2o_quick_dc = valve_state;
+        set_hydra_valve(&hydras[HYDRA_FS], H_VALVE_QUICK_DC_1, valve_state);
         break;
     case VALVE_PRESSURIZING:
-        system_data.actuators.v_pressurizing = valve_state;
+        set_hydra_valve(&hydras[HYDRA_UF], H_VALVE_CONTROLLED_1, valve_state);
         break;
     case VALVE_VENT:
-        system_data.actuators.v_vent = valve_state;
+        set_hydra_valve(&hydras[HYDRA_UF], H_VALVE_CONTROLLED_2, valve_state);
         break;
     default:
         // valve not defined

@@ -21,14 +21,14 @@ typedef enum {
 } hydra_cmd_t;
 
 typedef enum {
-    VALVE_QUICK_DC_1 = 0,
-    VALVE_QUICK_DC_2,
-    VALVE_CONTROLLED_1,
-    VALVE_CONTROLLED_2,
-    VALVE_CONTROLLED_3,
-    VALVE_STEEL_BALL_1,
-    VALVE_STEEL_BALL_2,
-    VALVE_SERVO,
+    H_VALVE_QUICK_DC_1 = 0,
+    H_VALVE_QUICK_DC_2,
+    H_VALVE_CONTROLLED_1,
+    H_VALVE_CONTROLLED_2,
+    H_VALVE_CONTROLLED_3,
+    H_VALVE_STEEL_BALL_1,
+    H_VALVE_STEEL_BALL_2,
+    H_VALVE_SERVO,
     hydra_valve_count,
 } hydra_valve_t;
 
