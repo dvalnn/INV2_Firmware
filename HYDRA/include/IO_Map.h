@@ -1,3 +1,6 @@
+#ifndef IO_MAP_H
+#define IO_MAP_H
+
 //* Actuation Unit
 #define SOL_VALVE_1 18
 #define SOL_VALVE_2 19
@@ -41,4 +44,4 @@
 #define READ_RS 5
 #define ENABLE_RS 6
 
-
+#endif  // IO_MAP_H
