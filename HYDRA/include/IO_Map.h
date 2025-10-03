@@ -2,39 +2,39 @@
 #define SOL_VALVE_1 18
 #define SOL_VALVE_2 19
 #define SOL_VALVE_3 20
-#define QuickDisco_N2O 21
-#define QuickDisco_N2 22
-#define STVALVE_1 23
-#define STVALVE_2 24
+#define QDC_N2O 21
+#define QDC_N2 22
+#define ST_VALVE_1 23
+#define ST_VALVE_2 24
 #define CAM_EN 25
-#define PWM_Sig 3
+#define PWM_SIG 3
 
 //* Sensor Unit
-#define Thermo1_DRDY 7
-#define Thermo2_DRDY 12
-#define Thermo3_DRDY 17
-#define AD5593r_RST 16
+#define THERMO1_DRDY 7
+#define THERMO2_DRDY 12
+#define THERMO3_DRDY 17
+#define AD5593R_RST 16
 
 #define FAULT_STATES 27
 #define TEMP_SENSE 26
 
 //* I2C
-#define i2c_sda 14
-#define i2c_scl 15
+#define I2C_SDA 14
+#define I2C_SCL 15
 
 //* SPI
-#define spi_miso 8
-#define spi_mosi 11
-#define spi_sck 10
+#define SPI_MISO 8
+#define SPI_MOSI 11
+#define SPI_SCK 10
 
-#define thermo1_cs 9
-#define thermo2_cs 13
-#define thermo3_cs 29
+#define THERMO1_CS 9
+#define THERMO2_CS 13
+#define THERMO3_CS 29
 
 //* STATUS
 #define RED_STATUS 0
 #define GREEN_STATUS 1
-#define Buzzer_PWM 2
+#define BUZZER_PWM 2
 
 //* RS-485
 #define WRITE_RS 4
