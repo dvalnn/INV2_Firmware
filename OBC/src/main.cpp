@@ -27,6 +27,7 @@
 #include "StMComms.h"
 #include "StMWork.h"
 #include "FlashLog.h"
+#include "HYDRA.h"
 
 #include "Control_Work.h"
 #include <I2Cdev.h>
@@ -42,6 +43,8 @@ bool fast_reboot = 0;
 bool Launch = false;
 
 system_data_t system_data;
+hydra_t hydras[hydra_id_count];
+uint32_t last_hydra_poll_time = 0;
 filling_params_t filling_params;
 
 void valves_setup(void)
@@ -57,6 +60,18 @@ void sd_setup(void)
 void lora_setup(void)
 {
     // TODO: Setup LoRa module
+}
+
+void hydras_setup(void)
+{
+    init_hydra(&hydras[HYDRA_UF]);
+    hydras[HYDRA_UF].id = HYDRA_UF;
+
+    init_hydra(&hydras[HYDRA_LF]);
+    hydras[HYDRA_LF].id = HYDRA_LF;
+
+    init_hydra(&hydras[HYDRA_FS]);
+    hydras[HYDRA_FS].id = HYDRA_FS;
 }
 
 void sys_data_setup(void)
@@ -172,6 +187,26 @@ void loop()
                     state_machine[system_data.state].work[i].delay;
 
             log(&system_data.state, 0, STATE_CHANGE);
+        }
+
+        if (millis() - last_hydra_poll_time > HYDRA_POLL_INTERVAL) {
+            fetch_next_hydra(hydras, &system_data);
+            last_hydra_poll_time = millis();
+        }
+
+        packet_t *hydra_packet = read_packet(&error, RS485_INTERFACE);
+        if (hydra_packet != NULL && error == CMD_READ_OK)
+        {
+            int result = parse_hydra_response(hydras, hydra_packet);
+            if (result != 0) {
+                // log cmd execution error
+            }
+        }
+        else if (error != CMD_READ_OK &&
+                 error != CMD_READ_NO_CMD)
+        {
+            // log cmd read error
+            
         }
     }
 }

@@ -7,7 +7,7 @@
 #include "DataModels.h"
 
 typedef enum {
-    HYDRA_UF = 1,
+    HYDRA_UF = 0,
     HYDRA_LF,
     HYDRA_FS,
     hydra_id_count,
@@ -59,11 +59,13 @@ typedef struct {
 } hydra_t;
 
 void init_hydra(hydra_t *hydra);
-int read_hydra(hydra_t *hydra);
+int update_data_from_hydra(hydra_t *hydra, system_data_t *system_data);
 int set_hydra_valve(hydra_t *hydra, hydra_valve_t valve, bool state);
 int set_hydra_valve_ms(hydra_t *hydra, hydra_valve_t valve, uint16_t ms);
 
 int send_hydra_command(hydra_t *hydra, hydra_cmd_t cmd, uint8_t *payload, uint8_t payload_size);
-int parse_hydra_response(hydra_t *hydra, packet_t *packet);
-    
+int parse_hydra_response(hydra_t hydras[], packet_t *packet);
+
+int fetch_next_hydra(hydra_t hydras[], system_data_t *system_data);
+
 #endif // HYDRA_H
