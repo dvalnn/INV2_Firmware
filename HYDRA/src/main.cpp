@@ -1,31 +1,29 @@
 #include <Arduino.h>
+#include <Crc.h>
+#include <Wire.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <Wire.h>
-#include <Crc.h>
 
-#include "Peripherals/IO_Map.h"
-#include "HardwareCfg.h"
-#include "DataModels.h"
 #include "Comms.h"
+#include "DataModels.h"
+#include "HardwareCfg.h"
+#include "Peripherals/IO_Map.h"
 #include "Sensors.h"
 
-#include "Peripherals/Thermo.h"
-#include "Peripherals/Pressures.h"
-#include "Peripherals/Valves.h"
 #include "Peripherals/Buzzer.h"
-#include "Peripherals/RS485.h"
 #include "Peripherals/IO_Map.h"
+#include "Peripherals/Pressures.h"
+#include "Peripherals/RS485.h"
+#include "Peripherals/Thermo.h"
+#include "Peripherals/Valves.h"
 
 bool setup_error = false;
-data_t my_data;
+data_t my_data = {0};
 
-void run_command(packet_t *packet)
-{
-    if (packet->cmd == CMD_STATUS)
-    {
+void run_command(packet_t *packet) {
+    if (packet->cmd == CMD_STATUS) {
         // send status packet
         packet_t status_packet;
         status_packet.sender_id = DEFAULT_ID;
@@ -36,11 +34,10 @@ void run_command(packet_t *packet)
         memcpy(status_packet.payload + 1, &my_data, sizeof(data_t));
         status_packet.crc = 0;
         if (CRC_ENABLED)
-            status_packet.crc = crc((uint8_t *)&status_packet, HEADER_SIZE + status_packet.payload_size);
+            status_packet.crc = crc((uint8_t *)&status_packet,
+                                    HEADER_SIZE + status_packet.payload_size);
         write_packet(&status_packet);
-    }
-    else if (packet->cmd == CMD_VALVE_SET && packet->payload_size == 1)
-    {
+    } else if (packet->cmd == CMD_VALVE_SET && packet->payload_size == 1) {
         // set valve state
         valve_t valve = (valve_t)(packet->payload[0]);
         uint8_t state = packet->payload[1];
@@ -56,11 +53,10 @@ void run_command(packet_t *packet)
         ack_packet.payload[0] = CMD_VALVE_SET;
         ack_packet.crc = 0;
         if (CRC_ENABLED)
-            ack_packet.crc = crc((uint8_t *)&ack_packet, HEADER_SIZE + ack_packet.payload_size);
+            ack_packet.crc = crc((uint8_t *)&ack_packet,
+                                 HEADER_SIZE + ack_packet.payload_size);
         write_packet(&ack_packet);
-    }
-    else if (packet->cmd == CMD_VALVE_MS && packet->payload_size == 3)
-    {
+    } else if (packet->cmd == CMD_VALVE_MS && packet->payload_size == 3) {
         valve_t valve = (valve_t)(packet->payload[0]);
         uint8_t state = packet->payload[1];
         uint16_t duration = (packet->payload[1] << 8) | packet->payload[2];
@@ -77,13 +73,40 @@ void run_command(packet_t *packet)
         ack_packet.payload[0] = CMD_VALVE_MS;
         ack_packet.crc = 0;
         if (CRC_ENABLED)
-            ack_packet.crc = crc((uint8_t *)&ack_packet, HEADER_SIZE + ack_packet.payload_size);
+            ack_packet.crc = crc((uint8_t *)&ack_packet,
+                                 HEADER_SIZE + ack_packet.payload_size);
         write_packet(&ack_packet);
     }
 }
 
-void setup()
-{
+void thermo_callback(int thermo_num, float temperature, void *user_data) {
+    data_t *data = (data_t *)user_data;
+
+    uint16_t temperature_int =
+        (uint16_t)(temperature * 100); // Convert to centi-degrees
+
+    // TODO: Handle negative temperatures (?)
+    // We could either:
+    // - update data model to use float temperature values
+    // - update the conversion used in the driver to avoid floating point
+    // operations & use int32 types in the data model
+
+    switch (thermo_num) {
+    case 1:
+        data->thermo1 = temperature_int;
+        break;
+    case 2:
+        data->thermo2 = temperature_int;
+        break;
+    case 3:
+        data->thermo3 = temperature_int;
+        break;
+    default:
+        break;
+    }
+}
+
+void setup() {
     memset(&my_data, 0, sizeof(data_t));
     my_data.cam_enable = false;
 
@@ -101,38 +124,36 @@ void setup()
     setup_error = thermo_setup();
     setup_error = valves_setup();
 
+    set_thermo_callback(thermo_callback, &my_data);
+
     // setup status leds and buzzer
     pinMode(RED_STATUS_PIN, OUTPUT);
     pinMode(GREEN_STATUS_PIN, OUTPUT);
 
-    if (setup_error)
-    {
+    if (setup_error) {
         Serial.println("Setup error detected!");
         digitalWrite(RED_STATUS_PIN, LOW);
         play_buzzer_error();
-    }
-    else
-    {
+    } else {
         Serial.println("Setup complete!");
         digitalWrite(GREEN_STATUS_PIN, LOW);
         play_buzzer_success();
     }
 }
 
-void loop()
-{
+void loop() {
     /* Comms */
     int error;
 
     // check if we have new data
     // if we get a valid message, execute the command associated to it
     packet_t *packet = read_packet(&error);
-    if (packet != NULL && error == CMD_READ_OK)
-    {
+    if (packet != NULL && error == CMD_READ_OK) {
         tone(BUZZER_PWM_PIN, 1000, 50); // beep on command receive
         run_command(packet);
     }
 
     /* Sensors */
     read_sensors(&my_data);
+    delay(10); // small delay to avoid overwhelming the CPU
 }

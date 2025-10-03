@@ -5,4 +5,8 @@
 
 int thermo_setup(void);
 
+typedef void (*thermo_data_callback)(int thermo_num, float temperature,
+                                     void *user_data);
+void set_thermo_callback(thermo_data_callback callback, void *user_data);
+
 #endif // THERMO_H
