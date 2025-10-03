@@ -2,7 +2,7 @@
 #include "IO_Map.h"
 #include <Arduino.h>
 
-void valves_setup(void) {
+int valves_setup(void) {
     pinMode(SOL_VALVE_1, OUTPUT);
     pinMode(SOL_VALVE_2, OUTPUT);
     pinMode(SOL_VALVE_3, OUTPUT);
@@ -12,4 +12,6 @@ void valves_setup(void) {
     pinMode(ST_VALVE_2, OUTPUT);
     pinMode(CAM_EN, OUTPUT);
     pinMode(PWM_SIG, OUTPUT);
+
+    return 0;
 }

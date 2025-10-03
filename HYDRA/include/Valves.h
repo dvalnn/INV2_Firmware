@@ -1,6 +1,6 @@
 #ifndef VALVES_H
 #define VALVES_H
 
-void valves_setup(void);s
+int valves_setup(void);
 
 #endif // VALVES_H
