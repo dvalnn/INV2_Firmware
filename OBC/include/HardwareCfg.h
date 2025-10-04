@@ -7,5 +7,6 @@ const int RS485_BAUD_RATE = 9600;
 #define ENABLE_RS_PIN 23 // GPIO pin to enable RS485 transceiver
 #define WRITE_RS_PIN 24
 #define READ_RS_PIN 25
+#define BUZZER_PIN 29
 
-#endif
+#endif // HARDWARE_CFG_H_

@@ -89,9 +89,7 @@ int send_hydra_command(hydra_t *hydra, hydra_cmd_t cmd, uint8_t *payload, uint8_
     {
         packet_t packet;
         packet.sender_id = DEFAULT_ID;
-        packet.target_id = (hydra->id == HYDRA_UF) ? HYDRA_UF_ID : (hydra->id == HYDRA_LF) ? HYDRA_LF_ID
-                                                               : (hydra->id == HYDRA_FS)   ? HYDRA_FS_ID
-                                                                                           : BROADCAST_ID;
+        packet.target_id = (uint8_t)hydra->id + HYDRA_UF_ID; // Map enum to ID
         packet.cmd = (uint8_t)cmd;
         packet.payload_size = payload_size;
         if (payload && payload_size > 0)
@@ -163,7 +161,7 @@ int fetch_next_hydra(hydra_t hydras[], system_data_t *system_data)
         if (result == 0)
         {
             // Move to the next hydra in the sequence
-            current_hydra = (hydra_id_t)((current_hydra + 1) % hydra_id_count);
+            //current_hydra = (hydra_id_t)((current_hydra + 1) % hydra_id_count);
             return 0;
         }
     }

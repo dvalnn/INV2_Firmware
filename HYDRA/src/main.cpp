@@ -120,7 +120,7 @@ void setup() {
     // Wire.begin();           // Initialize I2C with custom pins
     // Wire.setClock(400000);  // Set I2C clock to 400kHz
 
-    // setup_error = pressures_setup();
+    setup_error = pressures_setup();
     setup_error = thermo_setup();
     setup_error = valves_setup();
 
@@ -142,7 +142,7 @@ void setup() {
 }
 
 void loop() {
-    /* Comms */
+    
     int error;
 
     // check if we have new data
@@ -152,8 +152,10 @@ void loop() {
         tone(BUZZER_PWM_PIN, 1000, 50); // beep on command receive
         run_command(packet);
     }
+    //Serial.println("LIVE AND ALIVE");
 
-    /* Sensors */
     read_sensors(&my_data);
+        
     delay(10); // small delay to avoid overwhelming the CPU
+
 }

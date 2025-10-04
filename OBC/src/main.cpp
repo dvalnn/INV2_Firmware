@@ -22,7 +22,7 @@
 #include "GlobalVars.h"
 
 #include "Comms.h"
-
+#include "Buzzer.h"
 #include "StateMachine.h"
 #include "StMComms.h"
 #include "StMWork.h"
@@ -85,10 +85,18 @@ void sys_data_setup(void)
 void setup()
 {
     Serial.begin(USB_BAUD_RATE);    // USBC serial
-    Serial1.begin(RS485_BAUD_RATE); // RS485
+    
+    // RS485
+    pinMode(ENABLE_RS_PIN, OUTPUT); // RS485 transceiver enable pin
+    digitalWrite(ENABLE_RS_PIN, LOW);   // start in receive mode
+    Serial2.setTX(WRITE_RS_PIN);
+    Serial2.setRX(READ_RS_PIN);
+    Serial2.begin(RS485_BAUD_RATE);
 
     sys_data_setup();
 
+    setup_buzzer();
+    play_buzzer_success();
     printf("Setup done\n");
 }
 
@@ -193,7 +201,7 @@ void loop()
             fetch_next_hydra(hydras, &system_data);
             last_hydra_poll_time = millis();
         }
-
+        
         packet_t *hydra_packet = read_packet(&error, RS485_INTERFACE);
         if (hydra_packet != NULL && error == CMD_READ_OK)
         {
