@@ -1,6 +1,6 @@
 #include "Peripherals/Pressures.h"
 
-AD5593R ad5593r = AD5593R(0x11);
+AD5593R ad5593r = AD5593R(0x11, &Wire1);  // I2C address 0x11
 
 int dac_adc_setup(void) {
     // Initialize I2C communication with AD5593R

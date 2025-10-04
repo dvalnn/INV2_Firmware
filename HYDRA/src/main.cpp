@@ -80,6 +80,13 @@ void run_command(packet_t *packet) {
 }
 
 void thermo_callback(int thermo_num, float temperature, void *user_data) {
+    Serial.print("Thermo callback: ");
+    Serial.print("Thermo ");
+    Serial.print(thermo_num);
+    Serial.print(" - ");
+    Serial.print(temperature);
+    Serial.println(" °C");
+
     data_t *data = (data_t *)user_data;
 
     uint16_t temperature_int =
@@ -108,7 +115,6 @@ void thermo_callback(int thermo_num, float temperature, void *user_data) {
 
 void setup() {
     memset(&my_data, 0, sizeof(data_t));
-    my_data.thermo1 = 1234;
     my_data.cam_enable = false;
 
     setup_buzzer();
@@ -116,10 +122,11 @@ void setup() {
     rs485_init();                // RS-485 serial
 
     // Initialize I2C with custom pins from IO_Map.h
-    // Wire.setSDA(I2C_SDA);   // Set SDA to pin 14
-    // Wire.setSCL(I2C_SCL);   // Set SCL to pin 15
-    // Wire.begin();           // Initialize I2C with custom pins
-    // Wire.setClock(400000);  // Set I2C clock to 400kHz
+
+    Wire1.setSDA(I2C_SDA_PIN);   // Set SDA to pin 14
+    Wire1.setSCL(I2C_SCL_PIN);   // Set SCL to pin 15
+    Wire1.begin();           // Initialize I2C with custom pins
+    Wire1.setClock(400000);  // Set I2C clock to 400kHz
 
     setup_error = pressures_setup();
     setup_error = thermo_setup();
