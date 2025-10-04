@@ -1,5 +1,6 @@
 #include "HYDRA.h"
 #include <string.h> // for memset
+#include <Arduino.h>
 
 hydra_id_t current_hydra = HYDRA_UF;
 
@@ -104,12 +105,12 @@ int send_hydra_command(hydra_t *hydra, hydra_cmd_t cmd, uint8_t *payload, uint8_
     return -1;
 }
 
-int parse_hydra_response(hydra_t hydras[], packet_t *packet)
+int parse_hydra_response(hydra_t hydras[], packet_t *packet, system_data_t *system_data)
 {
     if (packet)
     {
         hydra_t *hydra = NULL;
-        switch (packet->target_id)
+        switch (packet->sender_id)
         {
         case HYDRA_UF_ID:
             hydra = &hydras[HYDRA_UF];
@@ -132,14 +133,9 @@ int parse_hydra_response(hydra_t hydras[], packet_t *packet)
             case HCMD_STATUS:
                 if (packet->payload_size < sizeof(hydra_data_t) + 1) // Minimum size check
                     return -1;
-                hydra->data.thermo1 = (packet->payload[index++] << 8) | packet->payload[index++];
-                hydra->data.thermo2 = (packet->payload[index++] << 8) | packet->payload[index++];
-                hydra->data.thermo3 = (packet->payload[index++] << 8) | packet->payload[index++];
-                hydra->data.pressure1 = (packet->payload[index++] << 8) | packet->payload[index++];
-                hydra->data.pressure2 = (packet->payload[index++] << 8) | packet->payload[index++];
-                hydra->data.pressure3 = (packet->payload[index++] << 8) | packet->payload[index++];
-                hydra->data.valve_states.raw = packet->payload[index++];
-                hydra->data.cam_enable = packet->payload[index++];
+                memcpy(&hydra->data, &packet->payload[index], sizeof(hydra_data_t));
+                update_data_from_hydra(hydra, system_data);
+                Serial.println(system_data->thermocouples.n2o_tank_uf_t1);
                 return 0;
             case HCMD_VALVE_SET:
             case HCMD_VALVE_MS:
@@ -161,7 +157,7 @@ int fetch_next_hydra(hydra_t hydras[], system_data_t *system_data)
         if (result == 0)
         {
             // Move to the next hydra in the sequence
-            //current_hydra = (hydra_id_t)((current_hydra + 1) % hydra_id_count);
+            current_hydra = (hydra_id_t)((current_hydra + 1) % hydra_id_count);
             return 0;
         }
     }

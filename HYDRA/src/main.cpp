@@ -108,6 +108,7 @@ void thermo_callback(int thermo_num, float temperature, void *user_data) {
 
 void setup() {
     memset(&my_data, 0, sizeof(data_t));
+    my_data.thermo1 = 1234;
     my_data.cam_enable = false;
 
     setup_buzzer();
@@ -149,10 +150,9 @@ void loop() {
     // if we get a valid message, execute the command associated to it
     packet_t *packet = read_packet(&error);
     if (packet != NULL && error == CMD_READ_OK) {
-        tone(BUZZER_PWM_PIN, 1000, 50); // beep on command receive
+        //tone(BUZZER_PWM_PIN, 1000, 50); // beep on command receive
         run_command(packet);
     }
-    //Serial.println("LIVE AND ALIVE");
 
     read_sensors(&my_data);
         

@@ -94,7 +94,7 @@ void setup()
     Serial2.begin(RS485_BAUD_RATE);
 
     sys_data_setup();
-
+    hydras_setup();
     setup_buzzer();
     play_buzzer_success();
     printf("Setup done\n");
@@ -205,7 +205,7 @@ void loop()
         packet_t *hydra_packet = read_packet(&error, RS485_INTERFACE);
         if (hydra_packet != NULL && error == CMD_READ_OK)
         {
-            int result = parse_hydra_response(hydras, hydra_packet);
+            int result = parse_hydra_response(hydras, hydra_packet, &system_data);
             if (result != 0) {
                 // log cmd execution error
             }

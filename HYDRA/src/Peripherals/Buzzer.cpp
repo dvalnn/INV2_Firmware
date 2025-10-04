@@ -26,6 +26,5 @@ void play_buzzer_success() {
         play_buzzer(2000, 75); 
         delay(150);
     }
-    
     //success_song(BUZZER_PWM_PIN);
 }

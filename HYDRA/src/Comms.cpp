@@ -43,7 +43,7 @@ static cmd_parse_state_t parse_input(uint8_t read_byte, packet_t *packet, cmd_pa
             state = SENDER_ID;
             packet->data_recv = 0;
             memset(packet, 0, sizeof(packet_t));
-            packet->begin = clock();
+            packet->begin = millis();
         }
     }
     break;
@@ -57,6 +57,7 @@ static cmd_parse_state_t parse_input(uint8_t read_byte, packet_t *packet, cmd_pa
 
     case TARGET_ID:
     {
+        packet->target_id = read_byte;
         state = CMD;
     }
     break;
@@ -115,44 +116,53 @@ packet_t *read_packet(int *error)
 
     size_t size;
     uint8_t read_byte;
-    
+
     if (Serial2.available() && state != END)
     {
-        tone(BUZZER_PWM_PIN, 2000, 10); // beep on byte receive
         read_byte = Serial2.read();
+        //Serial.printf("0x%02X ", read_byte);
         state = parse_input(read_byte, &packet, state);
-    } 
+    }
 
-    end = clock();
-    int msec = (end - packet.begin) * 1000 / CLOCKS_PER_SEC;
+    end = millis();
+    int msec = end - packet.begin;
 
     // if timeout reset state
     if (state != SYNC && msec > RS485_TIMEOUT_TIME_MS) // timeout
     {
-        
+
         state = SYNC;
 
         *error = CMD_READ_TIMEOUT;
 
         return NULL;
     }
-    // if bad crc reset state
-    else if (state == END &&
-             (packet.target_id == DEFAULT_ID ||
-              packet.target_id == BROADCAST_ID) &&
-             (check_crc(&packet) || !CRC_ENABLED))
-    {
-        state = SYNC;
-
-        *error = CMD_READ_OK;
-
-        return &packet;
-    }
     else if (state == END)
     {
         state = SYNC;
-
-        *error = CMD_READ_BAD_CRC;
+        if (packet.target_id == DEFAULT_ID ||
+            packet.target_id == BROADCAST_ID)
+        {
+            
+            if (CRC_ENABLED)
+            {
+                if (check_crc(&packet))
+                {
+                    *error = CMD_READ_OK;
+                    return &packet;
+                }
+            }
+            else
+            {
+                *error = CMD_READ_OK;
+                return &packet;
+            }
+        }
+        else
+        {
+            *error = CMD_READ_NO_CMD;
+            return NULL;
+        }
         return NULL;
     }
     else // default
