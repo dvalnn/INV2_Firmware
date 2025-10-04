@@ -1,0 +1,6 @@
+[submodule "Navigator/lib/BME280"]
+	path = Navigator/lib/BME280
+	url = git@github.com:finitespace/BME280.git
+[submodule "Navigator/lib/UBLOX_GNSS"]
+	path = Navigator/lib/UBLOX_GNSS
+	url = git@github.com:sparkfun/SparkFun_u-blox_GNSS_Arduino_Library.git
