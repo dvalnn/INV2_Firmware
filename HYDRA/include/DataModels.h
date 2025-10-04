@@ -4,7 +4,6 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-
 typedef enum {
     HYDRA_UF = 1,
     HYDRA_LF,
