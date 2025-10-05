@@ -129,6 +129,8 @@ typedef enum
 #define HYDRA_LF_ID 3
 #define HYDRA_FS_ID 4
 #define NAVIGATOR_ID 5
+#define LIFT_FS_ID 6
+#define LIFT_R_ID 7
 #define BROADCAST_ID 0xFF
 
 #define DEFAULT_ID OBC_ID

@@ -76,6 +76,18 @@ int handle_status_cmd(packet_t *packet, interface_t interface, packet_t *packet_
     packet_rep->payload[index++] = (system_data.thermocouples.n2o_line_thermo >> 8) & 0xff;
     packet_rep->payload[index++] = (system_data.thermocouples.n2o_line_thermo) & 0xff;
 
+    packet_rep->payload[index++] = (system_data.loadcells.n2o_bottle_weight >> 8) & 0xff;
+    packet_rep->payload[index++] = (system_data.loadcells.n2o_bottle_weight) & 0xff;
+
+    packet_rep->payload[index++] = (system_data.loadcells.thrust_loadcell1 >> 8) & 0xff;
+    packet_rep->payload[index++] = (system_data.loadcells.thrust_loadcell1) & 0xff;
+
+    packet_rep->payload[index++] = (system_data.loadcells.thrust_loadcell2 >> 8) & 0xff;
+    packet_rep->payload[index++] = (system_data.loadcells.thrust_loadcell2) & 0xff;
+
+    packet_rep->payload[index++] = (system_data.loadcells.thrust_loadcell3 >> 8) & 0xff;
+    packet_rep->payload[index++] = (system_data.loadcells.thrust_loadcell3) & 0xff;
+
     // EUROC: Add nav sensors
     // EUROC: Add kalman payload
 

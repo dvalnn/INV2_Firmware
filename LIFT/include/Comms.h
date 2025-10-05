@@ -74,7 +74,7 @@ typedef enum
 #define LIFT_R_ID 7
 #define BROADCAST_ID 0xFF
 
-#define DEFAULT_ID HYDRA_FS_ID // Change this for each board
+#define DEFAULT_ID LIFT_R_ID // Change this for each board
 
 void write_packet(packet_t *cmd);
 packet_t *read_packet(int *error);

@@ -161,12 +161,23 @@ typedef union
     uint16_t raw[5];
 } pressures_t;
 
+typedef union {
+    struct {
+        int16_t n2o_bottle_weight;
+        int16_t thrust_loadcell1;
+        int16_t thrust_loadcell2;
+        int16_t thrust_loadcell3;
+    };
+    int16_t raw[4];
+} loadcells_t;
+
 typedef struct
 {
     state_t state = IDLE;
     pressures_t pressures = {0};
     thermocouples_t thermocouples = {0};
     actuators_bitmap_t actuators = {0};
+    loadcells_t loadcells = {0};
 } system_data_t;
 
 typedef struct {
