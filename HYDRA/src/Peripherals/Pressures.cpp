@@ -67,9 +67,9 @@ void read_adc_channels(data_t *data) {
     adc_values[0] = ad5593r.readADC(1);
     adc_values[1] = ad5593r.readADC(2);
     adc_values[2] = ad5593r.readADC(3);
-    data->pressure1 = (int16_t)(adc_read_to_bar(adc_values[0]) * 100) + 1;
-    data->pressure2 = (int16_t)(adc_read_to_bar(adc_values[1]) * 100) + 2;
-    data->pressure3 = (int16_t)(adc_read_to_bar(adc_values[2]) * 100) + 3;
+    data->pressure1 = (int16_t)(adc_read_to_bar(adc_values[0]) * 100);
+    data->pressure2 = (int16_t)(adc_read_to_bar(adc_values[1]) * 100);
+    data->pressure3 = (int16_t)(adc_read_to_bar(adc_values[2]) * 100);
 }
 
 

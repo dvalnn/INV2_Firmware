@@ -36,95 +36,52 @@ int handle_status_cmd(packet_t *packet, interface_t interface, packet_t *packet_
     packet_rep->cmd = CMD_ACK;
     packet_rep->payload[index++] = CMD_STATUS;
 
-    // echo ASK byte
-    packet_rep->payload[index++] = packet->payload[0];
+    packet_rep->payload[index++] = system_data.state;
+    packet_rep->payload[index++] = (system_data.actuators.raw >> 8) & 0xff;
+    packet_rep->payload[index++] = (system_data.actuators.raw) & 0xff;
 
-    uint8_t ask = packet->payload[0];
-    if (ask_groups_size > 8)
-    {
-        return CMD_RUN_OUT_OF_BOUND;
-    }
+    packet_rep->payload[index++] = (system_data.pressures.n2o_tank_pressure >> 8) & 0xff;
+    packet_rep->payload[index++] = (system_data.pressures.n2o_tank_pressure) & 0xff;
 
-    if ((ask & STATE_BIT))
-    {
-        packet_rep->payload[index++] = system_data.state;
-    }
+    packet_rep->payload[index++] = (system_data.pressures.chamber_pressure >> 8) & 0xff;
+    packet_rep->payload[index++] = (system_data.pressures.chamber_pressure) & 0xff;
 
-    if ((ask & ACTUATOR_STATES_BIT))
-    {
-        packet_rep->payload[index++] = (system_data.actuators.raw >> 8) & 0xff;
-        packet_rep->payload[index++] = (system_data.actuators.raw) & 0xff;
-    }
+    packet_rep->payload[index++] = (system_data.pressures.n2o_line_pressure >> 8) & 0xff;
+    packet_rep->payload[index++] = (system_data.pressures.n2o_line_pressure) & 0xff;
 
-    if ((ask & R_PRESSURES_BIT))
-    {
-        int16_t ipressure;
-        ipressure = (int16_t)(system_data.pressures.n2o_tank_pressure * 100);
-        packet_rep->payload[index++] = (ipressure >> 8) & 0xff;
-        packet_rep->payload[index++] = (ipressure) & 0xff;
+    packet_rep->payload[index++] = (system_data.pressures.n2_line_pressure >> 8) & 0xff;
+    packet_rep->payload[index++] = (system_data.pressures.n2_line_pressure) & 0xff;
 
-        ipressure = (int16_t)(system_data.pressures.chamber_pressure * 100);
-        packet_rep->payload[index++] = (ipressure >> 8) & 0xff;
-        packet_rep->payload[index++] = (ipressure) & 0xff;
-    }
+    packet_rep->payload[index++] = (system_data.pressures.quick_dc_pressure >> 8) & 0xff;
+    packet_rep->payload[index++] = (system_data.pressures.quick_dc_pressure) & 0xff;
 
-    if ((ask & FS_PRESSURES_BIT))
-    {
-        int16_t ipressure;
-        ipressure = (int16_t)(system_data.pressures.n2o_line_pressure * 100);
-        packet_rep->payload[index++] = (ipressure >> 8) & 0xff;
-        packet_rep->payload[index++] = (ipressure) & 0xff;
+    packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t1 >> 8) & 0xff;
+    packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t1) & 0xff;
 
-        ipressure = (int16_t)(system_data.pressures.n2_line_pressure * 100);
-        packet_rep->payload[index++] = (ipressure >> 8) & 0xff;
-        packet_rep->payload[index++] = (ipressure) & 0xff;
+    packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t2 >> 8) & 0xff;
+    packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t2) & 0xff;
 
-        ipressure = (int16_t)(system_data.pressures.quick_dc_pressure * 100);
-        packet_rep->payload[index++] = (ipressure >> 8) & 0xff;
-        packet_rep->payload[index++] = (ipressure) & 0xff;
-    }
+    packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t3 >> 8) & 0xff;
+    packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t3) & 0xff;
 
-    if ((ask & R_TEMPERATURES_BIT))
-    {
-        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t1 >> 8) & 0xff;
-        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t1) & 0xff;
+    packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_lf_t1 >> 8) & 0xff;
+    packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_lf_t1) & 0xff;
 
-        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t2 >> 8) & 0xff;
-        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t2) & 0xff;
+    packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_lf_t2 >> 8) & 0xff;
+    packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_lf_t2) & 0xff;
 
-        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t3 >> 8) & 0xff;
-        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_uf_t3) & 0xff;
+    packet_rep->payload[index++] = (system_data.thermocouples.chamber_thermo >> 8) & 0xff;
+    packet_rep->payload[index++] = (system_data.thermocouples.chamber_thermo) & 0xff;
 
-        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_lf_t1 >> 8) & 0xff;
-        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_lf_t1) & 0xff;
+    packet_rep->payload[index++] = (system_data.thermocouples.n2o_line_thermo >> 8) & 0xff;
+    packet_rep->payload[index++] = (system_data.thermocouples.n2o_line_thermo) & 0xff;
 
-        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_lf_t2 >> 8) & 0xff;
-        packet_rep->payload[index++] = (system_data.thermocouples.n2o_tank_lf_t2) & 0xff;
-
-        packet_rep->payload[index++] = (system_data.thermocouples.chamber_thermo >> 8) & 0xff;
-        packet_rep->payload[index++] = (system_data.thermocouples.chamber_thermo) & 0xff;
-    }
-
-    if ((ask & FS_TEMPERATURES_BIT))
-    {
-        packet_rep->payload[index++] = (system_data.thermocouples.n2o_line_thermo >> 8) & 0xff;
-        packet_rep->payload[index++] = (system_data.thermocouples.n2o_line_thermo) & 0xff;
-    }
-
-    if ((ask & NAV_SENSORS_BIT))
-    {
-        // EUROC: Add nav sensors
-    }
-
-    if ((ask & NAV_KALMAN_BIT))
-    {
-        // EUROC: Add kalman payload
-    }
+    // EUROC: Add nav sensors
+    // EUROC: Add kalman payload
 
     packet_rep->payload_size = index;
     packet_rep->crc = crc((unsigned char *)&packet_rep, packet_rep->payload_size + 3);
     write_packet(packet_rep, interface);
-
     return CMD_RUN_OK;
 }
 
