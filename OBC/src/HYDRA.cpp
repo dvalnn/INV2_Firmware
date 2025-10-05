@@ -135,7 +135,6 @@ int parse_hydra_response(hydra_t hydras[], packet_t *packet, system_data_t *syst
                     return -1;
                 memcpy(&hydra->data, &packet->payload[index], sizeof(hydra_data_t));
                 update_data_from_hydra(hydra, system_data);
-                Serial.print(system_data->actuators.raw);
                 return 0;
             case HCMD_VALVE_SET:
             case HCMD_VALVE_MS:

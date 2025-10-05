@@ -72,7 +72,7 @@ typedef enum
 #define NAVIGATOR_ID 5
 #define BROADCAST_ID 0xFF
 
-#define DEFAULT_ID HYDRA_UF_ID // Change this for each board
+#define DEFAULT_ID HYDRA_FS_ID // Change this for each board
 
 void write_packet(packet_t *cmd);
 packet_t *read_packet(int *error);

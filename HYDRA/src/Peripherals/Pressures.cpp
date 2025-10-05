@@ -41,11 +41,35 @@ int dac_adc_setup(void) {
     return 0;  // Successful initialization
 }
 
+float adc_read_to_bar(int16_t reading) {
+    const float ADC_MAX = 4095.0f;       // 12-bit full scale
+    const float VREF    = 5.0f;         // ADC reference voltage
+    const float S_MIN_V = 0.5f;         // sensor output at 0 bar
+    const float S_SPAN  = 4.0f;         // 4.5 - 0.5 V span
+    const float P_MAX   = 250.0f;       // max pressure (bar)
+
+    // Convert ADC count to voltage
+    float voltage = ((float)reading / ADC_MAX) * VREF;
+
+    // Compute sensor voltage above minimum and clamp to [0, S_SPAN]
+    float v_above_min = voltage - S_MIN_V;
+    if (v_above_min < 0.0f) v_above_min = 0.0f;
+    if (v_above_min > S_SPAN) v_above_min = S_SPAN;
+
+    // Convert to pressure
+    float pressure = (v_above_min / S_SPAN) * P_MAX;
+    return pressure; // in bar
+}
+
 // Read ADC channels 0 to 3 and store values in adc_values array
 void read_adc_channels(data_t *data) {
-    data->pressure1 = ad5593r.readADC(1);
-    data->pressure2 = ad5593r.readADC(2);
-    data->pressure3 = ad5593r.readADC(3);
+    uint16_t adc_values[3];
+    adc_values[0] = ad5593r.readADC(1);
+    adc_values[1] = ad5593r.readADC(2);
+    adc_values[2] = ad5593r.readADC(3);
+    data->pressure1 = (int16_t)(adc_read_to_bar(adc_values[0]) * 100) + 1;
+    data->pressure2 = (int16_t)(adc_read_to_bar(adc_values[1]) * 100) + 2;
+    data->pressure3 = (int16_t)(adc_read_to_bar(adc_values[2]) * 100) + 3;
 }
 
 

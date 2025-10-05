@@ -9,6 +9,11 @@ typedef enum
 {
     IDLE,
     FILLING,
+    SAFE_IDLE,
+    FILLING_N2,
+    PRE_PRESSURE,
+    FILLING_N2O,
+    POST_PRESSURE,
     READY,
     ARMED,
     IGNITION,
@@ -19,17 +24,6 @@ typedef enum
     state_count, //this needs to be the last state for size to work
     S_NONE = -1
 } state_t;
-
-typedef enum 
-{
-    FP_NONE = 0,
-    SAFE_IDLE,
-    FILLING_N2,
-    PRE_PRESSURE,
-    FILLING_N2O,
-    POST_PRESSURE,
-    filling_program_count, //this needs to be the last state for size to work
-} filling_program_t;
 
 /*
     Commands
@@ -166,7 +160,6 @@ typedef struct
 } system_data_t;
 
 typedef struct {
-    filling_program_t program;
     uint16_t target_pressure, trigger_pressure;
     uint16_t target_temperature, trigger_temperature;
     uint16_t target_weight;
