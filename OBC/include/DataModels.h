@@ -48,6 +48,16 @@ typedef enum
 
 typedef enum
 {
+    CMD_FILL_NONE = 0,
+    CMD_SAFE_IDLE,
+    CMD_FILLING_N2,
+    CMD_PRE_PRESSURE,
+    CMD_FILLING_N2O,
+    CMD_POST_PRESSURE,
+} fill_cmd_t;
+
+typedef enum
+{
     CMD_MANUAL_SD_LOG_START,
     CMD_MANUAL_SD_LOG_STOP,
     CMD_MANUAL_SD_STATUS,

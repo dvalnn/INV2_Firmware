@@ -9,6 +9,7 @@
 #include "StMWork.h"
 #include "HYDRA.h"
 #include "FlashLog.h"
+#include "Valves.h"
 
 extern system_data_t system_data;
 extern filling_params_t filling_params;
@@ -171,32 +172,37 @@ int handle_fill_exec_cmd(packet_t *packet, interface_t interface, packet_t *pack
         int index = 1;
         switch (packet->payload[0])
         {
-        case SAFE_IDLE:
+        case CMD_SAFE_IDLE:
             index = 1;
             filling_params.target_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
             filling_params.trigger_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
+            expected_state[FILLING][CMD_FILL_EXEC] = SAFE_IDLE;
             break;
-        case FILLING_N2:
+        case CMD_FILLING_N2:
             index = 1;
             filling_params.target_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
+            expected_state[FILLING][CMD_FILL_EXEC] = FILLING_N2;
             break;
-        case PRE_PRESSURE:
+        case CMD_PRE_PRESSURE:
             index = 1;
             filling_params.target_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
             filling_params.trigger_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
+            expected_state[FILLING][CMD_FILL_EXEC] = PRE_PRESSURE;
             break;
-        case FILLING_N2O:
+        case CMD_FILLING_N2O:
             index = 1;
             filling_params.target_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
             filling_params.trigger_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
             filling_params.target_temperature = (packet->payload[index++] << 8) + packet->payload[index++];
             filling_params.trigger_temperature = (packet->payload[index++] << 8) + packet->payload[index++];
             filling_params.target_weight = (packet->payload[index++] << 8) + packet->payload[index++];
+            expected_state[FILLING][CMD_FILL_EXEC] = FILLING_N2O;
             break;
         case POST_PRESSURE:
             index = 1;
             filling_params.target_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
             filling_params.trigger_pressure = (packet->payload[index++] << 8) + packet->payload[index++];
+            expected_state[FILLING][CMD_FILL_EXEC] = POST_PRESSURE;
             break;
         default:
             return CMD_RUN_OUT_OF_BOUND;
@@ -221,108 +227,33 @@ int handle_manual_valve_cmd(packet_t *packet)
 {
     int valve = packet->payload[1];
     int valve_state = packet->payload[2];
-
-    switch (valve)
+    if (valve_set((valve_t)valve, valve_state) != 0)
     {
-    // Check HYDRA.cpp for valve mapping
-    case VALVE_ABORT:
-        set_hydra_valve(&hydras[HYDRA_LF], H_VALVE_CONTROLLED_1, valve_state);
-        break;
-    case VALVE_N2_PURGE:
-        set_hydra_valve(&hydras[HYDRA_FS], H_VALVE_STEEL_BALL_2, valve_state);
-        break;
-    case VALVE_N2O_PURGE:
-        set_hydra_valve(&hydras[HYDRA_FS], H_VALVE_CONTROLLED_2, valve_state);
-        break;
-    case VALVE_MAIN:
-        set_hydra_valve(&hydras[HYDRA_LF], H_VALVE_CONTROLLED_2, valve_state);
-        break;
-    case VALVE_N2_FILL:
-        set_hydra_valve(&hydras[HYDRA_FS], H_VALVE_STEEL_BALL_1, valve_state);
-        break;
-    case VALVE_N2O_FILL:
-        set_hydra_valve(&hydras[HYDRA_FS], H_VALVE_CONTROLLED_1, valve_state);
-        break;
-    case VALVE_N2_QUICK_DC:
-        set_hydra_valve(&hydras[HYDRA_FS], H_VALVE_QUICK_DC_2, valve_state);
-        break;
-    case VALVE_N2O_QUICK_DC:
-        set_hydra_valve(&hydras[HYDRA_FS], H_VALVE_QUICK_DC_1, valve_state);
-        break;
-    case VALVE_PRESSURIZING:
-        set_hydra_valve(&hydras[HYDRA_UF], H_VALVE_CONTROLLED_1, valve_state);
-        break;
-    case VALVE_VENT:
-        set_hydra_valve(&hydras[HYDRA_UF], H_VALVE_CONTROLLED_2, valve_state);
-        break;
-    default:
-        // valve not defined
         return CMD_RUN_OUT_OF_BOUND;
     }
-    return CMD_RUN_OK;
+    else
+    {
+        return CMD_RUN_OK;
+    }
 }
 
 int handle_manual_valve_ms_cmd(packet_t *packet)
 {
     int valve = packet->payload[1];
     int valve_time = packet->payload[2];
-    switch (valve)
+    if (valve_set((valve_t)valve, VALVE_OPEN) != 0)
     {
-    case VALVE_ABORT:
-        system_data.actuators.v_abort = 1;
-        delay(valve_time);
-        system_data.actuators.v_abort = 0;
-        break;
-    case VALVE_N2_PURGE:
-        system_data.actuators.v_n2_purge = 1;
-        delay(valve_time);
-        system_data.actuators.v_n2_purge = 0;
-        break;
-    case VALVE_N2O_PURGE:
-        system_data.actuators.v_n2o_purge = 1;
-        delay(valve_time);
-        system_data.actuators.v_n2o_purge = 0;
-        break;
-    case VALVE_MAIN:
-        system_data.actuators.v_main = 1;
-        delay(valve_time);
-        system_data.actuators.v_main = 0;
-        break;
-    case VALVE_N2_FILL:
-        system_data.actuators.v_n2_fill = 1;
-        delay(valve_time);
-        system_data.actuators.v_n2_fill = 0;
-        break;
-    case VALVE_N2O_FILL:
-        system_data.actuators.v_n2o_fill = 1;
-        delay(valve_time);
-        system_data.actuators.v_n2o_fill = 0;
-        break;
-    case VALVE_N2_QUICK_DC:
-        system_data.actuators.v_n2_quick_dc = 1;
-        delay(valve_time);
-        system_data.actuators.v_n2_quick_dc = 0;
-        break;
-    case VALVE_N2O_QUICK_DC:
-        system_data.actuators.v_n2o_quick_dc = 1;
-        delay(valve_time);
-        system_data.actuators.v_n2o_quick_dc = 0;
-        break;
-    case VALVE_PRESSURIZING:
-        system_data.actuators.v_pressurizing = 1;
-        delay(valve_time);
-        system_data.actuators.v_pressurizing = 0;
-        break;
-    case VALVE_VENT:
-        system_data.actuators.v_vent = 1;
-        delay(valve_time);
-        system_data.actuators.v_vent = 0;
-        break;
-    default:
-        // valve not defined
-        return CMD_RUN_OUT_OF_BOUND;
+        return CMD_RUN_DEFAULT_ERROR;
     }
-    return CMD_RUN_OK;
+    else
+    {
+        delay(valve_time);
+        if (valve_set((valve_t)valve, VALVE_CLOSE) != 0)
+        {
+            return CMD_RUN_DEFAULT_ERROR;
+        }
+        return CMD_RUN_OK;
+    }
 }
 
 int handle_manual_exec_cmd(packet_t *packet, interface_t interface, packet_t *packet_rep)

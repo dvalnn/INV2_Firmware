@@ -76,7 +76,7 @@ void hydras_setup(void)
 
 void sys_data_setup(void)
 {
-    system_data.state = FILLING;
+    system_data.state = IDLE;
     system_data.pressures = {0};
     system_data.thermocouples = {0};
     system_data.actuators = {0};
@@ -144,7 +144,7 @@ void loop()
 
             // make transition to new state on the state machine
             if (error == CMD_RUN_OK &&
-                state_machine[system_data.state].next_states[packet->cmd] != -1)
+                state_machine[system_data.state].next_states[packet->cmd] != system_data.state)
             {
                 // we have new state, use lookup table
                 command_state = expected_state[system_data.state][packet->cmd];

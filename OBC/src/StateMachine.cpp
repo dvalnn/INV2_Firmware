@@ -51,6 +51,57 @@ sm_state_t state_machine[state_count] =
 
         .next_states = expected_state[FILLING],
     },
+    // SAFE_IDLE
+    {
+        .work = {
+        },
+
+        .events = {
+        },
+
+        .next_states = expected_state[SAFE_IDLE],
+    },
+    // FILLING_N2
+    {
+        .work = {
+        },
+
+        .events = {
+        },
+
+        .next_states = expected_state[FILLING_N2],
+    },
+    // PRE_PRESSURE
+    {
+        .work = {
+        },
+
+        .events = {
+        },
+
+        .next_states = expected_state[PRE_PRESSURE],
+    },
+    // FILLING_N2O
+    {
+        .work = {
+        },
+
+        .events = {
+        },
+
+        .next_states = expected_state[FILLING_N2O],
+    },
+    // POST_PRESSURE
+    {
+        .work = {
+        },
+
+        .events = {
+            
+        },
+
+        .next_states = expected_state[POST_PRESSURE],
+    },
     // READY
     {
         .work = {
@@ -150,7 +201,7 @@ state_t event_handler()
         {
             if (react != NULL)
                 react();
-            if (next_state > -1 && next_state_event == -1)
+            if (next_state != system_data.state && next_state_event == S_NONE)
                 next_state_event = next_state;
         }
     }
