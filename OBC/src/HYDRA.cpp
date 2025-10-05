@@ -84,7 +84,7 @@ int set_hydra_valve_ms(hydra_t *hydra, hydra_valve_t valve, uint16_t ms)
     return -1;
 }
 
-int send_hydra_command(hydra_t *hydra, hydra_cmd_t cmd, uint8_t *payload, uint8_t payload_size)
+int send_hydra_command(hydra_t *hydra, hydra_cmd_t cmd, uint8_t payload[], uint8_t payload_size)
 {
     if (hydra)
     {
@@ -135,7 +135,7 @@ int parse_hydra_response(hydra_t hydras[], packet_t *packet, system_data_t *syst
                     return -1;
                 memcpy(&hydra->data, &packet->payload[index], sizeof(hydra_data_t));
                 update_data_from_hydra(hydra, system_data);
-                Serial.println(system_data->thermocouples.n2o_tank_uf_t1);
+                Serial.print(system_data->actuators.raw);
                 return 0;
             case HCMD_VALVE_SET:
             case HCMD_VALVE_MS:

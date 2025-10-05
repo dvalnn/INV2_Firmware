@@ -331,7 +331,6 @@ int handle_manual_exec_cmd(packet_t *packet, interface_t interface, packet_t *pa
         if (state != MANUAL)
             return CMD_RUN_STATE_ERROR;
         */
-
     packet_rep->cmd = CMD_ACK;
     packet_rep->payload_size = 1;
     packet_rep->payload[0] = CMD_MANUAL_EXEC;

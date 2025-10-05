@@ -1,6 +1,7 @@
 #include "Peripherals/Pressures.h"
+#include "Peripherals/Buzzer.h"
 
-AD5593R ad5593r = AD5593R(0x11, &Wire1);  // I2C address 0x11
+AD5593R ad5593r = AD5593R(0x10, &Wire1);  // I2C address 0x10
 
 int dac_adc_setup(void) {
     // Initialize I2C communication with AD5593R
@@ -11,6 +12,7 @@ int dac_adc_setup(void) {
 
     ad5593r.reset();  // Reset the device to ensure clean state
     delay(10);        // Small delay after reset
+
 
     ad5593r.setExternalReference(false, 2.5);  // Configure voltage reference (false = internal 2.5V reference)
     ad5593r.setMode("AAAATDDD");               // Set I/O configuration: 0-3 as ADC, 4 as THREESTATE (unused), 5-7 as DAC
