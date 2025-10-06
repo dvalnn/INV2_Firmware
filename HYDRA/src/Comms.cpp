@@ -116,11 +116,9 @@ packet_t *read_packet(int *error)
 
     size_t size;
     uint8_t read_byte;
-
     if (Serial2.available() && state != END)
     {
         read_byte = Serial2.read();
-        //Serial.printf("0x%02X ", read_byte);
         state = parse_input(read_byte, &packet, state);
     }
 

@@ -5,8 +5,6 @@
 #include <string.h>
 
 #include "Comms.h"
-
-#include "FlashLog.h"
 #include "GlobalVars.h"
 #include "HardwareCfg.h"
 

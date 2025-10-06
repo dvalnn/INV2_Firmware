@@ -24,7 +24,7 @@ int valve_set(valve_t valve, int state)
         set_hydra_valve(&hydras[HYDRA_FS], H_VALVE_STEEL_BALL_1, state);
         break;
     case VALVE_N2O_FILL:
-        set_hydra_valve(&hydras[HYDRA_FS], H_VALVE_CONTROLLED_1, state);
+        set_hydra_valve(&hydras[HYDRA_FS], H_VALVE_CONTROLLED_3, state);
         break;
     case VALVE_N2_QUICK_DC:
         set_hydra_valve(&hydras[HYDRA_FS], H_VALVE_QUICK_DC_2, state);

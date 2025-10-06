@@ -8,7 +8,6 @@
 #include "StMComms.h"
 #include "StMWork.h"
 #include "HYDRA.h"
-#include "FlashLog.h"
 #include "Valves.h"
 
 extern system_data_t system_data;
@@ -110,8 +109,6 @@ int handle_arm_cmd(packet_t *packet, interface_t interface, packet_t *packet_rep
 
     packet_rep->crc = crc((unsigned char *)packet_rep, packet_rep->payload_size + 3);
     write_packet(packet_rep, interface);
-
-    start_log();
 
     return CMD_RUN_OK;
 }
@@ -238,10 +235,8 @@ int handle_manual_exec_cmd(packet_t *packet, interface_t interface, packet_t *pa
     switch (packet->payload[0])
     {
     case CMD_MANUAL_SD_LOG_START:
-        start_log();
         break;
     case CMD_MANUAL_SD_LOG_STOP:
-        stop_log();
         break;
     case CMD_MANUAL_VALVE_STATE:
         handle_manual_valve_cmd(packet);

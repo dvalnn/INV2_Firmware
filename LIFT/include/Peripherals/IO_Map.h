@@ -8,7 +8,8 @@
 #define HX711_SCK2_PIN 8
 #define HX711_DOUT3_PIN 15
 #define HX711_SCK3_PIN 14
-
+#define HX711_DOUT4_PIN 18
+#define HX711_SCK4_PIN 17
 //* STATUS
 #define RED_STATUS_PIN 0
 #define GREEN_STATUS_PIN 1

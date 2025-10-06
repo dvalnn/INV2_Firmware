@@ -28,7 +28,7 @@ int dac_adc_setup(void) {
     ad5593r.setLDACmode(AD5593R_LDAC_DIRECT);  // Set LDAC mode (direct write to DAC outputs)
 
     // With 2x range (5V) and 12-bit resolution: output = (Vout/5.0) * 4095
-    uint16_t dac_output = (2.5 / 5.0) * 4095;  // 2.5 output voltage
+    uint16_t dac_output = (2.5 / 5) * 4095;  // 1.8 output voltage
 
     ad5593r.writeDAC(5, dac_output);  // Set DAC channel 5
     ad5593r.writeDAC(6, dac_output);  // Set DAC channel 6
@@ -67,9 +67,15 @@ void read_adc_channels(data_t *data) {
     adc_values[0] = ad5593r.readADC(1);
     adc_values[1] = ad5593r.readADC(2);
     adc_values[2] = ad5593r.readADC(3);
+    
     data->pressure1 = (int16_t)(adc_read_to_bar(adc_values[0]) * 100);
     data->pressure2 = (int16_t)(adc_read_to_bar(adc_values[1]) * 100);
     data->pressure3 = (int16_t)(adc_read_to_bar(adc_values[2]) * 100);
+    /*
+    data->pressure1 = adc_values[0];
+    data->pressure2 = adc_values[1];
+    data->pressure3 = adc_values[2];
+    */
 }
 
 

@@ -43,8 +43,10 @@ void setup()
     memset(&my_data, 0, sizeof(data_t));
 
     Serial.begin(USB_BAUD_RATE); // USBC serial
-    rs485_init();  // RS-485 serial
-
+    // rs485_init(); // RS-485 serial
+    while(!Serial) {
+        ;
+    }
     setup_error |= loadcells_setup(); // change to loadcell setup
 
     if (setup_error != 0)
@@ -57,6 +59,7 @@ void setup()
     }
 }
 
+
 void loop()
 {
     static unsigned long last_test = 0;
@@ -64,13 +67,14 @@ void loop()
 
     // check if we have new data
     // if we get a valid message, execute the command associated to it
-    packet_t *packet = read_packet(&error);
+    /* packet_t *packet = read_packet(&error);
     if (packet != NULL && error == CMD_READ_OK)
     {
-        //tone(BUZZER_PWM_PIN, 1000, 50); // beep on command receive
+        // tone(BUZZER_PWM_PIN, 1000, 50); // beep on command receive
         run_command(packet);
     }
-
+    */
+    calibrate_loadcells();
     read_sensors(&my_data);
-    delay(10); // small delay to avoid overwhelming the CPU
+    //delay(10); // small delay to avoid overwhelming the CPU
 }

@@ -26,12 +26,10 @@
 #include "StateMachine.h"
 #include "StMComms.h"
 #include "StMWork.h"
-#include "FlashLog.h"
 #include "HYDRA.h"
 #include "LIFT.h"
 
 #include "Control_Work.h"
-#include <I2Cdev.h>
 #include <LoRa.h>
 #include <Crc.h>
 #include <SerialFlash.h>
@@ -183,7 +181,6 @@ void loop()
                 state_machine[system_data.state].work[i].begin =
                     state_machine[system_data.state].work[i].delay;
 
-            log(&system_data.state, 0, STATE_CHANGE);
         }
 
         // command state transitions must take precedence to event state transitions
@@ -199,15 +196,18 @@ void loop()
                 state_machine[system_data.state].work[i].begin =
                     state_machine[system_data.state].work[i].delay;
 
-            log(&system_data.state, 0, STATE_CHANGE);
         }
 
         if (millis() - last_slave_poll_time > RS_SLAVE_POLL_INTERVAL) {
             current_slave = (current_slave + 1) % (hydra_id_count + lift_id_count);
-            if(current_slave < hydra_id_count)
+            if(current_slave < hydra_id_count) {
                 fetch_next_hydra(hydras, &system_data);
-            else
+                //tone(BUZZER_PIN, 2000, 50);
+            }
+            else {
                 fetch_next_lift(lifts, &system_data);
+                //tone(BUZZER_PIN, 1000, 50);
+            }
             last_slave_poll_time = millis();
         }
 
@@ -220,6 +220,7 @@ void loop()
                 case HYDRA_FS_ID:
                     {
                         int result = parse_hydra_response(hydras, slave_packet, &system_data);
+                        tone(BUZZER_PIN, 2000, 50);
                         if (result != 0) {
                             // log cmd execution error
                         }

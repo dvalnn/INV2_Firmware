@@ -42,7 +42,6 @@ void run_command(packet_t *packet)
     }
     else if (packet->cmd == CMD_VALVE_SET && packet->payload_size == 2)
     {
-        tone(BUZZER_PWM_PIN, 1000, 50); // beep on command receive
         // set valve state
         valve_t valve = (valve_t)(packet->payload[0]);
         uint8_t state = packet->payload[1];
@@ -136,7 +135,7 @@ void loop()
     packet_t *packet = read_packet(&error);
     if (packet != NULL && error == CMD_READ_OK)
     {
-        //tone(BUZZER_PWM_PIN, 1000, 50); // beep on command receive
+        tone(BUZZER_PWM_PIN, 1000, 50); // beep on command receive
         run_command(packet);
     }
 

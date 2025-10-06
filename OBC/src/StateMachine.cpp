@@ -57,6 +57,8 @@ sm_state_t state_machine[state_count] =
         },
 
         .events = {
+            {.condition = safe_active_cond, .reaction = enter_safety_vent, .next_state = SAFE_IDLE},
+            {.condition = safe_inactive_cond, .reaction = exit_safety_vent, .next_state = SAFE_IDLE},
         },
 
         .next_states = expected_state[SAFE_IDLE],
@@ -97,7 +99,7 @@ sm_state_t state_machine[state_count] =
         },
 
         .events = {
-            
+
         },
 
         .next_states = expected_state[POST_PRESSURE],
