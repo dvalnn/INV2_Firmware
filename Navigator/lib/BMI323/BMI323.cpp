@@ -1,11 +1,8 @@
 #include "BMI323.h"
 
-BMI323::BMI323(uint8_t csPin) : spiSettings(SPI_FREQ, MSBFIRST, SPI_MODE3), cs(csPin) {}
+BMI323::BMI323(uint8_t csPin, SPIClass *spiDevice = &SPI) : spi(csPin, SPI_FREQ, MSBFIRST, SPI_MODE3, spiDevice) {}
 
 bool BMI323::begin() {
-    pinMode(cs, OUTPUT);
-    digitalWrite(cs, HIGH);
-    SPI.begin();
     return initBMI323();
 }
 
@@ -14,8 +11,14 @@ bool BMI323::initBMI323() {
     writeRegister16(CMD_REG, SOFT_RESET_CMD);
     delay(50);
 
+    uint16_t chip_id = readRegister8(CHIP_ID_REG);
+    Serial.printf("chip id is %d\n", chip_id);
+
     // Verifica CHIP ID
-    if (readRegister16(CHIP_ID_REG) != 0x323) return false;
+    if (chip_id != 0x323) {
+        Serial.println("AAAAAAAHHHHHH");
+        return false;
+    }
 
     // Configura acelerômetro e giroscópio
     writeRegister16(ACC_CONF_REG, ACC_CONF_NORMAL_100HZ_8G);
@@ -32,25 +35,44 @@ bool BMI323::initializeFeatureEngine() {
     return false;
 }
 
-uint16_t BMI323::readRegister16(uint8_t reg) {
-    uint16_t val;
-    SPI.beginTransaction(spiSettings);
-    digitalWrite(cs, LOW);
-    SPI.transfer(reg | 0x80); // Read command
-    val = (SPI.transfer(0x00) << 8) | SPI.transfer(0x00);
-    digitalWrite(cs, HIGH);
-    SPI.endTransaction();
-    return val;
+uint8_t BMI323::readRegister8(uint8_t addr) {
+  uint8_t ret = 0;
+  readRegisterN(addr, &ret, 1);
+
+  return ret;
 }
 
-void BMI323::writeRegister16(uint8_t reg, uint16_t data) {
-    SPI.beginTransaction(spiSettings);
-    digitalWrite(cs, LOW);
-    SPI.transfer(reg & 0x7F); // Write command
-    SPI.transfer(data >> 8);
-    SPI.transfer(data & 0xFF);
-    digitalWrite(cs, HIGH);
-    SPI.endTransaction();
+uint16_t BMI323::readRegister16(uint8_t addr) {
+  uint8_t buffer[2] = {0, 0};
+  readRegisterN(addr, buffer, 2);
+
+  uint16_t ret = buffer[0];
+  ret <<= 8;
+  ret |= buffer[1];
+
+  return ret;
+}
+
+void BMI323::readRegisterN(uint8_t addr, uint8_t buffer[], uint8_t n){
+  addr &= 0x7F; // MSB=0 for read, make sure top bit is not set
+
+  spi.write_then_read(&addr, 1, buffer, n);
+}
+
+void BMI323::writeRegister8(uint8_t addr, uint8_t data) {
+  addr |= 0x80; // MSB=1 for write, make sure top bit is set
+
+  uint8_t buffer[2] = {addr, data};
+
+  spi.write(buffer, 2);
+}
+
+void BMI323::writeRegister16(uint8_t addr, uint16_t data){
+  addr |= 0x80; // MSB=1 for write, make sure top bit is set
+
+  uint8_t buffer[3] = {addr, (uint8_t)(data >> 8), (uint8_t)(data & 0xFF)};
+
+  spi.write(buffer, 3);
 }
 
 float BMI323::convertAccelData(uint16_t raw) {

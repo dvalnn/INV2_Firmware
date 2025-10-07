@@ -1,15 +1,17 @@
 #include <Arduino.h>
-// #include <SPI.h>
-// #include <BME280Spi.h>
-// #include <BMI323.h>
+#include <BME280Spi.h>
+#include <BMI323.h>
+#include <FreeRTOS.h>
+#include <SPI.h>
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 
-// --- SPI pins you want to use ---
+// --- SPI pins ---
 #define SPI_MISO 8
 #define SPI_MOSI 11
 #define SPI_SCK 10
 
 #define BME280_CS_PIN 9
+#define LIS2MD_CS_PIN 13
 #define BMI323_CS_PIN 25
 
 // --- UART0 config pins ---
@@ -27,83 +29,97 @@
 #define GNSS_TX 4
 #define GNSS_RX 5
 
-// --- SPI bus & sensors ---
-// BME280Spi::Settings bmeSettings(BME280_CS_PIN);
-// BME280Spi bme(bmeSettings);
-// BMI323 bmi(BMI323_CS_PIN);
+// Sensors and bus
+BME280Spi::Settings bmeSettings(BME280_CS_PIN);
+BME280Spi bme(bmeSettings);
+BMI323 bmi(BMI323_CS_PIN, &SPI1);
 SFE_UBLOX_GNSS myGNSS;
 
-long lastTime = 0;
+// Task handles
+TaskHandle_t TaskBMEHandle;
+TaskHandle_t TaskBMIHandle;
+TaskHandle_t TaskGPSHandle;
 
-void setup()
-{
-  Serial.begin(UART0_BAUDRATE);
-
-  // TODO: Remove this for the comms with the OBC as well as all log messages
-  while (!Serial) {
-    Serial.println("Waiting for serial");
-    tight_loop_contents();
-  }
-
-  Serial.println("test-test");
-  Serial.println("Initializing sensors and GNSS...");
-  Serial.println("Test0");
-
-  // --- SPI pin setup (Philhower core syntax) ---
+void setupSPI() {
   SPI1.setSCK(SPI_SCK);
   SPI1.setTX(SPI_MOSI);
   SPI1.setRX(SPI_MISO);
   SPI1.begin();
 
-  // --- CS pins ---
   pinMode(BME280_CS_PIN, OUTPUT);
+  pinMode(LIS2MD_CS_PIN, OUTPUT);
   pinMode(BMI323_CS_PIN, OUTPUT);
   digitalWrite(BME280_CS_PIN, HIGH);
+  digitalWrite(LIS2MD_CS_PIN, HIGH);
   digitalWrite(BMI323_CS_PIN, HIGH);
 
-  // --- Initialize sensors ---
-  // if (!bme.begin())
-  //   Serial.println("❌ BME280 not found!");
-  // else
-  //   Serial.println("✅ BME280 initialized.");
+  delay(100);
+}
 
-  // if (!bmi.begin())
-  //   Serial.println("❌ BMI323 not found!");
-  // else
-  //   Serial.println("✅ BMI323 initialized.");
+void TaskBMI(void *pvParameters) {
+  (void)pvParameters;
 
-  // --- GNSS setup on UART1 (pins 4/5) ---
-  // Serial2.setTX(GNSS_TX);
-  // Serial.println("Teste8");
-  // Serial2.setRX(GNSS_RX);
-  // Serial.println("Teste9");
+  if (!bmi.begin()) {
+    Serial.println("❌ BMI323 not found!");
+  } else {
+    Serial.println("✅ BMI323 initialized.");
+  }
 
-  Serial2.begin(UART1_BAUDRATE_HIGH);
+  for (;;) {
+    // Aqui iriam leituras periódicas do BME323
+    // Exemplo: leitura simples a cada 2.5 segundos
+    Serial.println("Hello BMI Task");
+    vTaskDelay(pdMS_TO_TICKS(2500));
+  }
+}
+
+// Task para leitura dos sensores BME280 e BMI323
+void TaskBME(void *pvParameters) {
+  (void)pvParameters;
+
+  // Inicialização dos sensores
+  if (!bme.begin()) {
+    Serial.println("❌ BME280 not found!");
+  } else {
+    Serial.println("✅ BME280 initialized.");
+  }
+
+  for (;;) {
+    // Aqui iriam leituras periódicas do BME280
+    // Exemplo: leitura simples a cada 3 segundos
+    Serial.println("Hello BME Task");
+    vTaskDelay(pdMS_TO_TICKS(3000));
+  }
+}
+
+// Task para leitura do GPS
+void TaskGPS(void *pvParameters) {
+  // Inicialização do GPS
+  Serial2.setTX(GNSS_TX);
+  Serial2.setRX(GNSS_RX);
 
   bool connected = false;
-  while (!connected)
-  {
+  while (!connected) {
     Serial.println("GNSS: trying 38400 baud");
     Serial2.begin(UART1_BAUDRATE_HIGH);
-    if (myGNSS.begin(Serial2))
-    {
+    if (myGNSS.begin(Serial2)) {
       connected = true;
       break;
     }
 
-    delay(100);
+    vTaskDelay(pdMS_TO_TICKS(100));
+
     Serial.println("GNSS: trying 9600 baud");
     Serial2.begin(UART1_BAUDRATE_LOW);
-    if (myGNSS.begin(Serial2))
-    {
+
+    if (myGNSS.begin(Serial2)) {
       Serial.println("GNSS: connected at 9600 baud, switching to 38400");
+
       myGNSS.setSerialRate(UART1_BAUDRATE_HIGH);
-      delay(100);
+      vTaskDelay(pdMS_TO_TICKS(100));
       connected = true;
-    }
-    else
-    {
-      delay(2000);
+    } else {
+      vTaskDelay(pdMS_TO_TICKS(2000));
     }
   }
 
@@ -111,13 +127,8 @@ void setup()
 
   myGNSS.setUART1Output(COM_TYPE_UBX);
   myGNSS.saveConfiguration();
-}
 
-void loop()
-{
-  if (millis() - lastTime > 1000)
-  {
-    lastTime = millis();
+  for (;;) {
 
     long latitude = myGNSS.getLatitude();
     long longitude = myGNSS.getLongitude();
@@ -132,5 +143,31 @@ void loop()
     Serial.print(altitude);
     Serial.print(F("mm  SIV: "));
     Serial.println(SIV);
+
+    vTaskDelay(pdMS_TO_TICKS(1000));
   }
+}
+
+void setup() {
+  Serial.begin(UART0_BAUDRATE);
+
+  while (!Serial) {
+    tight_loop_contents();
+  }
+
+  Serial.println("Initializing sensors and GNSS...");
+
+  setupSPI();
+
+  // Criação das tasks --> Numero de prio maior == maior prioridade
+  xTaskCreate(TaskGPS, "GPSTask", 2048, NULL, 1, &TaskGPSHandle);
+  xTaskCreate(TaskBMI, "BMITask", 2048, NULL, 2, &TaskBMIHandle);
+  xTaskCreate(TaskBME, "BMETask", 2048, NULL, 3, &TaskBMEHandle);
+
+  // Inicia o scheduler FreeRTOS
+  vTaskStartScheduler();
+}
+
+void loop() {
+  // Deixar vazio, o FreeRTOS gerencia as tasks
 }

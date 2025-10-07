@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <SPI.h>
+#include <Adafruit_SPIDevice.h>
 
 // Definições de registradores
 #define CHIP_ID_REG 0x00
@@ -33,17 +34,23 @@
 
 class BMI323 {
 public:
-    BMI323(uint8_t csPin);
+    BMI323(uint8_t csPin, SPIClass *spiDevice);
     bool begin();
     bool read(float &ax, float &ay, float &az, float &gx, float &gy, float &gz, float &temp);
 
 private:
-    SPISettings spiSettings;
-    uint8_t cs;
+    Adafruit_SPIDevice spi;
+
     bool initBMI323();
     bool initializeFeatureEngine();
-    uint16_t readRegister16(uint8_t reg);
-    void writeRegister16(uint8_t reg, uint16_t data);
+
+    uint8_t readRegister8(uint8_t addr);
+    uint16_t readRegister16(uint8_t addr);
+    void readRegisterN(uint8_t addr, uint8_t buffer[], uint8_t n);
+
+    void writeRegister8(uint8_t addr, uint8_t data);
+    void writeRegister16(uint8_t addr, uint16_t data);
+
     float convertAccelData(uint16_t raw);
     float convertGyroData(uint16_t raw);
     float convertTempData(uint16_t raw);
