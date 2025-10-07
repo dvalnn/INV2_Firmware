@@ -22,15 +22,14 @@
 #include "GlobalVars.h"
 
 #include "Comms.h"
-
+#include "Buzzer.h"
 #include "StateMachine.h"
 #include "StMComms.h"
 #include "StMWork.h"
-#include "FlashLog.h"
 #include "HYDRA.h"
+#include "LIFT.h"
 
 #include "Control_Work.h"
-#include <I2Cdev.h>
 #include <LoRa.h>
 #include <Crc.h>
 #include <SerialFlash.h>
@@ -44,13 +43,10 @@ bool Launch = false;
 
 system_data_t system_data;
 hydra_t hydras[hydra_id_count];
-uint32_t last_hydra_poll_time = 0;
+lift_t lifts[lift_id_count];
+uint32_t last_slave_poll_time = 0;
+uint8_t current_slave = 0;
 filling_params_t filling_params;
-
-void valves_setup(void)
-{
-    // TODO: Send command to hydras to close all valves
-}
 
 void sd_setup(void)
 {
@@ -62,7 +58,7 @@ void lora_setup(void)
     // TODO: Setup LoRa module
 }
 
-void hydras_setup(void)
+void slaves_setup(void)
 {
     init_hydra(&hydras[HYDRA_UF]);
     hydras[HYDRA_UF].id = HYDRA_UF;
@@ -72,23 +68,38 @@ void hydras_setup(void)
 
     init_hydra(&hydras[HYDRA_FS]);
     hydras[HYDRA_FS].id = HYDRA_FS;
+
+    init_lift(&lifts[LIFT_FS]);
+    lifts[LIFT_FS].id = LIFT_FS;
+
+    init_lift(&lifts[LIFT_R]);
+    lifts[LIFT_R].id = LIFT_R;
 }
 
 void sys_data_setup(void)
 {
-    system_data.state = FILLING;
+    system_data.state = IDLE;
     system_data.pressures = {0};
     system_data.thermocouples = {0};
     system_data.actuators = {0};
+    system_data.loadcells = {0};
 }
 
 void setup()
 {
     Serial.begin(USB_BAUD_RATE);    // USBC serial
-    Serial1.begin(RS485_BAUD_RATE); // RS485
+    
+    // RS485
+    pinMode(ENABLE_RS_PIN, OUTPUT); // RS485 transceiver enable pin
+    digitalWrite(ENABLE_RS_PIN, LOW);   // start in receive mode
+    Serial2.setTX(WRITE_RS_PIN);
+    Serial2.setRX(READ_RS_PIN);
+    Serial2.begin(RS485_BAUD_RATE);
 
     sys_data_setup();
-
+    slaves_setup();
+    setup_buzzer();
+    play_buzzer_success();
     printf("Setup done\n");
 }
 
@@ -136,7 +147,7 @@ void loop()
 
             // make transition to new state on the state machine
             if (error == CMD_RUN_OK &&
-                state_machine[system_data.state].next_states[packet->cmd] != -1)
+                state_machine[system_data.state].next_states[packet->cmd] != system_data.state)
             {
                 // we have new state, use lookup table
                 command_state = expected_state[system_data.state][packet->cmd];
@@ -170,7 +181,6 @@ void loop()
                 state_machine[system_data.state].work[i].begin =
                     state_machine[system_data.state].work[i].delay;
 
-            log(&system_data.state, 0, STATE_CHANGE);
         }
 
         // command state transitions must take precedence to event state transitions
@@ -186,20 +196,48 @@ void loop()
                 state_machine[system_data.state].work[i].begin =
                     state_machine[system_data.state].work[i].delay;
 
-            log(&system_data.state, 0, STATE_CHANGE);
         }
 
-        if (millis() - last_hydra_poll_time > HYDRA_POLL_INTERVAL) {
-            fetch_next_hydra(hydras, &system_data);
-            last_hydra_poll_time = millis();
+        if (millis() - last_slave_poll_time > RS_SLAVE_POLL_INTERVAL) {
+            current_slave = (current_slave + 1) % (hydra_id_count + lift_id_count);
+            if(current_slave < hydra_id_count) {
+                fetch_next_hydra(hydras, &system_data);
+                //tone(BUZZER_PIN, 2000, 50);
+            }
+            else {
+                fetch_next_lift(lifts, &system_data);
+                //tone(BUZZER_PIN, 1000, 50);
+            }
+            last_slave_poll_time = millis();
         }
 
-        packet_t *hydra_packet = read_packet(&error, RS485_INTERFACE);
-        if (hydra_packet != NULL && error == CMD_READ_OK)
+        packet_t *slave_packet = read_packet(&error, RS485_INTERFACE);
+        if (slave_packet != NULL && error == CMD_READ_OK)
         {
-            int result = parse_hydra_response(hydras, hydra_packet);
-            if (result != 0) {
-                // log cmd execution error
+            switch(slave_packet->sender_id) {
+                case HYDRA_UF_ID:
+                case HYDRA_LF_ID:
+                case HYDRA_FS_ID:
+                    {
+                        int result = parse_hydra_response(hydras, slave_packet, &system_data);
+                        tone(BUZZER_PIN, 2000, 50);
+                        if (result != 0) {
+                            // log cmd execution error
+                        }
+                    }
+                    break;
+                case LIFT_FS_ID:
+                case LIFT_R_ID:
+                    {
+                        int result = parse_lift_response(lifts, slave_packet, &system_data);
+                        if (result != 0) {
+                            // log cmd execution error
+                        }
+                    }
+                    break;
+                default:
+                    // Unknown slave ID
+                    break;
             }
         }
         else if (error != CMD_READ_OK &&

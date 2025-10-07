@@ -33,7 +33,6 @@ void write_packet(packet_t *packet)
 static cmd_parse_state_t parse_input(uint8_t read_byte, packet_t *packet, cmd_parse_state_t cmd_state)
 {
     uint8_t state = cmd_state;
-    // Serial.printf("State: %d - RX: 0x%x\n", state, read_byte);
     switch (state)
     {
     case SYNC:
@@ -44,7 +43,7 @@ static cmd_parse_state_t parse_input(uint8_t read_byte, packet_t *packet, cmd_pa
             state = SENDER_ID;
             packet->data_recv = 0;
             memset(packet, 0, sizeof(packet_t));
-            packet->begin = clock();
+            packet->begin = millis();
         }
     }
     break;
@@ -111,48 +110,57 @@ static cmd_parse_state_t parse_input(uint8_t read_byte, packet_t *packet, cmd_pa
 
 packet_t *read_packet(int *error)
 {
-    static packet_t *packet;
+    static packet_t packet;
     static cmd_parse_state_t state = SYNC;
     static clock_t end = 0;
 
     size_t size;
     uint8_t read_byte;
-
-    while (Serial1.available() && state != END)
+    if (Serial2.available() && state != END)
     {
-        read_byte = Serial1.read();
-        state = parse_input(read_byte, packet, state);
+        read_byte = Serial2.read();
+        state = parse_input(read_byte, &packet, state);
     }
 
-    end = clock();
-    int msec = (end - packet->begin) * 1000 / CLOCKS_PER_SEC;
+    end = millis();
+    int msec = end - packet.begin;
 
     // if timeout reset state
     if (state != SYNC && msec > RS485_TIMEOUT_TIME_MS) // timeout
     {
+
         state = SYNC;
 
         *error = CMD_READ_TIMEOUT;
 
         return NULL;
     }
-    // if bad crc reset state
-    else if (state == END &&
-             (packet->target_id == DEFAULT_ID ||
-              packet->target_id == BROADCAST_ID) &&
-             (check_crc(packet) || !CRC_ENABLED))
-    {
-        state = SYNC;
-
-        *error = CMD_READ_OK;
-
-        return packet;
-    }
     else if (state == END)
     {
         state = SYNC;
-
-        *error = CMD_READ_BAD_CRC;
+        if (packet.target_id == DEFAULT_ID ||
+            packet.target_id == BROADCAST_ID)
+        {
+            
+            if (CRC_ENABLED)
+            {
+                if (check_crc(&packet))
+                {
+                    *error = CMD_READ_OK;
+                    return &packet;
+                }
+            }
+            else
+            {
+                *error = CMD_READ_OK;
+                return &packet;
+            }
+        }
+        else
+        {
+            *error = CMD_READ_NO_CMD;
+            return NULL;
+        }
         return NULL;
     }
     else // default
@@ -160,6 +168,7 @@ packet_t *read_packet(int *error)
         *error = CMD_READ_NO_CMD;
         return NULL;
     }
+    return NULL;
 }
 
 bool check_crc(packet_t *packet)

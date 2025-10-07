@@ -22,8 +22,10 @@
 bool setup_error = false;
 data_t my_data = {0};
 
-void run_command(packet_t *packet) {
-    if (packet->cmd == CMD_STATUS) {
+void run_command(packet_t *packet)
+{
+    if (packet->cmd == CMD_STATUS)
+    {
         // send status packet
         packet_t status_packet;
         status_packet.sender_id = DEFAULT_ID;
@@ -37,7 +39,9 @@ void run_command(packet_t *packet) {
             status_packet.crc = crc((uint8_t *)&status_packet,
                                     HEADER_SIZE + status_packet.payload_size);
         write_packet(&status_packet);
-    } else if (packet->cmd == CMD_VALVE_SET && packet->payload_size == 1) {
+    }
+    else if (packet->cmd == CMD_VALVE_SET && packet->payload_size == 2)
+    {
         // set valve state
         valve_t valve = (valve_t)(packet->payload[0]);
         uint8_t state = packet->payload[1];
@@ -56,7 +60,9 @@ void run_command(packet_t *packet) {
             ack_packet.crc = crc((uint8_t *)&ack_packet,
                                  HEADER_SIZE + ack_packet.payload_size);
         write_packet(&ack_packet);
-    } else if (packet->cmd == CMD_VALVE_MS && packet->payload_size == 3) {
+    }
+    else if (packet->cmd == CMD_VALVE_MS && packet->payload_size == 3)
+    {
         valve_t valve = (valve_t)(packet->payload[0]);
         uint8_t state = packet->payload[1];
         uint16_t duration = (packet->payload[1] << 8) | packet->payload[2];
@@ -79,81 +85,60 @@ void run_command(packet_t *packet) {
     }
 }
 
-void thermo_callback(int thermo_num, float temperature, void *user_data) {
-    data_t *data = (data_t *)user_data;
-
-    uint16_t temperature_int =
-        (uint16_t)(temperature * 100); // Convert to centi-degrees
-
-    // TODO: Handle negative temperatures (?)
-    // We could either:
-    // - update data model to use float temperature values
-    // - update the conversion used in the driver to avoid floating point
-    // operations & use int32 types in the data model
-
-    switch (thermo_num) {
-    case 1:
-        data->thermo1 = temperature_int;
-        break;
-    case 2:
-        data->thermo2 = temperature_int;
-        break;
-    case 3:
-        data->thermo3 = temperature_int;
-        break;
-    default:
-        break;
-    }
-}
-
-void setup() {
+void setup()
+{
     memset(&my_data, 0, sizeof(data_t));
     my_data.cam_enable = false;
 
     setup_buzzer();
     Serial.begin(USB_BAUD_RATE); // USBC serial
-    rs485_init();                // RS-485 serial
+    rs485_init();  // RS-485 serial
 
     // Initialize I2C with custom pins from IO_Map.h
-    // Wire.setSDA(I2C_SDA);   // Set SDA to pin 14
-    // Wire.setSCL(I2C_SCL);   // Set SCL to pin 15
-    // Wire.begin();           // Initialize I2C with custom pins
-    // Wire.setClock(400000);  // Set I2C clock to 400kHz
+    pinMode(AD5593R_RST_PIN, OUTPUT);
+    digitalWrite(AD5593R_RST_PIN, HIGH); // Keep AD5593R out of reset
 
-    // setup_error = pressures_setup();
-    setup_error = thermo_setup();
-    setup_error = valves_setup();
+    Wire1.setSDA(I2C_SDA_PIN); // Set SDA to pin 14
+    Wire1.setSCL(I2C_SCL_PIN); // Set SCL to pin 15
+    Wire1.begin();             // Initialize I2C with custom pins
+    Wire1.setClock(400000);    // Set I2C clock to 400kHz
 
-    set_thermo_callback(thermo_callback, &my_data);
+    setup_error |= pressures_setup();
+    setup_error |= thermo_setup();
+    setup_error |= valves_setup();
 
     // setup status leds and buzzer
     pinMode(RED_STATUS_PIN, OUTPUT);
     pinMode(GREEN_STATUS_PIN, OUTPUT);
 
-    if (setup_error) {
+    if (setup_error != 0)
+    {
         Serial.println("Setup error detected!");
         digitalWrite(RED_STATUS_PIN, LOW);
         play_buzzer_error();
-    } else {
+    }
+    else
+    {
         Serial.println("Setup complete!");
         digitalWrite(GREEN_STATUS_PIN, LOW);
         play_buzzer_success();
     }
 }
 
-void loop() {
-    /* Comms */
+void loop()
+{
+    static unsigned long last_test = 0;
     int error;
 
     // check if we have new data
     // if we get a valid message, execute the command associated to it
     packet_t *packet = read_packet(&error);
-    if (packet != NULL && error == CMD_READ_OK) {
+    if (packet != NULL && error == CMD_READ_OK)
+    {
         tone(BUZZER_PWM_PIN, 1000, 50); // beep on command receive
         run_command(packet);
     }
 
-    /* Sensors */
     read_sensors(&my_data);
     delay(10); // small delay to avoid overwhelming the CPU
 }

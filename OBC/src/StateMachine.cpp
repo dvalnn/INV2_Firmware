@@ -12,17 +12,22 @@
 extern system_data_t system_data;
 
 state_t expected_state[state_count][cmd_size] = {
-    //                       NONE      STATUS     ABORT  STOP   READY     ARM       FIRE      LAUNCH_OVERRIDE FILL_EXEC FILL_RESUME MANUAL_EXEC  ACK
-    /* IDLE */             { IDLE,     IDLE,      ABORT, IDLE,  READY,    IDLE,     IDLE,     IDLE,           FILLING,  FILLING,    IDLE,        IDLE }, 
-    /* FILLING */          { FILLING,  FILLING,   ABORT, IDLE,  FILLING,  FILLING,  FILLING,  FILLING,        FILLING,  FILLING,    FILLING,     FILLING }, 
-    /* READY */            { READY,    READY,     ABORT, IDLE,  READY,    ARMED,    READY,    READY,          READY,    READY,      READY,       READY }, 
-    /* ARMED */            { ARMED,    ARMED,     ABORT, IDLE,  ARMED,    ARMED,    IGNITION, ARMED,          ARMED,    ARMED,      ARMED,       ARMED }, 
-    /* IGNITION */         { IGNITION, IGNITION,  ABORT, IDLE,  IGNITION, IGNITION, IGNITION, LAUNCH,         IGNITION, IGNITION,   IGNITION,    IGNITION }, 
-    /* LAUNCH */           { LAUNCH,   LAUNCH,    ABORT, IDLE,  LAUNCH,   LAUNCH,   LAUNCH,   LAUNCH,         LAUNCH,   LAUNCH,     LAUNCH,      LAUNCH }, 
-    /* FLIGHT */           { FLIGHT,   FLIGHT,    ABORT, IDLE,  FLIGHT,   FLIGHT,   FLIGHT,   FLIGHT,         FLIGHT,   FLIGHT,     FLIGHT,      FLIGHT },
-    /* RECOVERY */         { RECOVERY, RECOVERY,  ABORT, IDLE,  RECOVERY, RECOVERY, RECOVERY, RECOVERY,       RECOVERY, RECOVERY,   RECOVERY,    RECOVERY }, 
-    /* ABORT */            { ABORT,    ABORT,     ABORT, IDLE,  IDLE,     ABORT,    ABORT,    ABORT,          ABORT,    ABORT,      ABORT,       ABORT }, 
-};
+    //                       NONE           STATUS         ABORT  STOP   READY          ARM            FIRE           LAUNCH_OVERRIDE FILL_EXEC      FILL_RESUME    MANUAL_EXEC    ACK
+    /* IDLE */             { IDLE,          IDLE,          ABORT, IDLE,  READY,         IDLE,          IDLE,          IDLE,           FILLING,       FILLING,       IDLE,          IDLE }, 
+    /* FILLING */          { FILLING,       FILLING,       ABORT, IDLE,  FILLING,       FILLING,       FILLING,       FILLING,        FILLING,       FILLING,       FILLING,       FILLING },
+    /* SAFE IDLE */        { SAFE_IDLE,     SAFE_IDLE,     ABORT, IDLE,  SAFE_IDLE,     SAFE_IDLE,     SAFE_IDLE,     SAFE_IDLE,      SAFE_IDLE,     SAFE_IDLE,     SAFE_IDLE,     SAFE_IDLE }, 
+    /* FILLING N2 */       { FILLING_N2,    FILLING_N2,    ABORT, IDLE,  FILLING_N2,    FILLING_N2,    FILLING_N2,    FILLING_N2,     FILLING_N2,    FILLING_N2,    FILLING_N2,    FILLING_N2 }, 
+    /* PRE PRESSURE */     { PRE_PRESSURE,  PRE_PRESSURE,  ABORT, IDLE,  PRE_PRESSURE,  PRE_PRESSURE,  PRE_PRESSURE,  PRE_PRESSURE,   PRE_PRESSURE,  PRE_PRESSURE,  PRE_PRESSURE,  PRE_PRESSURE }, 
+    /* FILLING N2O */      { FILLING_N2O,   FILLING_N2O,   ABORT, IDLE,  FILLING_N2O,   FILLING_N2O,   FILLING_N2O,   FILLING_N2O,    FILLING_N2O,   FILLING_N2O,   FILLING_N2O,   FILLING_N2O }, 
+    /* POST PRESSURE */    { POST_PRESSURE, POST_PRESSURE, ABORT, IDLE,  POST_PRESSURE, POST_PRESSURE, POST_PRESSURE, POST_PRESSURE,  POST_PRESSURE, POST_PRESSURE, POST_PRESSURE, POST_PRESSURE },
+    /* READY */            { READY,         READY,         ABORT, IDLE,  READY,         ARMED,         READY,         READY,          READY,         READY,         READY,         READY }, 
+    /* ARMED */            { ARMED,         ARMED,         ABORT, IDLE,  ARMED,         ARMED,         IGNITION,      ARMED,          ARMED,         ARMED,         ARMED,         ARMED }, 
+    /* IGNITION */         { IGNITION,      IGNITION,      ABORT, IDLE,  IGNITION,      IGNITION,      IGNITION,      LAUNCH,         IGNITION,      IGNITION,      IGNITION,      IGNITION }, 
+    /* LAUNCH */           { LAUNCH,        LAUNCH,        ABORT, IDLE,  LAUNCH,        LAUNCH,        LAUNCH,        LAUNCH,         LAUNCH,        LAUNCH,        LAUNCH,        LAUNCH }, 
+    /* FLIGHT */           { FLIGHT,        FLIGHT,        ABORT, IDLE,  FLIGHT,        FLIGHT,        FLIGHT,        FLIGHT,         FLIGHT,        FLIGHT,        FLIGHT,        FLIGHT },
+    /* RECOVERY */         { RECOVERY,      RECOVERY,      ABORT, IDLE,  RECOVERY,      RECOVERY,      RECOVERY,      RECOVERY,       RECOVERY,      RECOVERY,      RECOVERY,      RECOVERY }, 
+    /* ABORT */            { ABORT,         ABORT,         ABORT, IDLE,  IDLE,          ABORT,         ABORT,         ABORT,          ABORT,         ABORT,         ABORT,         ABORT }, 
+};     
 
 sm_state_t state_machine[state_count] =
 {
@@ -45,6 +50,59 @@ sm_state_t state_machine[state_count] =
         },
 
         .next_states = expected_state[FILLING],
+    },
+    // SAFE_IDLE
+    {
+        .work = {
+        },
+
+        .events = {
+            {.condition = safe_active_cond, .reaction = enter_safety_vent, .next_state = SAFE_IDLE},
+            {.condition = safe_inactive_cond, .reaction = exit_safety_vent, .next_state = SAFE_IDLE},
+        },
+
+        .next_states = expected_state[SAFE_IDLE],
+    },
+    // FILLING_N2
+    {
+        .work = {
+        },
+
+        .events = {
+        },
+
+        .next_states = expected_state[FILLING_N2],
+    },
+    // PRE_PRESSURE
+    {
+        .work = {
+        },
+
+        .events = {
+        },
+
+        .next_states = expected_state[PRE_PRESSURE],
+    },
+    // FILLING_N2O
+    {
+        .work = {
+        },
+
+        .events = {
+        },
+
+        .next_states = expected_state[FILLING_N2O],
+    },
+    // POST_PRESSURE
+    {
+        .work = {
+        },
+
+        .events = {
+
+        },
+
+        .next_states = expected_state[POST_PRESSURE],
     },
     // READY
     {
@@ -145,7 +203,7 @@ state_t event_handler()
         {
             if (react != NULL)
                 react();
-            if (next_state > -1 && next_state_event == -1)
+            if (next_state != system_data.state && next_state_event == S_NONE)
                 next_state_event = next_state;
         }
     }

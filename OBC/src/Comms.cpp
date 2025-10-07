@@ -5,8 +5,6 @@
 #include <string.h>
 
 #include "Comms.h"
-
-#include "FlashLog.h"
 #include "GlobalVars.h"
 #include "HardwareCfg.h"
 
@@ -20,8 +18,7 @@ void write_packet(packet_t *packet, interface_t interface)
     int size = 0;
     uint8_t buff[HEADER_SIZE + MAX_PAYLOAD_SIZE + 2] = {0}; // 2 bytes from CRC
 
-    buff[size++] = SYNC_BYTE;char c = Serial1.read();
-    // process c
+    buff[size++] = SYNC_BYTE;
     buff[size++] = packet->sender_id;
     buff[size++] = packet->target_id;
     buff[size++] = packet->cmd;
@@ -30,15 +27,14 @@ void write_packet(packet_t *packet, interface_t interface)
         buff[size++] = packet->payload[i];
     buff[size++] = ((packet->crc >> 8) & 0xff);
     buff[size++] = ((packet->crc) & 0xff);
-
     switch (interface)
     {
     case LORA_INTERFACE:
         break;
     case RS485_INTERFACE:
         digitalWrite(ENABLE_RS_PIN, HIGH); // switch to transmit mode
-        Serial1.write(buff, size);
-        Serial1.flush();
+        Serial2.write(buff, size);
+        Serial2.flush();
         digitalWrite(ENABLE_RS_PIN, LOW); // switch back to receive mode
         break;
     case UART_INTERFACE:
@@ -165,9 +161,9 @@ packet_t *read_packet(int *error, interface_t interface)
 
     case RS485_INTERFACE:
     {
-        while (Serial1.available() && *state != END)
+        while (Serial2.available() && *state != END)
         {
-            read_byte = Serial1.read();
+            read_byte = Serial2.read();
             *state = parse_input(read_byte, packet, *state);
         }
     }

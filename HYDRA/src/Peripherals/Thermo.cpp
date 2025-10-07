@@ -1,90 +1,59 @@
 #include "Peripherals/Thermo.h"
 #include "Peripherals/IO_Map.h"
 
-struct thermo_callback {
-    thermo_data_callback callback;
-    void *user_data;
-};
+Adafruit_MAX31856 maxthermo1 = Adafruit_MAX31856(THERMO1_CS_PIN, SPI_MOSI_PIN, SPI_MISO_PIN, SPI_SCK_PIN); // cs, mosi, miso, clk
+Adafruit_MAX31856 maxthermo2 = Adafruit_MAX31856(THERMO2_CS_PIN, SPI_MOSI_PIN, SPI_MISO_PIN, SPI_SCK_PIN);
+Adafruit_MAX31856 maxthermo3 = Adafruit_MAX31856(THERMO3_CS_PIN, SPI_MOSI_PIN, SPI_MISO_PIN, SPI_SCK_PIN);
 
-static struct thermo_callback thermo_cb = {nullptr, nullptr};
+int thermo_setup(void)
+{
+    pinMode(THERMO1_DRDY_PIN, INPUT);
+    pinMode(THERMO2_DRDY_PIN, INPUT);
+    pinMode(THERMO3_DRDY_PIN, INPUT);
 
-#define MAKE_THERMO(n)                                                         \
-    static Adafruit_MAX31856 maxthermo##n = Adafruit_MAX31856(                 \
-        SPI_MISO_PIN, SPI_MOSI_PIN, THERMO##n##_CS_PIN, SPI_SCK_PIN);
-
-#define MAKE_THERMO_ISR(n)                                                     \
-    void thermo_##n##_isr(void) {                                              \
-        if (!thermo_cb.callback)                                               \
-            return;                                                            \
-        /* NOTE: maybe the conversionComplete check can be skipped. Test. */   \
-        if (maxthermo##n.conversionComplete()) {                               \
-            const float temp = maxthermo##n.readThermocoupleTemperature();     \
-            thermo_cb.callback(n, temp, thermo_cb.user_data);                  \
-        }                                                                      \
+    if (!maxthermo1.begin())
+    {
+        Serial.println("Could not initialize thermocouple 1.");
+        return -1;
     }
 
-#define SETUP_ISR_IF_RDY(n, rdy)                                               \
-    if (rdy) {                                                                 \
-        pinMode(THERMO##n##_DRDY_PIN, INPUT);                                  \
-        attachInterrupt(digitalPinToInterrupt(THERMO##n##_DRDY_PIN),           \
-                        thermo_##n##_isr, FALLING);                            \
+    if (!maxthermo2.begin())
+    {
+        Serial.println("Could not initialize thermocouple 2.");
+        return -1;
     }
 
-MAKE_THERMO(1)
-MAKE_THERMO(2)
-MAKE_THERMO(3)
-
-MAKE_THERMO_ISR(1)
-MAKE_THERMO_ISR(2)
-MAKE_THERMO_ISR(3)
-
-int thermo_setup(void) {
-    bool thermo1_rdy, thermo2_rdy, thermo3_rdy = false;
-
-    if (!maxthermo1.begin()) {
-        Serial.println("Failed to initialize thermo1!");
-        thermo1_rdy = true;
+    if (!maxthermo3.begin())
+    {
+        Serial.println("Could not initialize thermocouple 3.");
+        return -1;
     }
-    if (!maxthermo2.begin()) {
-        Serial.println("Failed to initialize thermo2!");
-        thermo2_rdy = true;
-    }
-    if (!maxthermo3.begin()) {
-        thermo3_rdy = true;
-        Serial.println("Failed to initialize thermo3!");
-    }
-
-    if (!thermo1_rdy && !thermo2_rdy && !thermo3_rdy) {
-        Serial.println("All thermocouples failed to initialize!");
-        return -1; // All thermocouples failed to initialize
-    }
-
-    maxthermo1.setThermocoupleType(MAX31856_TCTYPE_K);
-    maxthermo2.setThermocoupleType(MAX31856_TCTYPE_K);
-    maxthermo3.setThermocoupleType(MAX31856_TCTYPE_K);
 
     maxthermo1.setConversionMode(MAX31856_CONTINUOUS);
     maxthermo2.setConversionMode(MAX31856_CONTINUOUS);
     maxthermo3.setConversionMode(MAX31856_CONTINUOUS);
 
-    maxthermo1.setAveragingSamples(16);
-    maxthermo2.setAveragingSamples(16);
-    maxthermo3.setAveragingSamples(16);
-
-    maxthermo1.setNoiseFilter(MAX31856_NOISE_FILTER_50HZ);
-    maxthermo2.setNoiseFilter(MAX31856_NOISE_FILTER_50HZ);
-    maxthermo3.setNoiseFilter(MAX31856_NOISE_FILTER_50HZ);
-
-    SETUP_ISR_IF_RDY(1, thermo1_rdy);
-    SETUP_ISR_IF_RDY(2, thermo2_rdy);
-    SETUP_ISR_IF_RDY(3, thermo3_rdy);
-
-    Serial.println("MAX31856 thermocouples initialized!");
     return 0; // Successful initialization
 }
 
-void set_thermo_callback(thermo_data_callback callback,
-                                void *user_data) {
-    thermo_cb.callback = callback;
-    thermo_cb.user_data = user_data;
+int read_thermocouples(data_t *data)
+{
+    if (digitalRead(THERMO1_DRDY_PIN) == LOW)
+    {
+        float temp1 = maxthermo1.readThermocoupleTemperature();
+        data->thermo1 = (uint16_t)(temp1 * 100);
+    }
+
+    if (digitalRead(THERMO2_DRDY_PIN) == LOW)
+    {
+        float temp2 = maxthermo2.readThermocoupleTemperature();
+        data->thermo2 = (uint16_t)(temp2 * 100);
+    }
+
+    if (digitalRead(THERMO3_DRDY_PIN) == LOW)
+    {
+        float temp3 = maxthermo3.readThermocoupleTemperature();
+        data->thermo3 = (uint16_t)(temp3 * 100);
+    }
+    return 0; // Successful read
 }

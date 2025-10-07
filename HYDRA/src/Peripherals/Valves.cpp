@@ -10,6 +10,14 @@ int valves_setup(void) {
     pinMode(ST_VALVE_2_PIN, OUTPUT);
     pinMode(CAM_EN_PIN, OUTPUT);
     pinMode(PWM_SIG_PIN, OUTPUT);
+
+    digitalWrite(SOL_VALVE_1_PIN, LOW);
+    digitalWrite(SOL_VALVE_2_PIN, LOW);
+    digitalWrite(SOL_VALVE_3_PIN, LOW);
+    digitalWrite(QDC_VALVE_1_PIN, LOW);
+    digitalWrite(QDC_VALVE_2_PIN, LOW);
+    digitalWrite(ST_VALVE_1_PIN, LOW);
+    digitalWrite(ST_VALVE_2_PIN, LOW);
     return 0;
 }
 

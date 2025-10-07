@@ -1,5 +1,6 @@
 #include "HYDRA.h"
 #include <string.h> // for memset
+#include <Arduino.h>
 
 hydra_id_t current_hydra = HYDRA_UF;
 
@@ -34,10 +35,10 @@ int update_data_from_hydra(hydra_t *hydra, system_data_t *system_data)
             system_data->pressures.n2o_tank_pressure = hydra->data.pressure1;
             break;
         case HYDRA_FS:
-            system_data->actuators.v_n2o_fill = hydra->data.valve_states.v_controlled_1;
-            system_data->actuators.v_n2o_purge = hydra->data.valve_states.v_controlled_2;
-            system_data->actuators.v_n2_fill = hydra->data.valve_states.v_steel_ball_1;
-            system_data->actuators.v_n2_purge = hydra->data.valve_states.v_steel_ball_2;
+            system_data->actuators.v_n2o_fill = hydra->data.valve_states.v_controlled_2;
+            system_data->actuators.v_n2o_purge = hydra->data.valve_states.v_controlled_3;
+            system_data->actuators.v_n2_fill = hydra->data.valve_states.v_steel_ball_2;
+            system_data->actuators.v_n2_purge = hydra->data.valve_states.v_steel_ball_1;
             system_data->actuators.v_n2o_quick_dc = hydra->data.valve_states.v_quick_dc_1;
             system_data->actuators.v_n2_quick_dc = hydra->data.valve_states.v_quick_dc_2;
             system_data->pressures.n2o_line_pressure = hydra->data.pressure1;
@@ -83,15 +84,13 @@ int set_hydra_valve_ms(hydra_t *hydra, hydra_valve_t valve, uint16_t ms)
     return -1;
 }
 
-int send_hydra_command(hydra_t *hydra, hydra_cmd_t cmd, uint8_t *payload, uint8_t payload_size)
+int send_hydra_command(hydra_t *hydra, hydra_cmd_t cmd, uint8_t payload[], uint8_t payload_size)
 {
     if (hydra)
     {
         packet_t packet;
         packet.sender_id = DEFAULT_ID;
-        packet.target_id = (hydra->id == HYDRA_UF) ? HYDRA_UF_ID : (hydra->id == HYDRA_LF) ? HYDRA_LF_ID
-                                                               : (hydra->id == HYDRA_FS)   ? HYDRA_FS_ID
-                                                                                           : BROADCAST_ID;
+        packet.target_id = (uint8_t)hydra->id + HYDRA_UF_ID; // Map enum to ID
         packet.cmd = (uint8_t)cmd;
         packet.payload_size = payload_size;
         if (payload && payload_size > 0)
@@ -106,12 +105,12 @@ int send_hydra_command(hydra_t *hydra, hydra_cmd_t cmd, uint8_t *payload, uint8_
     return -1;
 }
 
-int parse_hydra_response(hydra_t hydras[], packet_t *packet)
+int parse_hydra_response(hydra_t hydras[], packet_t *packet, system_data_t *system_data)
 {
     if (packet)
     {
         hydra_t *hydra = NULL;
-        switch (packet->target_id)
+        switch (packet->sender_id)
         {
         case HYDRA_UF_ID:
             hydra = &hydras[HYDRA_UF];
@@ -134,14 +133,8 @@ int parse_hydra_response(hydra_t hydras[], packet_t *packet)
             case HCMD_STATUS:
                 if (packet->payload_size < sizeof(hydra_data_t) + 1) // Minimum size check
                     return -1;
-                hydra->data.thermo1 = (packet->payload[index++] << 8) | packet->payload[index++];
-                hydra->data.thermo2 = (packet->payload[index++] << 8) | packet->payload[index++];
-                hydra->data.thermo3 = (packet->payload[index++] << 8) | packet->payload[index++];
-                hydra->data.pressure1 = (packet->payload[index++] << 8) | packet->payload[index++];
-                hydra->data.pressure2 = (packet->payload[index++] << 8) | packet->payload[index++];
-                hydra->data.pressure3 = (packet->payload[index++] << 8) | packet->payload[index++];
-                hydra->data.valve_states.raw = packet->payload[index++];
-                hydra->data.cam_enable = packet->payload[index++];
+                memcpy(&hydra->data, &packet->payload[index], sizeof(hydra_data_t));
+                update_data_from_hydra(hydra, system_data);
                 return 0;
             case HCMD_VALVE_SET:
             case HCMD_VALVE_MS:

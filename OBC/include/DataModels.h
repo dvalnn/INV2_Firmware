@@ -9,6 +9,11 @@ typedef enum
 {
     IDLE,
     FILLING,
+    SAFE_IDLE,
+    FILLING_N2,
+    PRE_PRESSURE,
+    FILLING_N2O,
+    POST_PRESSURE,
     READY,
     ARMED,
     IGNITION,
@@ -19,17 +24,6 @@ typedef enum
     state_count, //this needs to be the last state for size to work
     S_NONE = -1
 } state_t;
-
-typedef enum 
-{
-    FP_NONE = 0,
-    SAFE_IDLE,
-    FILLING_N2,
-    PRE_PRESSURE,
-    FILLING_N2O,
-    POST_PRESSURE,
-    filling_program_count, //this needs to be the last state for size to work
-} filling_program_t;
 
 /*
     Commands
@@ -51,6 +45,16 @@ typedef enum
     CMD_ACK,
     cmd_size,
 } cmd_type_t;
+
+typedef enum
+{
+    CMD_FILL_NONE = 0,
+    CMD_SAFE_IDLE,
+    CMD_FILLING_N2,
+    CMD_PRE_PRESSURE,
+    CMD_FILLING_N2O,
+    CMD_POST_PRESSURE,
+} fill_cmd_t;
 
 typedef enum
 {
@@ -157,16 +161,26 @@ typedef union
     uint16_t raw[5];
 } pressures_t;
 
+typedef union {
+    struct {
+        int16_t n2o_bottle_weight;
+        int16_t thrust_loadcell1;
+        int16_t thrust_loadcell2;
+        int16_t thrust_loadcell3;
+    };
+    int16_t raw[4];
+} loadcells_t;
+
 typedef struct
 {
     state_t state = IDLE;
     pressures_t pressures = {0};
     thermocouples_t thermocouples = {0};
     actuators_bitmap_t actuators = {0};
+    loadcells_t loadcells = {0};
 } system_data_t;
 
 typedef struct {
-    filling_program_t program;
     uint16_t target_pressure, trigger_pressure;
     uint16_t target_temperature, trigger_temperature;
     uint16_t target_weight;

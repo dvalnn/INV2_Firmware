@@ -5,7 +5,7 @@
 #include "Peripherals/IO_Map.h"
 #include "DataModels.h"
 #include "Peripherals/Pressures.h"
-#include "elapsedMillis.h"
+#include "Peripherals/Thermo.h"
 
 void read_sensors(data_t *data);
 
