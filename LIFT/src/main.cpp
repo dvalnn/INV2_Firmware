@@ -11,7 +11,7 @@
 #include "HardwareCfg.h"
 #include "Peripherals/IO_Map.h"
 #include "Sensors.h"
-
+#include "Logging.h"
 #include "Peripherals/IO_Map.h"
 #include "Peripherals/RS485.h"
 
@@ -44,11 +44,24 @@ void setup()
 
     Serial.begin(USB_BAUD_RATE); // USBC serial
     // rs485_init(); // RS-485 serial
-    while(!Serial) {
+    while (!Serial)
+    {
         ;
     }
-    setup_error |= loadcells_setup(); // change to loadcell setup
+    
+    if (sd_init(FLASH_CS_PIN)) {
+        /*
+        sd_log_info("Logger started successfully");
+        sd_log("System online");
+        sd_log_error("Fake error for testing");
+        */
+    }
 
+    sd_list_files();
+    sd_delete_all_files();
+    sd_list_files();
+
+    setup_error |= loadcells_setup(); // change to loadcell setup
     if (setup_error != 0)
     {
         Serial.println("Setup error detected!");
@@ -58,7 +71,6 @@ void setup()
         Serial.println("Setup complete!");
     }
 }
-
 
 void loop()
 {
@@ -73,8 +85,9 @@ void loop()
         // tone(BUZZER_PWM_PIN, 1000, 50); // beep on command receive
         run_command(packet);
     }
-    */
+
     calibrate_loadcells();
     read_sensors(&my_data);
     //delay(10); // small delay to avoid overwhelming the CPU
+    */
 }

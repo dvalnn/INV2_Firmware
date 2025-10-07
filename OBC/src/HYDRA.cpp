@@ -35,10 +35,10 @@ int update_data_from_hydra(hydra_t *hydra, system_data_t *system_data)
             system_data->pressures.n2o_tank_pressure = hydra->data.pressure1;
             break;
         case HYDRA_FS:
-            system_data->actuators.v_n2o_fill = hydra->data.valve_states.v_controlled_3;
-            system_data->actuators.v_n2o_purge = hydra->data.valve_states.v_controlled_2;
-            system_data->actuators.v_n2_fill = hydra->data.valve_states.v_steel_ball_1;
-            system_data->actuators.v_n2_purge = hydra->data.valve_states.v_steel_ball_2;
+            system_data->actuators.v_n2o_fill = hydra->data.valve_states.v_controlled_2;
+            system_data->actuators.v_n2o_purge = hydra->data.valve_states.v_controlled_3;
+            system_data->actuators.v_n2_fill = hydra->data.valve_states.v_steel_ball_2;
+            system_data->actuators.v_n2_purge = hydra->data.valve_states.v_steel_ball_1;
             system_data->actuators.v_n2o_quick_dc = hydra->data.valve_states.v_quick_dc_1;
             system_data->actuators.v_n2_quick_dc = hydra->data.valve_states.v_quick_dc_2;
             system_data->pressures.n2o_line_pressure = hydra->data.pressure1;

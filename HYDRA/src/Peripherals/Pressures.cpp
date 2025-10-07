@@ -28,7 +28,7 @@ int dac_adc_setup(void) {
     ad5593r.setLDACmode(AD5593R_LDAC_DIRECT);  // Set LDAC mode (direct write to DAC outputs)
 
     // With 2x range (5V) and 12-bit resolution: output = (Vout/5.0) * 4095
-    uint16_t dac_output = (2.5 / 5) * 4095;  // 1.8 output voltage
+    uint16_t dac_output = (2.5 / 5) * 4095;  // 2.5 output voltage
 
     ad5593r.writeDAC(5, dac_output);  // Set DAC channel 5
     ad5593r.writeDAC(6, dac_output);  // Set DAC channel 6
